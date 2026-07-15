@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Section extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'school_year_id',
+        'grade_level_id',
+        'adviser_id',
+        'name',
+        'room',
+        'capacity',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'capacity' => 'integer',
+        ];
+    }
+
+    public function schoolYear(): BelongsTo
+    {
+        return $this->belongsTo(SchoolYear::class);
+    }
+
+    public function gradeLevel(): BelongsTo
+    {
+        return $this->belongsTo(GradeLevel::class);
+    }
+
+    public function adviser(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'adviser_id');
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(StudentEnrollment::class);
+    }
+
+    /** Currently enrolled learners in this section. */
+    public function activeEnrollments(): HasMany
+    {
+        return $this->hasMany(StudentEnrollment::class)
+            ->whereIn('status', ['enrolled', 'transferred_in']);
+    }
+
+    public function subjectAssignments(): HasMany
+    {
+        return $this->hasMany(SubjectAssignment::class);
+    }
+
+    public function attendance(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Sections a teacher may take attendance for: those they advise, or those
+     * offering a subject they are assigned to teach.
+     */
+    public function scopeForTeacher(Builder $query, int $teacherId): Builder
+    {
+        return $query->where(function (Builder $q) use ($teacherId) {
+            $q->where('adviser_id', $teacherId)
+                ->orWhereHas('subjectAssignments.teacherAssignments',
+                    fn (Builder $t) => $t->where('teacher_id', $teacherId));
+        });
+    }
+}
