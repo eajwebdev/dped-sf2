@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class ClassSession extends Model
@@ -58,6 +59,17 @@ class ClassSession extends Model
     public function schoolYear(): BelongsTo
     {
         return $this->belongsTo(SchoolYear::class);
+    }
+
+    /** The timetable slot this session was launched from, when there is one. */
+    public function teacherSchedule(): BelongsTo
+    {
+        return $this->belongsTo(TeacherSchedule::class);
+    }
+
+    public function sessionAttendance(): HasMany
+    {
+        return $this->hasMany(ClassSessionAttendance::class);
     }
 
     public function scopeActive(Builder $query): Builder

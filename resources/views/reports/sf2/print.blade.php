@@ -83,15 +83,6 @@
     </style>
 </head>
 <body>
-    @unless ($pdf ?? false)
-    <div class="toolbar no-print">
-        <a class="btn-back" href="{{ route('reports.sf2.index') }}">&larr; Back</a>
-        <button class="btn-print" onclick="window.print()">🖨 Print</button>
-        <a class="btn-pdf" href="{{ route('reports.sf2.pdf', ['section' => $section, 'year' => $data['month']->year, 'month' => $data['month']->month]) }}">PDF</a>
-        <a class="btn-excel" href="{{ route('reports.sf2.excel', ['section' => $section, 'year' => $data['month']->year, 'month' => $data['month']->month]) }}">Excel</a>
-        <span style="margin-left:auto;font-size:12px;opacity:.8">{{ $section->gradeLevel->name }} {{ $section->name }} · {{ $data['monthLabel'] }}</span>
-    </div>
-    @endunless
 
     <div class="sheet">
         {{-- ===== Title ===== --}}

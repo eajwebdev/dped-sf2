@@ -51,7 +51,26 @@
                                 <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">{{ $t->full_name }}</td>
                                 <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $t->employee_no ?? '—' }}</td>
                                 <td class="px-6 py-4">
-                                    @if ($t->user)<span class="text-emerald-600 dark:text-emerald-400">{{ $t->user->email }}</span>@else<span class="text-gray-400">No account</span>@endif
+                                    @if ($t->user)
+                                        <span class="text-emerald-600 dark:text-emerald-400">{{ $t->user->email }}</span>
+                                        <form method="POST" action="{{ route('admin.teachers.free-access', $t) }}" class="mt-1"
+                                              onsubmit="return confirm('{{ $t->user->free_access ? 'Revoke free access? The account drops back to its real trial/subscription state.' : 'Grant 100% free access? This account will never be asked to pay while it is on.' }}')">
+                                            @csrf
+                                            @if ($t->user->free_access)
+                                                <button type="submit" class="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-0.5 text-[11px] font-bold text-violet-700 hover:bg-violet-200 dark:bg-violet-500/15 dark:text-violet-300 dark:hover:bg-violet-500/25"
+                                                        title="Click to revoke free access">
+                                                    ★ Free access · revoke
+                                                </button>
+                                            @else
+                                                <button type="submit" class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold text-gray-400 hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-violet-500/10 dark:hover:text-violet-300"
+                                                        title="Grant 100% free access — no subscription needed">
+                                                    ☆ Grant free access
+                                                </button>
+                                            @endif
+                                        </form>
+                                    @else
+                                        <span class="text-gray-400">No account</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-center tabular-nums text-gray-600 dark:text-gray-400">{{ $t->advised_sections_count }}</td>
                                 <td class="px-6 py-4 text-center tabular-nums text-gray-600 dark:text-gray-400">{{ $t->subject_assignments_count }}</td>

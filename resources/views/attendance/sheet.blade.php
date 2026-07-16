@@ -52,7 +52,16 @@
                     @switch($lockReason)
                         @case('future') This date is in the future — attendance can't be recorded yet. @break
                         @case('holiday') {{ $date->format('M d, Y') }} is not a class day (holiday/weekend/suspension). @break
+                        @case('outside_year')
+                            {{ $date->format('M d, Y') }} is outside SY {{ $section->schoolYear->name }}
+                            ({{ $section->schoolYear->start_date->format('M d, Y') }} – {{ $section->schoolYear->end_date->format('M d, Y') }}).
+                            Pick a date within the school year, or ask an admin to activate the current school year.
+                        @break
                         @case('locked') This date is locked (older than the edit window). @break
+                        @case('closed_year')
+                            SY {{ $section->schoolYear->name }} is not your school's active year — this sheet is read-only.
+                            You can still generate its SF2 report.
+                        @break
                         @default Attendance for this date is read-only.
                     @endswitch
                 </span>
@@ -165,7 +174,10 @@
                 scheduleSave() { clearTimeout(this.timer); this.timer = setTimeout(() => this.save(), this.autosaveMs); },
                 markAllPresent() {
                     if (!this.editable) return;
-                    this.rows.forEach((r) => { if (!r.status) { r.status = 'present'; this.dirty[r.enrollment_id] = true; } });
+                    // Learners are pre-marked absent, so filling only blanks would be a no-op.
+                    this.rows.forEach((r) => {
+                        if (r.status !== 'present') { r.status = 'present'; this.dirty[r.enrollment_id] = true; }
+                    });
                     this.recount(); this.save();
                 },
                 onKey(e) {

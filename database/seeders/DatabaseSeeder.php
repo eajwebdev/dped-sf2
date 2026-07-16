@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             AcademicStructureSeeder::class,
             DemoDataSeeder::class,
             SecondYearSeeder::class,
+            JadeTeacherSeeder::class,
         ]);
     }
 }

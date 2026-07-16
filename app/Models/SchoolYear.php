@@ -76,6 +76,20 @@ class SchoolYear extends Model
     protected static bool $currentResolved = false;
 
     /** Resolve the single active school year (memoized per request). */
+    /**
+     * The active school year for a specific user: their school's own setting
+     * when one exists, otherwise the global active year. A sudden change by
+     * the admin takes effect on the user's next request through this path.
+     */
+    public static function activeFor(?User $user): ?self
+    {
+        $override = $user?->school_id
+            ? School::query()->whereKey($user->school_id)->first()?->activeSchoolYear
+            : null;
+
+        return $override ?? static::current();
+    }
+
     public static function current(): ?self
     {
         if (! static::$currentResolved) {

@@ -7,6 +7,8 @@ use App\Models\AttendanceLog;
 use App\Models\AttendanceSetting;
 use App\Models\AttendanceUnlock;
 use App\Models\ClassSession;
+use App\Models\ClassSessionAttendance;
+use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
@@ -48,6 +50,18 @@ class AttendanceService
         return $this->calendar->isClassDay($section->schoolYear, $date);
     }
 
+    /**
+     * A date outside the school year's range has no calendar row at all, which is
+     * indistinguishable from a holiday unless we check the range explicitly.
+     */
+    public function outsideSchoolYear(Section $section, Carbon $date): bool
+    {
+        $schoolYear = $section->schoolYear;
+
+        return $schoolYear !== null
+            && ! $date->between($schoolYear->start_date, $schoolYear->end_date);
+    }
+
     public function isUnlocked(Section $section, Carbon $date): bool
     {
         return AttendanceUnlock::where('section_id', $section->id)
@@ -74,12 +88,21 @@ class AttendanceService
         $settings ??= $this->settingsFor($section);
         $isAdmin = $user->isAdmin();
 
+        // Previous years stay readable for tracking, but only the school's
+        // active year accepts new records — even right after an admin switch.
+        if (! $isAdmin && $section->school_year_id !== SchoolYear::activeFor($user)?->id) {
+            return ['editable' => false, 'reason' => 'closed_year'];
+        }
+
         if ($date->gt(Carbon::today()) && ($settings->block_future_dates && ! $isAdmin)) {
             return ['editable' => false, 'reason' => 'future'];
         }
 
         if (! $this->isClassDay($section, $date) && ! $settings->allow_holiday_override && ! $isAdmin) {
-            return ['editable' => false, 'reason' => 'holiday'];
+            return [
+                'editable' => false,
+                'reason' => $this->outsideSchoolYear($section, $date) ? 'outside_year' : 'holiday',
+            ];
         }
 
         if ($this->windowLocked($date, $settings) && ! $this->isUnlocked($section, $date) && ! $isAdmin) {
@@ -281,6 +304,17 @@ class AttendanceService
             ]);
         }
 
+        // The day's row above gets overwritten by every later period, so also keep
+        // a per-period record — that is what makes skipped periods detectable.
+        ClassSessionAttendance::updateOrCreate(
+            ['class_session_id' => $session->id, 'student_id' => $student->id],
+            [
+                'student_enrollment_id' => $enrollment->id,
+                'status' => ClassSessionAttendance::STATUS_PRESENT,
+                'time_in' => $values['time_in'],
+            ]
+        );
+
         return ['ok' => true, 'name' => $student->full_name, 'status' => Attendance::STATUS_PRESENT];
     }
 
@@ -327,6 +361,8 @@ class AttendanceService
         return match ($reason) {
             'future' => 'You cannot record attendance for a future date.',
             'holiday' => 'This is not a class day. Ask an administrator to override the calendar.',
+            'outside_year' => 'This date falls outside the school year. Ask an administrator to activate the current school year.',
+            'closed_year' => 'This school year is closed for your school — records here are read-only. Only SF2 reports remain available for past years.',
             'locked' => 'This date is locked for editing. Ask an administrator to unlock it.',
             default => 'Attendance for this date cannot be edited.',
         };

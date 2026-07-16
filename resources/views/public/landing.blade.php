@@ -159,7 +159,7 @@
                 $features = [
                     ['QR check-in', 'Start a class to generate a one-time QR key. The assigned scanner unlocks with the key, then students scan themselves present.', 'M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z'],
                     ['Absent by default', 'Every learner in the section is pre-marked absent when class starts — only the ones who scan flip to present. No one slips through.', 'M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z'],
-                    ['SF2, done', 'Daily attendance rolls straight into a print-ready DepEd School Form 2, with PDF and Excel export in the official format.', 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'],
+                    ['SF2, done', 'Daily attendance rolls straight into a print-ready DepEd School Form 2 — open it as a PDF in the official format.', 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'],
                     ['Your classes, your data', 'Manage your students and subjects for the active school year set by your school — everything scoped to you.', 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342'],
                     ['Weekly schedule', 'Lay out your timetable once and launch the right class at the right time, straight from your dashboard.', 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5'],
                     ['Works on any phone', 'Camera scanning runs in the browser — no app to install on the scanning device. Any Android or iPhone works.', 'M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3'],
@@ -211,8 +211,8 @@
                 $steps = [
                     ['Register & get approved', 'Create your teacher account under your school. Your 2-week free trial starts on approval.', 'M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z'],
                     ['Set up classes & QR cards', 'Add your students and subjects, then print their QR ID cards in one batch.', 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z'],
-                    ['Start class, students scan', 'Launch the session from your schedule, unlock the scanner device, and students tap in as they arrive.', 'M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5Z'],
-                    ['Print your SF2', 'At month-end, your School Form 2 is already filled in. Export to PDF or Excel and submit.', 'M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z'],
+                    ['Start class, students scan', 'Launch the session from your schedule, unlock the scanner device, and students tap in as they arrive.', 'M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5ZM6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z'],
+                    ['Print your SF2', 'At month-end, your School Form 2 is already filled in. Generate the PDF and submit.', 'M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z'],
                 ];
             @endphp
 
@@ -250,12 +250,24 @@
                 <div class="relative rounded-[19px] bg-navy-900 p-8 text-center">
                     <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-glow-pink-sm">Most popular</span>
                     <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Teacher Plan</h3>
+                    @php
+                        // Read the live price so the page can never advertise a stale amount.
+                        $listPrice = \App\Models\Setting::priceCentavos() / 100;
+                        $planPrice = \App\Models\Setting::effectivePriceCentavos() / 100;
+                        $planDiscount = \App\Models\Setting::discountPercent();
+                    @endphp
                     <div class="mt-5 flex items-end justify-center gap-1">
-                        <span class="text-6xl font-extrabold tracking-tight text-white">₱299</span>
+                        <span class="text-6xl font-extrabold tracking-tight text-white">₱{{ number_format($planPrice, 0) }}</span>
                         <span class="mb-2 text-sm text-slate-400">/ month</span>
                     </div>
+                    @if ($planDiscount > 0)
+                        <p class="mt-2 flex items-center justify-center gap-2 text-sm">
+                            <span class="text-slate-500 line-through">₱{{ number_format($listPrice, 0) }}</span>
+                            <span class="rounded-full bg-brand-500/15 px-2.5 py-0.5 text-xs font-bold text-brand-300">Save {{ $planDiscount }}%</span>
+                        </p>
+                    @endif
                     <ul class="mt-8 space-y-3.5 text-left text-sm text-slate-300">
-                        @foreach (['2-week free trial on approval', 'Unlimited classes & students', 'QR attendance + printable QR ID cards', 'DepEd SF2 export — PDF & Excel', 'Weekly schedule & scan portal', 'Cancel anytime — renew when you need it'] as $perk)
+                        @foreach (['2-week free trial on approval', 'Unlimited classes & students', 'QR attendance + printable QR ID cards', 'DepEd SF2 — print-ready PDF', 'Weekly schedule & scan portal', 'Cancel anytime — renew when you need it'] as $perk)
                             <li class="flex items-start gap-3">
                                 <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/15">
                                     <svg class="h-3 w-3 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
@@ -282,8 +294,8 @@
             @php
                 $faqs = [
                     ['Do students need to install an app?', 'No. Scanning runs entirely in the browser of the scanning device. Students just present their QR ID card — printed straight from the system.'],
-                    ['Is the SF2 report really DepEd-compliant?', 'Yes. Attendance rolls into the official School Form 2 layout, ready to print or export as PDF and Excel.'],
-                    ['What happens when my trial ends?', 'Your data stays safe. Subscribe for ₱299/month to keep recording attendance — you can renew only for the months you need.'],
+                    ['Is the SF2 report really DepEd-compliant?', 'Yes. Attendance rolls into the official School Form 2 layout, generated as a PDF you can view and print.'],
+                    ['What happens when my trial ends?', 'Your data stays safe. Subscribe for ₱'.number_format(\App\Models\Setting::effectivePriceCentavos() / 100, 0).'/month to keep recording attendance — you can renew only for the months you need.'],
                     ['Can I use it for multiple sections and subjects?', 'Yes — unlimited classes, sections, subjects, and students are included in the single plan.'],
                     ['What devices do I need?', 'Any phone, tablet, or laptop with a camera and a browser. One device acts as the class scanner; you manage everything from your own dashboard.'],
                 ];

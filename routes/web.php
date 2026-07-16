@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\BillingController as AdminBillingController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\GradeLevelController;
@@ -21,9 +23,10 @@ use App\Http\Controllers\ClassSessionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrCardController;
 use App\Http\Controllers\QrCheckinController;
-use App\Http\Controllers\ScanPortalController;
 use App\Http\Controllers\Sf2Controller;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\Teacher\CuttingClassController as TeacherCuttingClassController;
+use App\Http\Controllers\Teacher\SectionController as TeacherSectionController;
 use App\Http\Controllers\Teacher\StudentController as TeacherStudentController;
 use App\Http\Controllers\Teacher\SubjectController as TeacherSubjectController;
 use App\Http\Controllers\TeacherDashboardController;
@@ -72,6 +75,9 @@ Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook'])
 | Public key-gated class scanner (the QR key is the credential — no login)
 |--------------------------------------------------------------------------
 */
+// The scan portal is key-gated now: /portal lands on class-key entry.
+Route::redirect('/portal', '/class-scan')->name('portal');
+
 Route::get('/class-scan', [ClassScanController::class, 'enter'])->name('class-scan.enter');
 Route::post('/class-scan', [ClassScanController::class, 'unlock'])
     ->middleware('throttle:20,1')->name('class-scan.unlock');
@@ -89,6 +95,12 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     Route::get('/teacher', TeacherDashboardController::class)->name('teacher.dashboard');
 
     // Teacher-owned, school-scoped roster & subject management.
+    // Teachers can open their own advisory class for the active school year.
+    Route::post('/sections', [TeacherSectionController::class, 'store'])->name('teacher.sections.store');
+
+    // Advisory learners who skipped a period today.
+    Route::get('/cutting', [TeacherCuttingClassController::class, 'index'])->name('teacher.cutting.index');
+
     Route::resource('students', TeacherStudentController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
         ->names('teacher.students');
@@ -107,9 +119,6 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     Route::patch('/schedule/{schedule}', [TeacherScheduleController::class, 'update'])->name('schedule.update');
     Route::delete('/schedule/{schedule}', [TeacherScheduleController::class, 'destroy'])->name('schedule.destroy');
 
-    // Full-screen QR scan portal (students scan themselves present).
-    Route::get('/portal', ScanPortalController::class)->name('portal');
-
     // Downloadable QR ID cards (name + school year + section).
     Route::get('/qr-cards/section/{section}', [QrCardController::class, 'section'])->name('qr-cards.section');
     Route::get('/qr-cards/student/{student}', [QrCardController::class, 'student'])->name('qr-cards.student');
@@ -127,9 +136,8 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
 
     // SF2 Daily Attendance Report of Learners.
     Route::get('/reports/sf2', [Sf2Controller::class, 'index'])->name('reports.sf2.index');
+    // Renders the SF2 as an inline PDF (DomPDF) — no HTML view, no Excel.
     Route::get('/reports/sf2/{section}', [Sf2Controller::class, 'show'])->name('reports.sf2.show');
-    Route::get('/reports/sf2/{section}/pdf', [Sf2Controller::class, 'pdf'])->name('reports.sf2.pdf');
-    Route::get('/reports/sf2/{section}/excel', [Sf2Controller::class, 'excel'])->name('reports.sf2.excel');
 });
 
 /*
@@ -160,6 +168,7 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::resource('grade-levels', GradeLevelController::class)->except('show');
         Route::resource('subjects', SubjectController::class)->except('show');
         Route::resource('teachers', TeacherController::class)->except('show');
+        Route::post('teachers/{teacher}/free-access', [TeacherController::class, 'toggleFreeAccess'])->name('teachers.free-access');
         Route::resource('sections', SectionController::class)->except('show');
 
         // Students (+ import/export).
@@ -173,6 +182,13 @@ Route::middleware(['auth', 'verified', 'admin'])
 
         // Audit logs.
         Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+
+        // Subscription pricing / discount.
+        Route::get('settings', [AdminSettingsController::class, 'index'])->name('settings.index');
+        Route::put('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+
+        // Payment history.
+        Route::get('billing', [AdminBillingController::class, 'index'])->name('billing.index');
 
         // End-of-year promotion.
         Route::get('promotion', [PromotionController::class, 'index'])->name('promotion.index');

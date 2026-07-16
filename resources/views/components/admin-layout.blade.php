@@ -1,20 +1,16 @@
 @props(['title' => null, 'breadcrumbs' => null])
 
 @php
+    // Owner console: schools, teachers, billing, school years, logs.
+    // Academic work (students, sections, attendance, SF2) lives on the teacher side.
     $nav = [
         ['route' => 'admin.dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
         ['route' => 'admin.schools.index', 'label' => 'Schools', 'icon' => 'building'],
         ['route' => 'admin.registrations.index', 'label' => 'Registrations', 'icon' => 'inbox', 'badge' => $pendingRegistrations ?? 0],
-        ['route' => 'admin.school-years.index', 'label' => 'School Years', 'icon' => 'calendar'],
-        ['route' => 'admin.grade-levels.index', 'label' => 'Grade Levels', 'icon' => 'layers'],
-        ['route' => 'admin.sections.index', 'label' => 'Sections', 'icon' => 'grid'],
-        ['route' => 'admin.subjects.index', 'label' => 'Subjects', 'icon' => 'book'],
         ['route' => 'admin.teachers.index', 'label' => 'Teachers', 'icon' => 'users'],
-        ['route' => 'admin.students.index', 'label' => 'Students', 'icon' => 'id'],
-        ['route' => 'admin.enrollments.index', 'label' => 'Enrollment', 'icon' => 'clipboard'],
-        ['route' => 'attendance.index', 'label' => 'Attendance', 'icon' => 'check'],
-        ['route' => 'reports.sf2.index', 'label' => 'SF2 Report', 'icon' => 'report'],
-        ['route' => 'admin.promotion.index', 'label' => 'Promotion', 'icon' => 'up'],
+        ['route' => 'admin.school-years.index', 'label' => 'School Years', 'icon' => 'calendar'],
+        ['route' => 'admin.billing.index', 'label' => 'Billing', 'icon' => 'clipboard'],
+        ['route' => 'admin.settings.index', 'label' => 'Settings', 'icon' => 'report'],
         ['route' => 'admin.audit-logs.index', 'label' => 'Audit Logs', 'icon' => 'shield'],
     ];
     $icons = [

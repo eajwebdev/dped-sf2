@@ -4,10 +4,15 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StudentRequest;
+use App\Models\SchoolYear;
+use App\Models\Section;
 use App\Models\Student;
+use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\EnrollmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * School-scoped student management for teachers. The BelongsToSchool global
@@ -16,7 +21,10 @@ use Illuminate\Http\Request;
  */
 class StudentController extends Controller
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly EnrollmentService $enrollment,
+    ) {}
 
     public function index(Request $request)
     {
@@ -50,7 +58,41 @@ class StudentController extends Controller
         $student = Student::create($request->safe()->except('photo'));
         $this->audit->created($student, "Student {$student->last_name} ({$student->lrn}) created");
 
-        return redirect()->route('teacher.students.index')->with('success', 'Student added.');
+        // A teacher's roster is their advisory class, so enroll straight into it —
+        // an unenrolled learner would show up in no attendance sheet and no SF2.
+        $section = $this->adviserSection($request->user());
+
+        if (! $section) {
+            return redirect()->route('teacher.students.index')
+                ->with('success', 'Student added, but not enrolled — you have no advisory class in the active school year.');
+        }
+
+        try {
+            $this->enrollment->enroll($student, $section);
+        } catch (ValidationException $e) {
+            return redirect()->route('teacher.students.index')
+                ->with('success', 'Student added, but not enrolled: '.collect($e->errors())->flatten()->first());
+        }
+
+        return redirect()->route('teacher.students.index')
+            ->with('success', "Student added and enrolled into {$section->gradeLevel?->name} — {$section->name}.");
+    }
+
+    /** The teacher's advisory section in the active school year, if any. */
+    private function adviserSection(User $user): ?Section
+    {
+        $teacherId = $user->teacher?->id;
+        $activeYear = SchoolYear::activeFor($user);
+
+        if (! $teacherId || ! $activeYear) {
+            return null;
+        }
+
+        return Section::with('gradeLevel')
+            ->where('adviser_id', $teacherId)
+            ->where('school_year_id', $activeYear->id)
+            ->orderBy('id')
+            ->first();
     }
 
     public function edit(Student $student)

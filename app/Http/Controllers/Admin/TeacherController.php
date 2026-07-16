@@ -62,6 +62,21 @@ class TeacherController extends Controller
         return $this->index()->with(['openModal' => 'edit', 'editModel' => $teacher->load('user')]);
     }
 
+    /** Grant or revoke owner-comped 100% free access on the linked account. */
+    public function toggleFreeAccess(Teacher $teacher): RedirectResponse
+    {
+        $user = $teacher->user;
+        abort_unless($user !== null, 404, 'This teacher has no login account.');
+
+        $user->update(['free_access' => ! $user->free_access]);
+        $verb = $user->free_access ? 'granted' : 'revoked';
+        $this->audit->log('free_access_'.$verb, $user, "Free access {$verb} for {$user->email}");
+
+        return back()->with('success', $user->free_access
+            ? "{$user->name} now has 100% free access — no subscription needed."
+            : "Free access revoked for {$user->name}; their normal trial/subscription state applies again.");
+    }
+
     public function update(TeacherRequest $request, Teacher $teacher): RedirectResponse
     {
         $data = $request->validated();

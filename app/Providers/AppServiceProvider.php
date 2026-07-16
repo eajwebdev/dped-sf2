@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Share the active school year with every view for the top nav / banners.
         View::composer('*', function ($view) {
-            $view->with('activeSchoolYear', SchoolYear::current());
+            $view->with('activeSchoolYear', SchoolYear::activeFor(auth()->user()));
         });
 
         // Pending-registration badge for the admin sidebar.

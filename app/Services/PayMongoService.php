@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -17,13 +18,25 @@ class PayMongoService
 
     public function isConfigured(): bool
     {
-        return ! empty(config('services.paymongo.secret_key'));
+        return ! empty(Setting::paymongoSecretKey());
     }
 
     /** Monthly price in centavos. */
+    /** What the subscriber is charged: the admin-set price, less any discount. */
     public function price(): int
     {
-        return (int) config('services.paymongo.price', 29900);
+        return Setting::effectivePriceCentavos();
+    }
+
+    /** List price before discount, for showing a struck-through "was" amount. */
+    public function listPrice(): int
+    {
+        return Setting::priceCentavos();
+    }
+
+    public function discountPercent(): int
+    {
+        return Setting::discountPercent();
     }
 
     /**
@@ -34,10 +47,10 @@ class PayMongoService
     public function createCheckoutSession(User $user, string $reference): array
     {
         if (! $this->isConfigured()) {
-            throw new RuntimeException('PayMongo is not configured. Add PAYMONGO_SECRET_KEY to your .env.');
+            throw new RuntimeException('PayMongo is not configured. Set the secret key under Admin → Settings → Payments.');
         }
 
-        $response = Http::withBasicAuth(config('services.paymongo.secret_key'), '')
+        $response = Http::withBasicAuth(Setting::paymongoSecretKey(), '')
             ->acceptJson()
             ->post(self::BASE_URL.'/checkout_sessions', [
                 'data' => [
@@ -79,7 +92,7 @@ class PayMongoService
      */
     public function verifyWebhookSignature(string $payload, ?string $signatureHeader): bool
     {
-        $secret = config('services.paymongo.webhook_secret');
+        $secret = Setting::paymongoWebhookSecret();
         if (empty($secret)) {
             return true;
         }

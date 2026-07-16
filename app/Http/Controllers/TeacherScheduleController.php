@@ -13,7 +13,7 @@ class TeacherScheduleController extends Controller
     public function index(Request $request)
     {
         $teacher = $this->teacherOrAbort($request);
-        $activeYear = SchoolYear::active()->first();
+        $activeYear = SchoolYear::activeFor($request->user());
 
         $schedules = TeacherSchedule::with(['section.gradeLevel', 'subject'])
             ->where('teacher_id', $teacher->id)

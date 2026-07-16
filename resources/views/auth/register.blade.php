@@ -45,15 +45,7 @@
 
                         <div>
                             <label for="school_id" class="mb-1.5 block text-sm font-medium text-slate-200">School <span class="text-brand-400">*</span></label>
-                            <select id="school_id" name="school_id" required
-                                    class="{{ $darkInput }} cursor-pointer {{ $errors->has('school_id') ? '!border-red-400/60' : '' }}">
-                                <option value="" class="bg-navy-800">Select your school…</option>
-                                @foreach ($schools as $school)
-                                    <option value="{{ $school->id }}" class="bg-navy-800" @selected(old('school_id') == $school->id)>
-                                        {{ $school->name }} (ID {{ $school->school_id }})
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-school-select name="school_id" :schools="$schools" :selected="old('school_id')" :required="true" :dark="true" />
                             @error('school_id')<p class="mt-1.5 animate-slide-up text-xs font-medium text-red-400">{{ $message }}</p>@enderror
                             @if ($schools->isEmpty())
                                 <p class="mt-1.5 text-xs font-medium text-amber-400">No schools are available yet — please contact your administrator.</p>

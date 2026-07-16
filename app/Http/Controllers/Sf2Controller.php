@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\Sf2Export;
 use App\Models\Section;
 use App\Services\AuditLogger;
 use App\Services\Sf2ReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
 
 class Sf2Controller extends Controller
 {
@@ -18,10 +16,11 @@ class Sf2Controller extends Controller
         private readonly AuditLogger $audit,
     ) {}
 
-    /** Picker: choose an accessible section + month. */
+    /** Picker: choose an advisory section + month. */
     public function index(Request $request)
     {
-        $sections = $request->user()->accessibleSections()
+        // SF2 is the class adviser's form: sections merely taught are excluded.
+        $sections = $request->user()->advisorySections()
             ->with(['gradeLevel', 'schoolYear'])
             ->orderByDesc('school_year_id')->orderBy('grade_level_id')->orderBy('name')
             ->get();
@@ -33,39 +32,21 @@ class Sf2Controller extends Controller
         ]);
     }
 
+    /**
+     * Render the SF2 as a PDF streamed inline, so the browser tab displays it
+     * with its own print/save controls instead of forcing a download.
+     */
     public function show(Request $request, Section $section)
     {
         [$year, $month] = $this->resolvePeriod($request, $section);
         $this->authorizeSection($request, $section);
 
         $data = $this->report->build($section, $year, $month);
+        $this->audit->log('report_generated', $section, "SF2 generated for {$data['monthLabel']}");
 
-        return view('reports.sf2.print', ['data' => $data] + $data);
-    }
-
-    public function pdf(Request $request, Section $section)
-    {
-        [$year, $month] = $this->resolvePeriod($request, $section);
-        $this->authorizeSection($request, $section);
-
-        $data = $this->report->build($section, $year, $month);
-        $this->audit->log('report_generated', $section, "SF2 PDF generated for {$data['monthLabel']}");
-
-        $pdf = Pdf::loadView('reports.sf2.print', ['data' => $data, 'pdf' => true] + $data)
-            ->setPaper('a4', 'landscape');
-
-        return $pdf->download($this->filename($section, $data, 'pdf'));
-    }
-
-    public function excel(Request $request, Section $section)
-    {
-        [$year, $month] = $this->resolvePeriod($request, $section);
-        $this->authorizeSection($request, $section);
-
-        $data = $this->report->build($section, $year, $month);
-        $this->audit->log('report_generated', $section, "SF2 Excel generated for {$data['monthLabel']}");
-
-        return Excel::download(new Sf2Export($data), $this->filename($section, $data, 'xlsx'));
+        return Pdf::loadView('reports.sf2.print', ['data' => $data, 'pdf' => true] + $data)
+            ->setPaper('a4', 'landscape')
+            ->stream($this->filename($section, $data, 'pdf'));
     }
 
     /** @return array{0:int,1:int} [year, month] */
@@ -93,9 +74,9 @@ class Sf2Controller extends Controller
     {
         $user = $request->user();
         abort_unless(
-            $user->isAdmin() || $user->accessibleSections()->whereKey($section->id)->exists(),
+            $user->isAdmin() || $user->advisorySections()->whereKey($section->id)->exists(),
             403,
-            'You do not have access to this section.'
+            'SF2 covers advisory classes only — you are not the class adviser for this section.'
         );
     }
 }

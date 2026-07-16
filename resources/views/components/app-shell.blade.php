@@ -29,16 +29,16 @@
 <div x-data="{ mobileNav: false }" class="min-h-full">
     <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-navy-900/80">
         <div class="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
-            <a href="{{ route($home) }}" class="flex shrink-0 items-center gap-2.5">
+            {{-- Logo only: the mark carries the brand, so the name is on the label instead. --}}
+            <a href="{{ route($home) }}" class="flex shrink-0 items-center" aria-label="{{ config('app.name') }} — Home">
                 <img src="{{ asset('eaj-appicon.png') }}" alt="" class="h-9 w-9 rounded-xl object-contain">
-                <span class="hidden text-base font-extrabold tracking-tight text-slate-900 dark:text-white sm:block">{{ config('app.name') }}</span>
             </a>
 
-            {{-- Desktop nav --}}
-            <nav class="ml-2 hidden items-center gap-1 text-sm md:flex">
+            {{-- Desktop nav: full links need ~1024px; below that the hamburger takes over --}}
+            <nav class="ml-2 hidden shrink-0 items-center gap-1 text-sm lg:flex">
                 @foreach ($nav as $item)
                     <a href="{{ route($item['route']) }}"
-                       class="relative rounded-xl px-3.5 py-2 font-medium transition-all duration-200 {{ request()->routeIs($item['match'])
+                       class="relative whitespace-nowrap rounded-xl px-3 py-2 font-medium transition-all duration-200 {{ request()->routeIs($item['match'])
                             ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300'
                             : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5' }}">
                         {{ $item['label'] }}
@@ -47,15 +47,10 @@
                         @endif
                     </a>
                 @endforeach
-                <a href="{{ route('portal') }}"
-                   class="btn-primary btn-sm ml-1">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"/></svg>
-                    Scan Portal
-                </a>
             </nav>
 
             @if ($activeSchoolYear ?? null)
-                <span class="ml-auto hidden items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 lg:inline-flex">
+                <span class="ml-auto hidden items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 lg:inline-flex">
                     <span class="relative flex h-2 w-2">
                         <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"></span>
                         <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
@@ -64,16 +59,61 @@
                 </span>
             @endif
 
-            {{-- Trial / subscription pill (teachers only) --}}
-            @php $subState = auth()->user()?->isTeacher() ? auth()->user()->subscriptionState() : null; @endphp
-            @if ($subState === 'trial')
-                <a href="{{ route('subscribe.show') }}" class="{{ ($activeSchoolYear ?? null) ? '' : 'ml-auto' }} hidden items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-600 transition-colors hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-300 lg:inline-flex">
-                    <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span> Trial ends {{ auth()->user()->trial_ends_at->diffForHumans(['parts' => 1]) }}
-                </a>
-            @elseif ($subState === 'expired')
-                <a href="{{ route('subscribe.show') }}" class="{{ ($activeSchoolYear ?? null) ? '' : 'ml-auto' }} hidden items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100 dark:bg-red-500/10 dark:text-red-300 lg:inline-flex">
-                    <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span> Subscribe
-                </a>
+            {{-- Trial / subscription status (teachers only): blinking icon, details on hover --}}
+            @php
+                $subState = auth()->user()?->isTeacher() ? auth()->user()->subscriptionState() : null;
+                $isTrial = $subState === 'trial';
+                $trialEnds = auth()->user()?->trial_ends_at;
+            @endphp
+            @if ($subState === 'trial' || $subState === 'expired')
+                <div class="{{ ($activeSchoolYear ?? null) ? '' : 'ml-auto' }} relative shrink-0"
+                     x-data="{ hover: false }"
+                     @mouseenter="hover = true"
+                     @mouseleave="hover = false">
+                    <a href="{{ route('subscribe.show') }}"
+                       @focus="hover = true"
+                       @blur="hover = false"
+                       aria-label="{{ $isTrial ? 'Free trial'.($trialEnds ? ' ends '.$trialEnds->format('M d, Y') : '') : 'Trial ended — subscribe' }}"
+                       class="relative flex h-9 w-9 items-center justify-center rounded-full transition-colors {{ $isTrial
+                            ? 'bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-300'
+                            : 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-300' }}">
+                        {{-- blinking halo --}}
+                        <span class="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full opacity-75 {{ $isTrial ? 'bg-brand-500' : 'bg-red-500' }}"></span>
+                        <svg class="relative h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            @if ($isTrial)
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            @else
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M10.34 3.94L2.7 16.13c-.87 1.5.21 3.37 1.94 3.37h14.72c1.73 0 2.81-1.87 1.94-3.37L13.66 3.94c-.87-1.5-3.03-1.5-3.9 0z"/>
+                            @endif
+                        </svg>
+                    </a>
+
+                    <div x-show="hover" x-cloak role="tooltip"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         class="absolute left-1/2 top-full z-30 mt-2 w-60 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-lift dark:border-white/10 dark:bg-navy-800">
+                        @if ($isTrial)
+                            <p class="text-sm font-bold text-slate-900 dark:text-white">Free trial</p>
+                            <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                                @if ($trialEnds)
+                                    Ends {{ $trialEnds->format('M d, Y') }} ({{ $trialEnds->diffForHumans(['parts' => 1]) }}).
+                                @endif
+                                Subscribe to keep your classes and SF2 reports after it ends.
+                            </p>
+                            <p class="mt-2 text-xs font-semibold text-brand-600 dark:text-brand-300">Click to subscribe →</p>
+                        @else
+                            <p class="text-sm font-bold text-slate-900 dark:text-white">Trial ended</p>
+                            <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                                Your free trial is over. Subscribe to restore access to your classes and SF2 reports.
+                            </p>
+                            <p class="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">Click to subscribe →</p>
+                        @endif
+                    </div>
+                </div>
             @endif
 
             <div class="ml-auto flex items-center gap-1 lg:ml-2">
@@ -81,10 +121,10 @@
 
                 {{-- User dropdown --}}
                 <div x-data="{ open: false }" class="relative">
-                    <button @click="open = !open" class="group flex cursor-pointer items-center gap-2 rounded-full py-1.5 pl-1.5 pr-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-white/10 sm:pr-3">
+                    <button @click="open = !open" class="group flex cursor-pointer items-center gap-2 rounded-full py-1.5 pl-1.5 pr-1.5 transition-colors hover:bg-slate-100 dark:hover:bg-white/10 xl:pr-3">
                         <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white shadow-glow-pink-sm">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
-                        <span class="hidden text-sm font-medium sm:block">{{ auth()->user()->name }}</span>
-                        <svg class="hidden h-4 w-4 text-slate-400 transition-colors group-hover:text-slate-600 dark:group-hover:text-slate-300 sm:block" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                        <span class="hidden whitespace-nowrap text-sm font-medium xl:block">{{ auth()->user()->name }}</span>
+                        <svg class="hidden h-4 w-4 text-slate-400 transition-colors group-hover:text-slate-600 dark:group-hover:text-slate-300 xl:block" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                     </button>
                     <div x-show="open" x-cloak @click.outside="open = false"
                          x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-1 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100"
@@ -113,7 +153,7 @@
                 </div>
 
                 {{-- Mobile hamburger --}}
-                <button @click="mobileNav = !mobileNav" class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/10 md:hidden" aria-label="Menu">
+                <button @click="mobileNav = !mobileNav" class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/10 lg:hidden" aria-label="Menu">
                     <svg x-show="!mobileNav" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     <svg x-show="mobileNav" x-cloak class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -121,7 +161,7 @@
         </div>
 
         {{-- Mobile nav panel --}}
-        <nav x-show="mobileNav" x-cloak x-transition class="border-t border-slate-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-navy-900 md:hidden">
+        <nav x-show="mobileNav" x-cloak x-transition class="border-t border-slate-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-navy-900 lg:hidden">
             <div class="flex flex-col gap-1 text-sm">
                 @foreach ($nav as $item)
                     <a href="{{ route($item['route']) }}"
@@ -131,9 +171,6 @@
                         {{ $item['label'] }}
                     </a>
                 @endforeach
-                <a href="{{ route('portal') }}" class="btn-primary btn-md mt-1">
-                    Scan Portal
-                </a>
             </div>
         </nav>
     </header>

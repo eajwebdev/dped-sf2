@@ -34,7 +34,9 @@ class ClassSessionController extends Controller
         // The section must be one the teacher can take attendance for.
         $section = $user->accessibleSections()->whereKey($data['section_id'])->firstOrFail();
 
-        $year = SchoolYear::active()->firstOrFail();
+        $year = SchoolYear::activeFor($user) ?? abort(422, 'No active school year for your school.');
+        abort_unless($section->school_year_id === $year->id, 422,
+            'This class belongs to a closed school year — sessions can only run in the active one.');
         $today = Carbon::today();
 
         // Resume an already-running session rather than spawning duplicates.

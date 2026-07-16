@@ -24,7 +24,8 @@
 @endphp
 
 <{{ $tag }} @if($href) href="{{ $href }}" @endif
-    {{ $attributes->merge(['class' => 'card card-hover group relative overflow-hidden p-5 ' . ($href ? 'cursor-pointer' : '')]) }}>
+    {{-- 'block' matters: as an <a> the card is inline by default and its layout collapses --}}
+    {{ $attributes->merge(['class' => 'card card-hover group relative block overflow-hidden p-5 ' . ($href ? 'cursor-pointer' : '')]) }}>
     <div class="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br {{ $toneClass }} opacity-[0.07] transition-transform duration-500 group-hover:scale-150"></div>
 
     <div class="flex items-start justify-between gap-3">

@@ -61,6 +61,7 @@ class User extends Authenticatable
         'contact_number',
         'trial_ends_at',
         'subscribed_until',
+        'free_access',
         'approved_at',
         'approved_by',
     ];
@@ -88,6 +89,7 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'trial_ends_at' => 'datetime',
             'subscribed_until' => 'date',
+            'free_access' => 'boolean',
             'approved_at' => 'datetime',
         ];
     }
@@ -165,7 +167,7 @@ class User extends Authenticatable
             return false;
         }
 
-        if (! $this->isBillingEnrolled()) {
+        if ($this->free_access || ! $this->isBillingEnrolled()) {
             return true;
         }
 
@@ -177,6 +179,11 @@ class User extends Authenticatable
     {
         if (! $this->isApproved()) {
             return self::STATUS_PENDING;
+        }
+
+        // Owner-granted comp: overrides billing entirely while switched on.
+        if ($this->free_access) {
+            return 'free';
         }
 
         if (! $this->isBillingEnrolled()) {
@@ -224,5 +231,23 @@ class User extends Authenticatable
 
         // No linked teacher record -> no sections.
         return $teacherId ? $query->forTeacher($teacherId) : $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * Sections this user is the class adviser of — a strict subset of
+     * accessibleSections(), which also includes sections merely taught.
+     * SF2 is the adviser's form, so it must never widen past this.
+     */
+    public function advisorySections(): Builder
+    {
+        $query = Section::query();
+
+        if ($this->isAdmin()) {
+            return $query;
+        }
+
+        $teacherId = $this->teacher?->id;
+
+        return $teacherId ? $query->where('adviser_id', $teacherId) : $query->whereRaw('1 = 0');
     }
 }

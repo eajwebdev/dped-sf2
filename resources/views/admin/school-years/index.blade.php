@@ -59,9 +59,25 @@
                             <td class="px-3 py-3">
                                 <div class="flex items-center justify-end gap-1">
                                     @unless ($sy->is_active)
-                                        <form method="POST" action="{{ route('admin.school-years.activate', $sy) }}" class="inline">@csrf
-                                            <x-action icon="activate" title="Set as active year" color="emerald" />
-                                        </form>
+                                        <div class="relative inline-block" x-data="{ open: false }" @click.outside="open = false">
+                                            <button type="button" @click="open = !open"
+                                                    class="rounded-lg px-2 py-1 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                                                    title="Set as active year">
+                                                Activate
+                                            </button>
+                                            <div x-show="open" x-cloak x-transition
+                                                 class="absolute right-0 z-20 mt-1 w-64 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-lift dark:border-white/10 dark:bg-navy-800">
+                                                <form method="POST" action="{{ route('admin.school-years.activate', $sy) }}">@csrf
+                                                    <input type="hidden" name="scope" value="all">
+                                                    <button type="submit" class="btn-primary btn-sm w-full">Activate for all schools</button>
+                                                </form>
+                                                <form method="POST" action="{{ route('admin.school-years.activate', $sy) }}" class="mt-2 space-y-2">@csrf
+                                                    <input type="hidden" name="scope" value="school">
+                                                    <x-school-select name="school_id" :schools="$schools" :required="true" placeholder="One school only — search…" />
+                                                    <button type="submit" class="btn-outline btn-sm w-full">Activate for that school</button>
+                                                </form>
+                                            </div>
+                                        </div>
                                     @else
                                         <form method="POST" action="{{ route('admin.school-years.close', $sy) }}" class="inline">@csrf
                                             <x-action icon="close" title="Close year" color="gray" />
