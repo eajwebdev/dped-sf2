@@ -2,17 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\GradeLevel;
 use App\Models\SchoolYear;
-use App\Models\Section;
-use App\Models\Teacher;
 use App\Services\SchoolCalendarService;
 use Illuminate\Database\Seeder;
 
 /**
- * Creates the NEXT (inactive) school year with Grade 8 sections so the
- * end-of-year promotion flow can be demonstrated: Grade 7 (2025-2026)
- * → Grade 8 (2026-2027).
+ * Creates the 2026-2027 school year with its class-day calendar. Sections are
+ * teacher-made now (advisers create their own classes), so none are seeded.
  */
 class SecondYearSeeder extends Seeder
 {
@@ -24,15 +20,5 @@ class SecondYearSeeder extends Seeder
         );
 
         app(SchoolCalendarService::class)->generate($sy);
-
-        $g8 = GradeLevel::where('code', 'G8')->first();
-        $adviser = Teacher::first();
-
-        if ($g8) {
-            Section::updateOrCreate(
-                ['school_year_id' => $sy->id, 'grade_level_id' => $g8->id, 'name' => 'Rizal'],
-                ['adviser_id' => $adviser?->id, 'room' => 'Room 201', 'capacity' => 45]
-            );
-        }
     }
 }

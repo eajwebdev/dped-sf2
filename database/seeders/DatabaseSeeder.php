@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             SchoolSeeder::class,
             AcademicStructureSeeder::class,
-            DemoDataSeeder::class,
+            // DemoDataSeeder (Maria Santos + factory learners) is intentionally
+            // out of the default chain — Jade is the default teacher.
             SecondYearSeeder::class,
             JadeTeacherSeeder::class,
         ]);

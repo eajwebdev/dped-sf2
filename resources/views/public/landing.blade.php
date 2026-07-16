@@ -62,7 +62,7 @@
                         <span class="h-3 w-3 rounded-full bg-red-400/80"></span>
                         <span class="h-3 w-3 rounded-full bg-amber-400/80"></span>
                         <span class="h-3 w-3 rounded-full bg-emerald-400/80"></span>
-                        <span class="ml-3 flex-1 truncate rounded-lg bg-white/5 px-3 py-1 text-[11px] text-slate-400">app.eajsystems.com — Attendance</span>
+                        <span class="ml-3 flex-1 truncate rounded-lg bg-white/5 px-3 py-1 text-[11px] text-slate-400">sf2.eajwebdev.com</span>
                     </div>
                     <div class="space-y-4 p-5">
                         <div class="flex items-center justify-between">
