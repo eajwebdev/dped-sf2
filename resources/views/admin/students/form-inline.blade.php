@@ -49,13 +49,13 @@
     </div>
 
     <!-- Photo -->
-    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+    <div class="border-t border-gray-200 dark:border-white/10 pt-4">
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Photo</label>
         <div class="flex items-start gap-4">
             @if ($student?->photo_path)
                 <img src="{{ Storage::url($student->photo_path) }}" class="h-20 w-20 rounded-lg object-cover">
             @endif
-            <input type="file" name="photo" accept="image/*" class="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-indigo-700 dark:file:bg-indigo-500/10 dark:file:text-indigo-300">
+            <input type="file" name="photo" accept="image/*" class="w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-brand-700 dark:file:bg-brand-500/10 dark:file:text-brand-300">
         </div>
         @if ($student?->photo_path)
             <label class="mt-2 flex items-center gap-2 text-xs text-gray-500">
@@ -66,11 +66,11 @@
     </div>
 
     <!-- Actions -->
-    <div class="flex items-center justify-end gap-2 border-t border-gray-200 dark:border-gray-700 pt-4">
-        <button type="button" @click="$parent.{{ $student ? 'editOpen' : 'createOpen' }} = false" class="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
+    <div class="flex items-center justify-end gap-2 border-t border-gray-200 dark:border-white/10 pt-4">
+        <button type="button" @click="$parent.{{ $student ? 'editOpen' : 'createOpen' }} = false" class="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-navy-700">
             Cancel
         </button>
-        <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+        <button type="submit" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
             {{ $student ? 'Update' : 'Create' }} Student
         </button>
     </div>

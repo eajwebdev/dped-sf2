@@ -25,7 +25,7 @@
             </a>
         </div>
         <div class="text-center">
-            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">Attendance Scan Portal</p>
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-400">Attendance Scan Portal</p>
             <p class="text-xs text-gray-500" x-text="clock"></p>
         </div>
         <div class="w-[104px] text-right">
@@ -39,19 +39,19 @@
 
         {{-- Schedule-aware class banner --}}
         @if ($currentClass)
-            <div class="rounded-2xl border border-indigo-500/30 bg-indigo-500/10 px-5 py-4">
-                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">Happening now · from your schedule</p>
+            <div class="rounded-2xl border border-brand-500/30 bg-brand-500/10 px-5 py-4">
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-400">Happening now · from your schedule</p>
                 <div class="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <h1 class="text-xl font-bold text-white">{{ $currentClass->section->gradeLevel->name }} — {{ $currentClass->section->name }}</h1>
-                    <span class="text-sm text-indigo-300 tabular-nums">{{ $currentClass->time_range }}</span>
-                    @if ($currentClass->subject)<span class="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-xs font-medium text-indigo-300">{{ $currentClass->subject->name }}</span>@endif
+                    <span class="text-sm text-brand-300 tabular-nums">{{ $currentClass->time_range }}</span>
+                    @if ($currentClass->subject)<span class="rounded-full bg-brand-500/20 px-2.5 py-0.5 text-xs font-medium text-brand-300">{{ $currentClass->subject->name }}</span>@endif
                 </div>
             </div>
         @else
             <div class="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
                 <p class="text-sm text-gray-400">
                     No class on your schedule right now — pick the section to take attendance for.
-                    <a href="{{ route('schedule.index') }}" class="font-medium text-indigo-400 hover:text-indigo-300">Set up your schedule</a>
+                    <a href="{{ route('schedule.index') }}" class="font-medium text-brand-400 hover:text-brand-300">Set up your schedule</a>
                     so the portal selects it automatically.
                 </p>
             </div>
@@ -60,7 +60,7 @@
         {{-- Section selector --}}
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
             <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Class</label>
-            <select x-model="sectionId" class="flex-1 rounded-lg border-white/10 bg-white/5 text-sm text-white px-4 py-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30">
+            <select x-model="sectionId" class="flex-1 rounded-lg border-white/10 bg-white/5 text-sm text-white px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30">
                 <option value="" class="bg-gray-900">Choose a class…</option>
                 <template x-for="s in sections" :key="s.id">
                     <option :value="s.id" x-text="s.label" class="bg-gray-900"></option>
@@ -76,7 +76,7 @@
             <div x-show="!cameraOn" class="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gray-950/60">
                 <svg class="h-16 w-16 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z"/></svg>
                 <button @click="startCamera()" :disabled="!sectionId"
-                        class="rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all disabled:opacity-40 disabled:shadow-none">
+                        class="rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all disabled:opacity-40 disabled:shadow-none">
                     Start Scanning
                 </button>
                 <p x-show="!sectionId" class="text-xs text-gray-500">Choose a class first</p>
@@ -104,7 +104,7 @@
             {{-- Manual fallback --}}
             <form @submit.prevent="submit(manual)" class="flex flex-1 gap-2">
                 <input type="text" x-model="manual" placeholder="Or type / scan the card code here" :disabled="!sectionId"
-                       class="w-full rounded-lg border-white/10 bg-white/5 text-sm text-white placeholder-gray-600 px-4 py-2.5 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-40">
+                       class="w-full rounded-lg border-white/10 bg-white/5 text-sm text-white placeholder-gray-600 px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 disabled:opacity-40">
                 <button :disabled="!sectionId" class="rounded-lg bg-white/10 px-5 text-sm font-bold text-white hover:bg-white/15 transition-colors disabled:opacity-40">Mark Present</button>
             </form>
         </div>
@@ -133,7 +133,7 @@
                 <div class="flex flex-wrap gap-2">
                     @foreach ($todayClasses as $tc)
                         <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium tabular-nums
-                                     {{ $currentClass && $tc->id === $currentClass->id ? 'bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40' : 'bg-white/5 text-gray-400' }}">
+                                     {{ $currentClass && $tc->id === $currentClass->id ? 'bg-brand-500/20 text-brand-300 ring-1 ring-brand-500/40' : 'bg-white/5 text-gray-400' }}">
                             {{ $tc->section->gradeLevel->name }} {{ $tc->section->name }} · {{ $tc->time_range }}
                         </span>
                     @endforeach

@@ -16,11 +16,15 @@ class SubjectRequest extends FormRequest
     {
         $id = $this->route('subject')?->id;
 
+        // Subject codes are unique within a school (admins operate on the
+        // shared, school-less catalogue where school_id is null).
+        $schoolId = $this->user()?->isAdmin() ? null : $this->user()?->school_id;
+
         return [
             'name' => ['required', 'string', 'max:100'],
             'code' => [
                 'required', 'string', 'max:20',
-                Rule::unique('subjects', 'code')->ignore($id),
+                Rule::unique('subjects', 'code')->ignore($id)->where('school_id', $schoolId),
             ],
             'grade_level_id' => ['nullable', 'exists:grade_levels,id'],
             'units' => ['nullable', 'integer', 'min:0', 'max:20'],

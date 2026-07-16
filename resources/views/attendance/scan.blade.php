@@ -12,7 +12,7 @@
             </div>
         </div>
 
-        <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+        <div class="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 p-5 shadow-sm">
             <div class="relative overflow-hidden rounded-lg bg-black" style="aspect-ratio: 4/3">
                 <video x-ref="video" autoplay playsinline muted class="h-full w-full object-cover"></video>
                 <div x-show="!cameraOn" class="absolute inset-0 flex items-center justify-center text-sm text-white/70">Camera off</div>
@@ -20,15 +20,15 @@
 
             <div class="mt-3 flex gap-2">
                 <button @click="toggleCamera()" x-text="cameraOn ? 'Stop camera' : 'Start camera'"
-                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"></button>
+                        class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"></button>
                 <span x-show="!supported" x-cloak class="self-center text-xs text-amber-500">Camera scanning not supported on this browser — use manual entry.</span>
             </div>
 
             {{-- Manual fallback --}}
             <form @submit.prevent="submit(manual)" class="mt-4 flex gap-2">
                 <input type="text" x-model="manual" placeholder="Or paste/scan token manually"
-                       class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-900 text-sm focus:border-indigo-500 focus:ring-indigo-500">
-                <button class="rounded-lg bg-gray-100 dark:bg-gray-700 px-4 text-sm font-medium">Check in</button>
+                       class="w-full rounded-lg border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm focus:border-brand-500 focus:ring-brand-500">
+                <button class="rounded-lg bg-gray-100 dark:bg-navy-700 px-4 text-sm font-medium">Check in</button>
             </form>
 
             <p x-show="message" x-cloak class="mt-3 rounded-lg px-3 py-2 text-sm"
@@ -36,10 +36,10 @@
                x-text="message"></p>
         </div>
 
-        <div class="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
+        <div class="mt-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 p-4 shadow-sm">
             <h2 class="mb-2 text-sm font-semibold">Checked in (<span x-text="log.length"></span>)</h2>
             <template x-for="entry in log" :key="entry.id">
-                <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 py-1.5 text-sm last:border-0">
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-white/5 py-1.5 text-sm last:border-0">
                     <span x-text="entry.name"></span><span class="text-xs text-emerald-600" x-text="entry.time"></span>
                 </div>
             </template>

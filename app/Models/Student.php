@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,9 +13,10 @@ use Illuminate\Support\Str;
 
 class Student extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToSchool, HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'lrn',
         'first_name',
         'middle_name',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Attendance extends Model
 {
-    use HasFactory;
+    use BelongsToSchool, HasFactory;
 
     protected $table = 'attendance';
 
@@ -26,6 +27,7 @@ class Attendance extends Model
     public const STATUS_NO_CLASS = 'no_class';
 
     protected $fillable = [
+        'school_id',
         'student_enrollment_id',
         'student_id',
         'section_id',

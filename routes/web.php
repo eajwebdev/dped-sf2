@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\GradeLevelController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\RegistrationController;
+use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\SchoolYearController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SectionController;
@@ -14,20 +16,25 @@ use App\Http\Controllers\Admin\StudentIoController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ClassScanController;
+use App\Http\Controllers\ClassSessionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrCardController;
 use App\Http\Controllers\QrCheckinController;
 use App\Http\Controllers\ScanPortalController;
 use App\Http\Controllers\Sf2Controller;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\Teacher\StudentController as TeacherStudentController;
+use App\Http\Controllers\Teacher\SubjectController as TeacherSubjectController;
 use App\Http\Controllers\TeacherDashboardController;
 use App\Http\Controllers\TeacherScheduleController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    // Guests go straight to the login screen; signed-in users to their dashboard.
-    return Auth::check() ? redirect()->route('dashboard') : redirect()->route('login');
-});
+    // Signed-in users go to their dashboard; guests see the public landing page.
+    return Auth::check() ? redirect()->route('dashboard') : view('public.landing');
+})->name('landing');
 
 // Role-aware landing: send admins to the admin dashboard, teachers to theirs.
 Route::get('/dashboard', function () {
@@ -40,15 +47,59 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Account status page for pending / rejected registrations (no subscription gate).
+    Route::get('/account/pending', [SubscriptionController::class, 'pending'])->name('account.pending');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Subscription (approved teachers, gate-free so lapsed users can pay)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/subscribe', [SubscriptionController::class, 'show'])->name('subscribe.show');
+    Route::post('/subscribe/checkout', [SubscriptionController::class, 'checkout'])->name('subscribe.checkout');
+    Route::get('/subscribe/success', [SubscriptionController::class, 'success'])->name('subscribe.success');
+    Route::get('/subscribe/cancel', [SubscriptionController::class, 'cancel'])->name('subscribe.cancel');
+});
+
+// PayMongo server-to-server webhook (no auth, CSRF-exempt).
+Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook'])->name('subscription.webhook');
+
+/*
+|--------------------------------------------------------------------------
+| Public key-gated class scanner (the QR key is the credential — no login)
+|--------------------------------------------------------------------------
+*/
+Route::get('/class-scan', [ClassScanController::class, 'enter'])->name('class-scan.enter');
+Route::post('/class-scan', [ClassScanController::class, 'unlock'])
+    ->middleware('throttle:20,1')->name('class-scan.unlock');
+Route::get('/class-scan/session', [ClassScanController::class, 'show'])->name('class-scan.show');
+Route::post('/class-scan/checkin', [ClassScanController::class, 'checkIn'])
+    ->middleware('throttle:240,1')->name('class-scan.checkin');
+Route::post('/class-scan/exit', [ClassScanController::class, 'exit'])->name('class-scan.exit');
 
 /*
 |--------------------------------------------------------------------------
 | Attendance (teachers + admins) & Teacher dashboard
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     Route::get('/teacher', TeacherDashboardController::class)->name('teacher.dashboard');
+
+    // Teacher-owned, school-scoped roster & subject management.
+    Route::resource('students', TeacherStudentController::class)
+        ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+        ->names('teacher.students');
+    Route::resource('subjects', TeacherSubjectController::class)
+        ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+        ->names('teacher.subjects');
+
+    // Start Class → live QR-attendance session.
+    Route::post('/class-sessions/start', [ClassSessionController::class, 'start'])->name('class-sessions.start');
+    Route::get('/class-sessions/{session}', [ClassSessionController::class, 'show'])->name('class-sessions.show');
+    Route::post('/class-sessions/{session}/end', [ClassSessionController::class, 'end'])->name('class-sessions.end');
 
     // Weekly teaching schedule (calendar).
     Route::get('/schedule', [TeacherScheduleController::class, 'index'])->name('schedule.index');
@@ -91,6 +142,14 @@ Route::middleware(['auth', 'verified', 'admin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
+
+        // Schools (SaaS tenants) that teachers register into.
+        Route::resource('schools', SchoolController::class)->except('show');
+
+        // Teacher self-registration approvals.
+        Route::get('registrations', [RegistrationController::class, 'index'])->name('registrations.index');
+        Route::post('registrations/{user}/approve', [RegistrationController::class, 'approve'])->name('registrations.approve');
+        Route::post('registrations/{user}/reject', [RegistrationController::class, 'reject'])->name('registrations.reject');
 
         // School years + lifecycle actions.
         Route::post('school-years/{school_year}/activate', [SchoolYearController::class, 'activate'])->name('school-years.activate');

@@ -6,7 +6,9 @@ use App\Models\Attendance;
 use App\Models\AttendanceLog;
 use App\Models\AttendanceSetting;
 use App\Models\AttendanceUnlock;
+use App\Models\ClassSession;
 use App\Models\Section;
+use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -194,6 +196,92 @@ class AttendanceService
         });
 
         return ['saved' => $saved, 'errors' => $errors];
+    }
+
+    /**
+     * Start-of-class seeding: mark every active learner in the section ABSENT
+     * for the day (only where no record exists yet). Scanning later flips them
+     * to present. Returns the number of learners seeded.
+     */
+    public function openSession(User $user, Section $section, Carbon $date): int
+    {
+        $roster = $this->roster($section);
+
+        $already = Attendance::where('section_id', $section->id)
+            ->whereDate('attendance_date', $date)
+            ->pluck('student_enrollment_id')
+            ->all();
+
+        $created = 0;
+
+        DB::transaction(function () use ($roster, $already, $section, $date, $user, &$created) {
+            foreach ($roster as $enrollment) {
+                if (in_array($enrollment->id, $already, true)) {
+                    continue;
+                }
+
+                $record = Attendance::create([
+                    'school_id' => $section->school_id,
+                    'student_enrollment_id' => $enrollment->id,
+                    'student_id' => $enrollment->student_id,
+                    'section_id' => $section->id,
+                    'school_year_id' => $section->school_year_id,
+                    'attendance_date' => $date->toDateString(),
+                    'status' => Attendance::STATUS_ABSENT,
+                    'marked_by' => $user->id,
+                ]);
+                $this->logChange($record, $user, 'created', null, Attendance::STATUS_ABSENT, null, 'Class started');
+                $created++;
+            }
+        });
+
+        return $created;
+    }
+
+    /**
+     * Flip a scanned learner to present within a live class session. Runs
+     * without an authenticated user (the session qr_key is the credential), so
+     * it bypasses the editable-window gate and pins everything to the session.
+     *
+     * @return array{ok: bool, name?: string, status?: string, message?: string}
+     */
+    public function markPresentForSession(ClassSession $session, Student $student): array
+    {
+        $enrollment = StudentEnrollment::withoutGlobalScopes()
+            ->where('section_id', $session->section_id)
+            ->where('student_id', $student->id)
+            ->whereIn('status', [StudentEnrollment::STATUS_ENROLLED, StudentEnrollment::STATUS_TRANSFERRED_IN])
+            ->first();
+
+        if (! $enrollment) {
+            return ['ok' => false, 'message' => "{$student->full_name} is not in this class."];
+        }
+
+        $record = Attendance::withoutGlobalScopes()
+            ->where('student_enrollment_id', $enrollment->id)
+            ->whereDate('attendance_date', $session->session_date)
+            ->first();
+
+        $values = [
+            'status' => Attendance::STATUS_PRESENT,
+            'time_in' => Carbon::now()->format('H:i:s'),
+            'marked_by' => $session->teacher?->user_id,
+        ];
+
+        if ($record) {
+            $record->update($values);
+        } else {
+            Attendance::create($values + [
+                'school_id' => $session->school_id,
+                'student_enrollment_id' => $enrollment->id,
+                'student_id' => $student->id,
+                'section_id' => $session->section_id,
+                'school_year_id' => $session->school_year_id,
+                'attendance_date' => $session->session_date->toDateString(),
+            ]);
+        }
+
+        return ['ok' => true, 'name' => $student->full_name, 'status' => Attendance::STATUS_PRESENT];
     }
 
     /** Admin: re-open a locked date so a teacher can amend it. */

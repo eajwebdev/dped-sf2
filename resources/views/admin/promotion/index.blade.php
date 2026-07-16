@@ -9,13 +9,13 @@
     <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
         <div>
             <label class="block text-xs text-gray-400">Promote FROM</label>
-            <select name="from_year_id" onchange="this.form.submit()" class="mt-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-900 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+            <select name="from_year_id" onchange="this.form.submit()" class="mt-1 rounded-lg border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm focus:border-brand-500 focus:ring-brand-500">
                 @foreach ($years as $y)<option value="{{ $y->id }}" @selected($fromYear && $fromYear->id === $y->id)>{{ $y->name }}{{ $y->is_active ? ' (active)' : '' }}</option>@endforeach
             </select>
         </div>
         <div>
             <label class="block text-xs text-gray-400">Promote TO</label>
-            <select name="to_year_id" onchange="this.form.submit()" class="mt-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-900 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+            <select name="to_year_id" onchange="this.form.submit()" class="mt-1 rounded-lg border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm focus:border-brand-500 focus:ring-brand-500">
                 <option value="">— Select target year —</option>
                 @foreach ($years as $y)<option value="{{ $y->id }}" @selected($toYear && $toYear->id === $y->id)>{{ $y->name }}</option>@endforeach
             </select>
@@ -32,11 +32,11 @@
 
             <x-card title="Map each {{ $fromYear->name }} class to a {{ $toYear->name }} class">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10 text-sm">
                         <thead><tr class="text-left text-xs uppercase tracking-wide text-gray-400">
                             <th class="px-3 py-2">Source class</th><th class="px-3 py-2 text-center">Learners</th><th class="px-3 py-2">Next grade</th><th class="px-3 py-2">Target class ({{ $toYear->name }})</th>
                         </tr></thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                        <tbody class="divide-y divide-gray-100 dark:divide-white/5">
                             @forelse ($sourceSections as $sec)
                                 @php $next = $sec->gradeLevel->nextGrade(); @endphp
                                 <tr>
@@ -44,7 +44,7 @@
                                     <td class="px-3 py-2 text-center">{{ $sec->learners_count }}</td>
                                     <td class="px-3 py-2">
                                         @if ($sec->gradeLevel->is_graduating)
-                                            <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">Graduating</span>
+                                            <span class="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">Graduating</span>
                                         @else
                                             {{ $next?->name ?? '—' }}
                                         @endif
@@ -55,7 +55,7 @@
                                         @elseif (! $next)
                                             <span class="text-xs text-amber-500">No next grade defined</span>
                                         @else
-                                            <select name="section_map[{{ $sec->id }}]" class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-900 text-xs py-1.5 focus:border-indigo-500 focus:ring-indigo-500">
+                                            <select name="section_map[{{ $sec->id }}]" class="rounded-lg border-gray-300 dark:border-white/15 dark:bg-navy-900 text-xs py-1.5 focus:border-brand-500 focus:ring-brand-500">
                                                 <option value="">— Skip —</option>
                                                 @foreach (($targetSectionsByGrade[$next->id] ?? collect()) as $ts)
                                                     <option value="{{ $ts->id }}">{{ $ts->gradeLevel->name }} — {{ $ts->name }}</option>
@@ -74,7 +74,7 @@
                     </table>
                 </div>
                 <div class="mt-4 flex justify-end">
-                    <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Run Promotion</button>
+                    <button type="submit" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">Run Promotion</button>
                 </div>
             </x-card>
         </form>

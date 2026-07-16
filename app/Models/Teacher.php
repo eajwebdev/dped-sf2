@@ -14,6 +14,7 @@ class Teacher extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'user_id',
         'employee_no',
         'first_name',
@@ -36,6 +37,11 @@ class Teacher extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
     }
 
     /** Sections where this teacher is the class adviser. */

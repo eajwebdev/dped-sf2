@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureActiveSubscription;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsTeacher;
 use Illuminate\Foundation\Application;
@@ -16,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'teacher' => EnsureUserIsTeacher::class,
+            'subscription' => EnsureActiveSubscription::class,
+        ]);
+
+        // PayMongo posts webhooks server-to-server (no CSRF token).
+        $middleware->validateCsrfTokens(except: [
+            'subscription/webhook',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

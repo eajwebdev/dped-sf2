@@ -36,11 +36,11 @@
             </div>
             <div class="flex items-end gap-2">
                 <a href="{{ route('attendance.scan', ['section' => $section, 'date' => $date->toDateString()]) }}"
-                   class="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700/50">📷 Scan QR</a>
+                   class="rounded-lg border border-gray-300 dark:border-white/15 px-3 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-navy-700/50">📷 Scan QR</a>
                 <form method="GET" action="{{ route('attendance.sheet', $section) }}">
                     <label class="block text-xs text-gray-400">Date</label>
                     <input type="date" name="date" value="{{ $date->toDateString() }}" onchange="this.form.submit()"
-                           class="mt-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-900 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                           class="mt-1 rounded-lg border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm focus:border-brand-500 focus:ring-brand-500">
                 </form>
             </div>
         </div>
@@ -67,7 +67,7 @@
         @endunless
 
         {{-- Toolbar: summary + save state + shortcuts --}}
-        <div class="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm">
+        <div class="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-4 py-2.5 text-sm">
             <div class="flex items-center gap-3">
                 <span class="font-medium text-emerald-600" x-text="summary.present + ' P'"></span>
                 <span class="font-medium text-red-600" x-text="summary.absent + ' A'"></span>
@@ -81,7 +81,7 @@
                     <span x-show="!saving && lastSaved" x-cloak class="text-xs text-emerald-600" x-text="'Saved ' + lastSaved"></span>
                     <span x-show="saveError" x-cloak class="text-xs text-red-600" x-text="saveError"></span>
                     <button type="button" @click="markAllPresent()" class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300">Mark all present</button>
-                    <button type="button" @click="save()" class="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700">Save now</button>
+                    <button type="button" @click="save()" class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700">Save now</button>
                 </div>
             @endif
         </div>
@@ -89,24 +89,24 @@
         <p class="mb-2 text-[11px] text-gray-400">Shortcuts: click a row, then press <b>P</b> Present · <b>A</b> Absent · <b>L</b> Late · <b>E</b> Excused · <b>H</b> Half-day · <b>↑/↓/Enter</b> to move.</p>
 
         {{-- Grid --}}
-        <div class="overflow-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800" style="max-height: 70vh">
+        <div class="overflow-auto rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800" style="max-height: 70vh">
             <table class="min-w-full text-sm">
-                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
+                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-navy-900">
                     <tr class="text-left text-xs uppercase tracking-wide text-gray-400">
-                        <th class="sticky left-0 z-20 bg-gray-50 dark:bg-gray-900 px-3 py-2 w-10">#</th>
-                        <th class="sticky left-10 z-20 bg-gray-50 dark:bg-gray-900 px-3 py-2 min-w-[16rem]">Learner</th>
+                        <th class="sticky left-0 z-20 bg-gray-50 dark:bg-navy-900 px-3 py-2 w-10">#</th>
+                        <th class="sticky left-10 z-20 bg-gray-50 dark:bg-navy-900 px-3 py-2 min-w-[16rem]">Learner</th>
                         <th class="px-3 py-2 text-center">Status</th>
                         <th class="px-3 py-2 min-w-[12rem]">Remarks</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
                     <template x-for="(row, i) in rows" :key="row.enrollment_id">
                         <tr :data-row="i" @click="cursor = i"
-                            :class="cursor === i ? 'bg-indigo-50/60 dark:bg-indigo-500/10' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'">
+                            :class="cursor === i ? 'bg-brand-50/60 dark:bg-brand-500/10' : 'hover:bg-gray-50 dark:hover:bg-navy-700/30'">
                             <td class="sticky left-0 z-10 px-3 py-2 text-gray-400"
-                                :class="cursor === i ? 'bg-indigo-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-800'" x-text="i + 1"></td>
+                                :class="cursor === i ? 'bg-brand-50 dark:bg-navy-800' : 'bg-white dark:bg-navy-800'" x-text="i + 1"></td>
                             <td class="sticky left-10 z-10 px-3 py-2"
-                                :class="cursor === i ? 'bg-indigo-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-800'">
+                                :class="cursor === i ? 'bg-brand-50 dark:bg-navy-800' : 'bg-white dark:bg-navy-800'">
                                 <span class="font-medium" x-text="row.name"></span>
                                 <span class="block font-mono text-[11px] text-gray-400" x-text="row.lrn"></span>
                             </td>
@@ -115,14 +115,14 @@
                                     <template x-for="(meta, slug) in statuses" :key="slug">
                                         <button type="button" @click="setStatus(i, slug)" :disabled="!editable"
                                                 class="h-8 w-8 rounded-md text-xs font-bold text-white transition disabled:cursor-not-allowed"
-                                                :class="row.status === slug ? meta.class + ' ring-2 ring-offset-1 ring-gray-400 dark:ring-offset-gray-800' : 'bg-gray-200 text-gray-500 dark:bg-gray-700 hover:opacity-80'"
+                                                :class="row.status === slug ? meta.class + ' ring-2 ring-offset-1 ring-gray-400 dark:ring-offset-gray-800' : 'bg-gray-200 text-gray-500 dark:bg-navy-700 hover:opacity-80'"
                                                 x-text="meta.key" :title="meta.label"></button>
                                     </template>
                                 </div>
                             </td>
                             <td class="px-3 py-2">
                                 <input type="text" x-model="row.remarks" @input="markDirty(row.enrollment_id)" :disabled="!editable"
-                                       placeholder="—" class="w-full rounded-md border-gray-200 dark:border-gray-600 dark:bg-gray-900 text-xs py-1 focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-gray-100 dark:disabled:bg-gray-800">
+                                       placeholder="—" class="w-full rounded-md border-gray-200 dark:border-white/15 dark:bg-navy-900 text-xs py-1 focus:border-brand-500 focus:ring-brand-500 disabled:bg-gray-100 dark:disabled:bg-gray-800">
                             </td>
                         </tr>
                     </template>

@@ -33,7 +33,7 @@
             </div>
         </div>
 
-        <div class="border-t border-gray-200 dark:border-gray-700 pt-5">
+        <div class="border-t border-gray-200 dark:border-white/10 pt-5">
             <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Contact & Guardian</h3>
             <x-form.input label="Address" name="address" :value="$student->address" />
             <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -42,20 +42,20 @@
             </div>
         </div>
 
-        <div class="border-t border-gray-200 dark:border-gray-700 pt-5">
+        <div class="border-t border-gray-200 dark:border-white/10 pt-5">
             <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Photo</h3>
             <div class="flex items-center gap-4">
                 @if ($student->photo_path)
                     <img src="{{ Storage::url($student->photo_path) }}" class="h-16 w-16 rounded-lg object-cover" alt="">
                 @endif
                 <input type="file" name="photo" accept="image/*"
-                       class="text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 dark:file:bg-indigo-500/10 dark:file:text-indigo-300">
+                       class="text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-brand-700 dark:file:bg-brand-500/10 dark:file:text-brand-300">
             </div>
             @error('photo')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
 
         <div class="flex items-center gap-3 pt-1">
-            <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">{{ $editing ? 'Update' : 'Create' }} Student</button>
+            <button type="submit" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">{{ $editing ? 'Update' : 'Create' }} Student</button>
             <a href="{{ route('admin.students.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Cancel</a>
         </div>
     </form>

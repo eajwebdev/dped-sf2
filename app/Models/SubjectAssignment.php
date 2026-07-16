@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,9 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SubjectAssignment extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToSchool, HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'school_year_id',
         'grade_level_id',
         'section_id',

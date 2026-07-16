@@ -20,11 +20,11 @@
                             {{-- Assigned teachers --}}
                             <div class="mt-2 flex flex-wrap gap-2">
                                 @forelse ($offering->teacherAssignments as $ta)
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 text-xs text-indigo-700 dark:text-indigo-300">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-50 dark:bg-brand-500/10 px-2.5 py-1 text-xs text-brand-700 dark:text-brand-300">
                                         {{ $ta->teacher->full_name }}{{ $ta->is_primary ? ' ★' : '' }}
                                         <form method="POST" action="{{ route('admin.assignments.teachers.destroy', $ta) }}">
                                             @csrf @method('DELETE')
-                                            <button class="text-indigo-400 hover:text-red-500" title="Unassign">&times;</button>
+                                            <button class="text-brand-400 hover:text-red-500" title="Unassign">&times;</button>
                                         </form>
                                     </span>
                                 @empty
@@ -35,14 +35,14 @@
                             {{-- Assign a teacher --}}
                             <form method="POST" action="{{ route('admin.assignments.teachers.store', $offering) }}" class="mt-3 flex flex-wrap items-center gap-2">
                                 @csrf
-                                <select name="teacher_id" required class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-900 text-xs py-1.5 focus:border-indigo-500 focus:ring-indigo-500">
+                                <select name="teacher_id" required class="rounded-lg border-gray-300 dark:border-white/15 dark:bg-navy-900 text-xs py-1.5 focus:border-brand-500 focus:ring-brand-500">
                                     <option value="">Assign teacher…</option>
                                     @foreach ($teachers as $t)
                                         <option value="{{ $t->id }}">{{ $t->full_name }}</option>
                                     @endforeach
                                 </select>
-                                <label class="flex items-center gap-1 text-xs text-gray-500"><input type="checkbox" name="is_primary" value="1" class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-900 text-indigo-600 focus:ring-indigo-500"> Primary</label>
-                                <button class="rounded-lg bg-gray-100 dark:bg-gray-700 px-3 py-1.5 text-xs font-medium">Add</button>
+                                <label class="flex items-center gap-1 text-xs text-gray-500"><input type="checkbox" name="is_primary" value="1" class="rounded border-gray-300 dark:border-white/15 dark:bg-navy-900 text-brand-600 focus:ring-brand-500"> Primary</label>
+                                <button class="rounded-lg bg-gray-100 dark:bg-navy-700 px-3 py-1.5 text-xs font-medium">Add</button>
                             </form>
                         </div>
                         <x-confirm-delete :action="route('admin.assignments.subjects.destroy', $offering)" title="Remove subject?" message="Remove {{ $offering->subject->name }} from this section? Teacher assignments will be removed too." />
@@ -57,7 +57,7 @@
         <div>
             <x-card title="Add Subject">
                 @if ($availableSubjects->isEmpty())
-                    <p class="text-sm text-gray-400">All eligible subjects are already offered. Create more under <a href="{{ route('admin.subjects.index') }}" class="text-indigo-600 hover:underline">Subjects</a>.</p>
+                    <p class="text-sm text-gray-400">All eligible subjects are already offered. Create more under <a href="{{ route('admin.subjects.index') }}" class="text-brand-600 hover:underline">Subjects</a>.</p>
                 @else
                     <form method="POST" action="{{ route('admin.assignments.subjects.store', $section) }}" class="space-y-3">
                         @csrf
@@ -66,7 +66,7 @@
                                 <option value="{{ $subj->id }}">{{ $subj->name }} ({{ $subj->code }})</option>
                             @endforeach
                         </x-form.select>
-                        <button class="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Add to section</button>
+                        <button class="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">Add to section</button>
                     </form>
                 @endif
             </x-card>

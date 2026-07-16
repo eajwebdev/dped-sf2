@@ -140,7 +140,7 @@ class TeacherScheduleTest extends TestCase
             ->assertSee('Happening now');
     }
 
-    public function test_qr_cards_pdf_downloads_for_authorized_teacher(): void
+    public function test_qr_cards_zip_downloads_for_authorized_teacher(): void
     {
         $student = Student::factory()->create();
         StudentEnrollment::create([
@@ -155,7 +155,7 @@ class TeacherScheduleTest extends TestCase
         $this->actingAs($this->teacherUser)
             ->get(route('qr-cards.section', $this->section))
             ->assertOk()
-            ->assertHeader('content-type', 'application/pdf');
+            ->assertHeader('content-type', 'application/zip');
     }
 
     public function test_qr_cards_forbidden_for_unrelated_teacher(): void

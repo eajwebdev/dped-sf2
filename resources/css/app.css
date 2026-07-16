@@ -1,3 +1,227 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────
+   EAJ Design System — base
+   ───────────────────────────────────────────────────────────── */
+@layer base {
+    :root {
+        --eaj-pink: #FC0F5D;
+        --eaj-pink-hover: #E20A53;
+        --eaj-navy: #09143D;
+        --eaj-navy-2: #132258;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    html {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        text-rendering: optimizeLegibility;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    }
+
+    /* Slim, theme-aware scrollbars */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background: rgb(148 163 184 / 0.4);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgb(148 163 184 / 0.6);
+    }
+    .dark ::-webkit-scrollbar-thumb {
+        background: rgb(255 255 255 / 0.15);
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: rgb(255 255 255 / 0.25);
+    }
+
+    /* Visible focus for keyboard navigation */
+    a:focus-visible,
+    button:focus-visible,
+    [role='button']:focus-visible {
+        outline: 2px solid var(--eaj-pink);
+        outline-offset: 2px;
+        border-radius: 8px;
+    }
+
+    /* Respect reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        ::before,
+        ::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   EAJ Design System — components
+   ───────────────────────────────────────────────────────────── */
+@layer components {
+    /* Buttons */
+    .btn {
+        @apply inline-flex cursor-pointer select-none items-center justify-center gap-2 rounded-xl text-sm font-semibold
+               transition-all duration-200 active:scale-[0.97]
+               disabled:pointer-events-none disabled:opacity-50;
+    }
+    .btn-md {
+        @apply min-h-[44px] px-5 py-2.5;
+    }
+    .btn-sm {
+        @apply min-h-[36px] px-3.5 py-2 text-xs;
+    }
+    .btn-lg {
+        @apply min-h-[52px] px-8 py-3.5 text-base;
+    }
+    .btn-primary {
+        @apply btn bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-glow-pink-sm
+               hover:from-brand-600 hover:to-brand-700 hover:shadow-glow-pink;
+    }
+    .btn-secondary {
+        @apply btn bg-navy-900 text-white hover:bg-navy-800
+               dark:bg-white dark:text-navy-900 dark:hover:bg-slate-200;
+    }
+    .btn-outline {
+        @apply btn border border-slate-300 bg-white text-slate-700 shadow-soft
+               hover:border-brand-400 hover:text-brand-600
+               dark:border-white/15 dark:bg-white/5 dark:text-slate-200
+               dark:hover:border-brand-400/60 dark:hover:text-brand-300;
+    }
+    .btn-ghost {
+        @apply btn text-slate-600 hover:bg-slate-100 hover:text-slate-900
+               dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white;
+    }
+    .btn-danger {
+        @apply btn bg-gradient-to-r from-red-500 to-red-600 text-white shadow-[0_4px_14px_-2px_rgb(239_68_68/0.35)]
+               hover:from-red-600 hover:to-red-700;
+    }
+
+    /* Cards */
+    .card {
+        @apply rounded-card border border-slate-200/80 bg-white shadow-soft
+               dark:border-white/10 dark:bg-navy-800;
+    }
+    .card-hover {
+        @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lift;
+    }
+    .card-glass {
+        @apply rounded-card border border-white/20 bg-white/70 shadow-soft backdrop-blur-xl
+               dark:border-white/10 dark:bg-navy-800/70;
+    }
+
+    /* Form controls */
+    .input {
+        @apply block w-full rounded-xl border-slate-300 bg-white text-sm text-slate-900 shadow-sm
+               transition-all duration-200 placeholder:text-slate-400
+               focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15
+               dark:border-white/15 dark:bg-navy-900/60 dark:text-white dark:placeholder:text-slate-500
+               dark:focus:border-brand-400;
+    }
+    .input-error {
+        @apply border-red-400 focus:border-red-500 focus:ring-red-500/15;
+    }
+    .label {
+        @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300;
+    }
+
+    /* Badges */
+    .badge {
+        @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+    }
+
+    /* Tables */
+    .table-wrap {
+        @apply card overflow-hidden;
+    }
+    .table-scroll {
+        @apply overflow-x-auto;
+    }
+    .table {
+        @apply min-w-full divide-y divide-slate-200 text-sm dark:divide-white/10;
+    }
+    .table thead th {
+        @apply sticky top-0 z-10 whitespace-nowrap bg-slate-50/95 px-4 py-3.5 text-left text-[11px] font-bold uppercase
+               tracking-wider text-slate-500 backdrop-blur dark:bg-navy-900/95 dark:text-slate-400;
+    }
+    .table tbody {
+        @apply divide-y divide-slate-100 dark:divide-white/5;
+    }
+    .table tbody tr {
+        @apply transition-colors hover:bg-slate-50/80 dark:hover:bg-white/5;
+    }
+    .table tbody td {
+        @apply whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-200;
+    }
+
+    /* Skeleton loaders */
+    .skeleton {
+        @apply relative overflow-hidden rounded-lg bg-slate-200/80 dark:bg-white/10;
+    }
+    .skeleton::after {
+        content: '';
+        @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent
+               dark:via-white/10;
+        animation: shimmer 1.6s infinite;
+    }
+
+    /* Sidebar link */
+    .side-link {
+        @apply relative flex min-h-[44px] items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium
+               transition-all duration-200;
+    }
+
+    /* Section headings on marketing pages */
+    .eyebrow {
+        @apply inline-flex items-center gap-2 rounded-full border border-brand-500/25 bg-brand-500/10 px-4 py-1.5
+               text-xs font-bold uppercase tracking-wider text-brand-500 dark:text-brand-300;
+    }
+
+    /* Gradient text */
+    .text-gradient-pink {
+        @apply bg-gradient-to-r from-brand-400 via-brand-500 to-brand-600 bg-clip-text text-transparent;
+    }
+}
+
+/* Keyframes used by raw CSS above (outside Tailwind's animate-* utilities) */
+@keyframes shimmer {
+    100% { transform: translateX(100%); }
+}
+@keyframes gradient-pan {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@layer utilities {
+    /* Animated gradient background (hero) */
+    .bg-animated-gradient {
+        background: linear-gradient(-45deg, #09143d, #132258, #4c0219, #09143d);
+        background-size: 400% 400%;
+        animation: gradient-pan 14s ease infinite;
+    }
+
+    /* Staggered entrance delays */
+    .stagger-1 { animation-delay: 0.07s; }
+    .stagger-2 { animation-delay: 0.14s; }
+    .stagger-3 { animation-delay: 0.21s; }
+    .stagger-4 { animation-delay: 0.28s; }
+    .stagger-5 { animation-delay: 0.35s; }
+    .stagger-6 { animation-delay: 0.42s; }
+}

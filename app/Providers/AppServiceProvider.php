@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\SchoolYear;
+use App\Models\User;
 use App\Services\AuditLogger;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -33,6 +34,13 @@ class AppServiceProvider extends ServiceProvider
         // Share the active school year with every view for the top nav / banners.
         View::composer('*', function ($view) {
             $view->with('activeSchoolYear', SchoolYear::current());
+        });
+
+        // Pending-registration badge for the admin sidebar.
+        View::composer('components.admin-layout', function ($view) {
+            $view->with('pendingRegistrations', auth()->user()?->isAdmin()
+                ? User::where('role', User::ROLE_TEACHER)->where('status', User::STATUS_PENDING)->count()
+                : 0);
         });
 
         // Audit authentication events.

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Support\Carbon;
 
 class TeacherSchedule extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToSchool, HasFactory, SoftDeletes;
 
     public const DAYS = [
         1 => 'Monday',
@@ -27,6 +28,7 @@ class TeacherSchedule extends Model
     public const COLORS = ['indigo', 'emerald', 'amber', 'rose', 'sky', 'violet'];
 
     protected $fillable = [
+        'school_id',
         'teacher_id',
         'school_year_id',
         'section_id',

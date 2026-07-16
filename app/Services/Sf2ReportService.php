@@ -31,7 +31,7 @@ class Sf2ReportService
 
     public function build(Section $section, int $year, int $month): array
     {
-        $section->loadMissing(['gradeLevel', 'adviser', 'schoolYear']);
+        $section->loadMissing(['gradeLevel', 'adviser', 'schoolYear', 'school']);
 
         $monthStart = Carbon::create($year, $month, 1)->startOfDay();
         $monthEnd = (clone $monthStart)->endOfMonth();
@@ -46,11 +46,14 @@ class Sf2ReportService
             'letter' => $this->dayLetter($d),
         ])->all();
 
-        // Active learners in the section, split by gender, alphabetised.
-        $enrollments = StudentEnrollment::with('student')
+        // Every enrolment in the section for the year (any status) — needed for
+        // transferred in/out tallies. Active ones make up the roster.
+        $allEnrollments = StudentEnrollment::with('student')
             ->where('section_id', $section->id)
-            ->whereIn('status', [StudentEnrollment::STATUS_ENROLLED, StudentEnrollment::STATUS_TRANSFERRED_IN])
-            ->get()
+            ->get();
+
+        $enrollments = $allEnrollments
+            ->filter(fn ($e) => in_array($e->status, [StudentEnrollment::STATUS_ENROLLED, StudentEnrollment::STATUS_TRANSFERRED_IN], true))
             ->sortBy(fn ($e) => $e->student->last_name.$e->student->first_name)
             ->values();
 
@@ -64,7 +67,7 @@ class Sf2ReportService
         $females = $this->buildRows($enrollments->where('student.gender', 'Female')->values(), $classDays, $attendance);
 
         $dailyTotals = $this->dailyTotals($classDays, $males, $females);
-        $summary = $this->summary($males, $females, $classDays->count(), $dailyTotals);
+        $summary = $this->summary($males, $females, $classDays->count(), $dailyTotals, $enrollments, $allEnrollments);
 
         return [
             'section' => $section,
@@ -111,6 +114,9 @@ class Sf2ReportService
                 }
             }
 
+            // On SF2 a blank day counts as present, so present = class days − absences.
+            $present = max(0, $classDays->count() - $absent);
+
             $rows[] = [
                 'no' => $no++,
                 'name' => $enrollment->student->full_name,
@@ -118,7 +124,10 @@ class Sf2ReportService
                 'marks' => $marks,
                 'statuses' => $statuses,
                 'absent' => $absent,
+                'present' => $present,
                 'tardy' => $tardy,
+                'consecutiveAbsences' => $this->longestAbsentStreak($statuses),
+                'lateEnrolment' => (bool) ($enrollment->is_late_enrollment ?? false),
             ];
         }
 
@@ -147,27 +156,84 @@ class Sf2ReportService
         )->count();
     }
 
-    private function summary(array $males, array $females, int $classDaysCount, array $dailyTotals): array
+    /**
+     * The DepEd SF2 monthly summary table (values split M / F / TOTAL). Where
+     * the system does not track a metric (e.g. a beginning-of-year baseline),
+     * the end-of-month registration is used, matching common school practice.
+     */
+    private function summary(array $males, array $females, int $classDaysCount, array $dailyTotals, Collection $active, Collection $all): array
     {
         $mCount = count($males);
         $fCount = count($females);
 
-        $mDailySum = collect($dailyTotals)->sum('male');
-        $fDailySum = collect($dailyTotals)->sum('female');
+        $avgM = $classDaysCount > 0 ? round(collect($dailyTotals)->sum('male') / $classDaysCount, 2) : 0.0;
+        $avgF = $classDaysCount > 0 ? round(collect($dailyTotals)->sum('female') / $classDaysCount, 2) : 0.0;
 
-        $avgM = $classDaysCount > 0 ? round($mDailySum / $classDaysCount, 2) : 0;
-        $avgF = $classDaysCount > 0 ? round($fDailySum / $classDaysCount, 2) : 0;
+        // Transferred in/out for the section this year, by gender.
+        $transferredIn = $this->genderCounts($all->where('status', StudentEnrollment::STATUS_TRANSFERRED_IN));
+        $transferredOut = $this->genderCounts($all->where('status', StudentEnrollment::STATUS_TRANSFERRED_OUT));
+        $lateEnrol = ['male' => $this->countBy($males, 'lateEnrolment'), 'female' => $this->countBy($females, 'lateEnrolment')];
+        $absent5 = ['male' => $this->countAtLeast($males, 'consecutiveAbsences', 5), 'female' => $this->countAtLeast($females, 'consecutiveAbsences', 5)];
+
+        // Counts sum M + F; percentages are computed from the TOTAL column, not summed.
+        $intTriple = fn (int $m, int $f) => ['male' => $m, 'female' => $f, 'total' => $m + $f];
+        $totalCount = $mCount + $fCount;
+        $avgTotal = round($avgM + $avgF, 2);
 
         return [
-            'enrolment' => ['male' => $mCount, 'female' => $fCount, 'total' => $mCount + $fCount],
             'classDays' => $classDaysCount,
-            'avgDaily' => ['male' => $avgM, 'female' => $avgF, 'total' => round($avgM + $avgF, 2)],
-            'percentAttendance' => [
-                'male' => $mCount > 0 ? round($avgM / $mCount * 100, 1) : 0,
-                'female' => $fCount > 0 ? round($avgF / $fCount * 100, 1) : 0,
-                'total' => ($mCount + $fCount) > 0 ? round(($avgM + $avgF) / ($mCount + $fCount) * 100, 1) : 0,
+            'enrolment' => $intTriple($mCount, $fCount),           // as of 1st Friday (baseline)
+            'lateEnrolment' => $intTriple($lateEnrol['male'], $lateEnrol['female']),
+            'registered' => $intTriple($mCount, $fCount),          // end of month
+            'percentEnrolment' => [                                // registered ÷ enrolment
+                'male' => $mCount > 0 ? 1.0 : 0.0,
+                'female' => $fCount > 0 ? 1.0 : 0.0,
+                'total' => $totalCount > 0 ? 1.0 : 0.0,
             ],
+            'avgDaily' => ['male' => $avgM, 'female' => $avgF, 'total' => $avgTotal],
+            'percentAttendance' => [                               // ADA ÷ registered
+                'male' => $mCount > 0 ? round($avgM / $mCount, 2) : 0.0,
+                'female' => $fCount > 0 ? round($avgF / $fCount, 2) : 0.0,
+                'total' => $totalCount > 0 ? round($avgTotal / $totalCount, 2) : 0.0,
+            ],
+            'absent5' => $intTriple($absent5['male'], $absent5['female']),
+            'nls' => $intTriple(0, 0),
+            'transferredOut' => $intTriple($transferredOut['male'], $transferredOut['female']),
+            'transferredIn' => $intTriple($transferredIn['male'], $transferredIn['female']),
         ];
+    }
+
+    /** Longest run of consecutive absences across the class days. */
+    private function longestAbsentStreak(array $statuses): int
+    {
+        $longest = $run = 0;
+        foreach ($statuses as $status) {
+            if ($status === Attendance::STATUS_ABSENT) {
+                $longest = max($longest, ++$run);
+            } else {
+                $run = 0;
+            }
+        }
+
+        return $longest;
+    }
+
+    private function genderCounts(Collection $enrollments): array
+    {
+        return [
+            'male' => $enrollments->filter(fn ($e) => $e->student?->gender === 'Male')->count(),
+            'female' => $enrollments->filter(fn ($e) => $e->student?->gender === 'Female')->count(),
+        ];
+    }
+
+    private function countBy(array $rows, string $flag): int
+    {
+        return collect($rows)->filter(fn ($r) => $r[$flag] ?? false)->count();
+    }
+
+    private function countAtLeast(array $rows, string $key, int $min): int
+    {
+        return collect($rows)->filter(fn ($r) => ($r[$key] ?? 0) >= $min)->count();
     }
 
     private function dayLetter(Carbon $date): string

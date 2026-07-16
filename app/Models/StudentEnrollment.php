@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentEnrollment extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToSchool, HasFactory, SoftDeletes;
 
     public const STATUS_ENROLLED = 'enrolled';
 
@@ -27,6 +28,7 @@ class StudentEnrollment extends Model
     public const STATUS_GRADUATED = 'graduated';
 
     protected $fillable = [
+        'school_id',
         'student_id',
         'school_year_id',
         'grade_level_id',

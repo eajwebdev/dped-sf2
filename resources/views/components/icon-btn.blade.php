@@ -27,7 +27,7 @@
 <{{ $href ? 'a' : 'button' }} {{ $attributes->merge([
   'href' => $href,
   'onclick' => $onclick,
-  'class' => $colorClass.' p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition',
+  'class' => $colorClass.' p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-700/50 transition',
   'title' => $title,
   'type' => $href ? null : 'button',
 ]) }}>
