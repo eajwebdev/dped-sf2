@@ -41,10 +41,13 @@ class Sf2Controller extends Controller
         [$year, $month] = $this->resolvePeriod($request, $section);
         $this->authorizeSection($request, $section);
 
+        $validated = $request->validate(['head' => ['nullable', 'string', 'max:120']]);
+        $schoolHead = trim((string) ($validated['head'] ?? ''));
+
         $data = $this->report->build($section, $year, $month);
         $this->audit->log('report_generated', $section, "SF2 generated for {$data['monthLabel']}");
 
-        return Pdf::loadView('reports.sf2.print', ['data' => $data, 'pdf' => true] + $data)
+        return Pdf::loadView('reports.sf2.print', ['data' => $data, 'pdf' => true, 'schoolHead' => $schoolHead] + $data)
             ->setPaper('a4', 'landscape')
             ->stream($this->filename($section, $data, 'pdf'));
     }

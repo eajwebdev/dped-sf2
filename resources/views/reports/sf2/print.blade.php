@@ -27,9 +27,13 @@
 
         .sheet { background: #fff; margin: 1rem auto; padding: 12px 16px; width: 1120px; max-width: 99%; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
 
-        .head-row { width: 100%; }
-        .head-row td { vertical-align: top; }
-        .logo { width: 70px; }
+        /* Narrower centered band pulls both logos in against the title
+           instead of pinning them at the far page corners. */
+        .head-row { width: 72%; margin: 0 auto; }
+        .head-row td { vertical-align: middle; }
+        .logo { width: 100px; }
+        .logo img.seal { height: 58px; }
+        .logo img.deped { height: 48px; }
         .title { text-align: center; }
         .title h1 { font-size: 15px; font-weight: bold; margin: 0; }
         .title .sub { font-size: 9px; font-style: italic; margin: 1px 0 0; }
@@ -86,14 +90,26 @@
 
     <div class="sheet">
         {{-- ===== Title ===== --}}
+        @php
+            // DomPDF needs local filesystem paths, not URLs. School's uploaded
+            // logo (stored directly in public/) first, the bundled seal as fallback.
+            $schoolLogo = $school?->logo_path && file_exists(public_path($school->logo_path))
+                ? public_path($school->logo_path)
+                : public_path('logo.png');
+            $depedLogo = public_path('DepED-Logo.png');
+        @endphp
         <table class="head-row">
             <tr>
-                <td class="logo">&nbsp;</td>
+                <td class="logo">
+                    @if (file_exists($schoolLogo))<img class="seal" src="{{ $schoolLogo }}" alt="School logo">@endif
+                </td>
                 <td class="title">
                     <h1>School Form 2 (SF2) Daily Attendance Report of Learners</h1>
                     <p class="sub">(This replaces Form 1, Form 2 &amp; STS Form 4 - Absenteeism and Dropout Profile)</p>
                 </td>
-                <td class="logo" style="text-align:right"><span class="title sf2">School Form 2</span></td>
+                <td class="logo" style="text-align:right">
+                    @if (file_exists($depedLogo))<img class="deped" src="{{ $depedLogo }}" alt="DepEd">@endif
+                </td>
             </tr>
         </table>
 
@@ -160,25 +176,26 @@
                 <td class="c1">
                     <p><b>GUIDELINES:</b></p>
                     <p>1. The attendance shall be accomplished daily. Refer to the codes for checking learners' attendance.</p>
-                    <p>2. Dates shall be written in the columns after Learner's Name.</p>
+                    <p>2. Dates shall be written in the preceding columns beside Learner's Name.</p>
                     <p>3. To compute the following:</p>
                     <p style="margin-left:8px">a. Percentage of Enrolment =
-                        <span class="formula"><span class="frac">Registered Learners as of end of the month</span><br>Enrolment as of 1st Friday of the school year</span> x 100</p>
+                        <span class="formula"><span class="frac">Registered Learner as of End of the Month</span><br>Enrolment as of 1st Friday of June</span> x 100</p>
                     <p style="margin-left:8px">b. Average Daily Attendance =
                         <span class="formula"><span class="frac">Total Daily Attendance</span><br>Number of School Days in reporting month</span></p>
                     <p style="margin-left:8px">c. Percentage of Attendance for the month =
-                        <span class="formula"><span class="frac">Average daily attendance</span><br>Registered Learners as of end of the month</span> x 100</p>
-                    <p>4. Every end of the month, the class adviser will submit this form to the office of the principal for recording of summary table into School Form 4. Once signed by the principal, this form should be returned to the adviser.</p>
-                    <p>5. The adviser will provide necessary interventions including but not limited to home visitation to learner/s who were absent for 5 consecutive days and/or those at risk of dropping out.</p>
-                    <p>6. Attendance performance of learners will be reflected in Form 137 and Form 138 every grading period.</p>
-                    <p><i>*Beginning of School Year cut-off report is every 1st Friday of the School Year</i></p>
+                        <span class="formula"><span class="frac">Average daily attendance</span><br>Registered Learner as of End of the Month</span> x 100</p>
+                    <p>4. Every End of the month, the class adviser will submit this form to the office of the principal for recording of summary table into the School Form 4. Once signed by the principal, this form should be returned to the adviser.</p>
+                    {{-- "neccessary" / "Late Commer" reproduce the official DepEd form verbatim --}}
+                    <p>5. The adviser will extend neccessary intervention including but not limited to home visitation to learner/s that committed 5 consecutive days of absences or those with potentials of dropping out</p>
+                    <p>6. Attendance performance of learner is expected to reflect in Form 137 and Form 138 every grading period</p>
+                    <p style="margin-left:8px"><i>* Beginning of School Year cut-off report is every 1st Friday of School Calendar Days</i></p>
                 </td>
 
                 {{-- Column 2 — Codes & reasons for NLS --}}
                 <td class="c2">
                     <p><b>1. CODES FOR CHECKING ATTENDANCE</b></p>
-                    <p>(blank) - Present; <b class="absent">(x)</b> - Absent;<br>Tardy (half shaded = Upper for Late Comer, Lower for Cutting Classes)</p>
-                    <p style="margin-top:5px"><b>2. REASONS/CAUSES FOR NLS (Not in Learners' School)</b></p>
+                    <p><b>blank</b>- Present; <b class="absent">(x)</b>- Absent; Tardy (half shaded= Upper for Late Commer, Lower for Cutting Classes)</p>
+                    <p style="margin-top:5px"><b>2. REASONS/CAUSES OF DROP-OUTS</b></p>
                     <div class="reasons">
                         <div><b>a. Domestic-Related Factors</b></div>
                         <div style="margin-left:8px">a.1. Had to take care of siblings<br>a.2. Early marriage/pregnancy<br>a.3. Parents' attitude toward schooling<br>a.4. Family problems</div>
@@ -187,40 +204,42 @@
                         <div><b>c. School-Related Factors</b></div>
                         <div style="margin-left:8px">c.1. Teacher Factor<br>c.2. Physical condition of classroom<br>c.3. Peer influence</div>
                         <div><b>d. Geographic/Environmental</b></div>
-                        <div style="margin-left:8px">d.1. Distance between home and school<br>d.2. Armed conflict (incl. Tribal wars &amp; clan feuds)<br>d.3. Calamities/Disasters</div>
+                        <div style="margin-left:8px">d.1. Distance between home and school<br>d.2. Armed conflict (incl. Tribal wars &amp; clanfeuds)<br>d.3. Calamities/Disasters</div>
                         <div><b>e. Financial-Related</b></div>
                         <div style="margin-left:8px">e.1. Child labor, work</div>
-                        <div><b>f. Others (Specify)</b></div>
+                        <div><b>f. Others</b></div>
                     </div>
-                    <p style="margin-top:6px"><i>Generated thru LIS</i></p>
                 </td>
 
                 {{-- Column 3 — Monthly summary + signatures --}}
                 <td class="c3">
-                    <p><b>Month:</b> {{ strtoupper($data['month']->format('F')) }} &nbsp; <b>No. of Days of Classes:</b> {{ $sum['classDays'] }}</p>
-                    <p style="text-align:center;font-weight:bold">Summary</p>
                     <table class="sumtab">
-                        <tr><th class="l">&nbsp;</th><th>M</th><th>F</th><th>TOTAL</th></tr>
-                        <tr><td class="l">* Enrolment as of (1st Friday of the SY)</td><td>{{ $sum['enrolment']['male'] }}</td><td>{{ $sum['enrolment']['female'] }}</td><td>{{ $sum['enrolment']['total'] }}</td></tr>
-                        <tr><td class="l">Late enrolment during the month (beyond cut-off)</td><td>{{ $sum['lateEnrolment']['male'] }}</td><td>{{ $sum['lateEnrolment']['female'] }}</td><td>{{ $sum['lateEnrolment']['total'] }}</td></tr>
-                        <tr><td class="l">Registered Learners as of end of month</td><td>{{ $sum['registered']['male'] }}</td><td>{{ $sum['registered']['female'] }}</td><td>{{ $sum['registered']['total'] }}</td></tr>
-                        <tr><td class="l">Percentage of Enrolment as of end of month</td><td>{{ $dec($sum['percentEnrolment']['male']) }}</td><td>{{ $dec($sum['percentEnrolment']['female']) }}</td><td>{{ $dec($sum['percentEnrolment']['total']) }}</td></tr>
-                        <tr><td class="l">Average Daily Attendance</td><td>{{ $dec($sum['avgDaily']['male']) }}</td><td>{{ $dec($sum['avgDaily']['female']) }}</td><td>{{ $dec($sum['avgDaily']['total']) }}</td></tr>
-                        <tr><td class="l">Percentage of Attendance for the month</td><td>{{ $dec($sum['percentAttendance']['male']) }}</td><td>{{ $dec($sum['percentAttendance']['female']) }}</td><td>{{ $dec($sum['percentAttendance']['total']) }}</td></tr>
-                        <tr><td class="l">Number of students absent for 5 consecutive days</td><td>{{ $sum['absent5']['male'] }}</td><td>{{ $sum['absent5']['female'] }}</td><td>{{ $sum['absent5']['total'] }}</td></tr>
-                        <tr><td class="l">NLS</td><td>{{ $sum['nls']['male'] }}</td><td>{{ $sum['nls']['female'] }}</td><td>{{ $sum['nls']['total'] }}</td></tr>
-                        <tr><td class="l">Transferred out</td><td>{{ $sum['transferredOut']['male'] }}</td><td>{{ $sum['transferredOut']['female'] }}</td><td>{{ $sum['transferredOut']['total'] }}</td></tr>
-                        <tr><td class="l">Transferred in</td><td>{{ $sum['transferredIn']['male'] }}</td><td>{{ $sum['transferredIn']['female'] }}</td><td>{{ $sum['transferredIn']['total'] }}</td></tr>
+                        <tr>
+                            <td class="l" rowspan="2" style="width:34%"><b>Month:</b><br>{{ strtoupper($data['month']->format('F')) }}</td>
+                            <td class="l" rowspan="2" style="width:26%;text-align:center"><b>No. of Days of<br>Classes:</b> {{ $sum['classDays'] }}</td>
+                            <th colspan="3"><b>Summary for the Month</b></th>
+                        </tr>
+                        <tr><th>M</th><th>F</th><th>TOTAL</th></tr>
+                        <tr><td class="l" colspan="2">* Enrolment as of (1st Friday of June)</td><td>{{ $sum['enrolment']['male'] }}</td><td>{{ $sum['enrolment']['female'] }}</td><td>{{ $sum['enrolment']['total'] }}</td></tr>
+                        <tr><td class="l" colspan="2"><i>Late Enrollment <b>during the month</b><br>(beyond cut-off)</i></td><td>{{ $sum['lateEnrolment']['male'] }}</td><td>{{ $sum['lateEnrolment']['female'] }}</td><td>{{ $sum['lateEnrolment']['total'] }}</td></tr>
+                        <tr><td class="l" colspan="2"><i>Registered Learner as of <b>end of the month</b></i></td><td>{{ $sum['registered']['male'] }}</td><td>{{ $sum['registered']['female'] }}</td><td>{{ $sum['registered']['total'] }}</td></tr>
+                        <tr><td class="l" colspan="2"><i>Percentage of Enrolment as of <b>end of the month</b></i></td><td>{{ $dec($sum['percentEnrolment']['male']) }}</td><td>{{ $dec($sum['percentEnrolment']['female']) }}</td><td>{{ $dec($sum['percentEnrolment']['total']) }}</td></tr>
+                        <tr><td class="l" colspan="2"><i>Average Daily Attendance</i></td><td>{{ $dec($sum['avgDaily']['male']) }}</td><td>{{ $dec($sum['avgDaily']['female']) }}</td><td>{{ $dec($sum['avgDaily']['total']) }}</td></tr>
+                        <tr><td class="l" colspan="2"><i>Percentage of Attendance for the month</i></td><td>{{ $dec($sum['percentAttendance']['male']) }}</td><td>{{ $dec($sum['percentAttendance']['female']) }}</td><td>{{ $dec($sum['percentAttendance']['total']) }}</td></tr>
+                        <tr><td class="l" colspan="2"><i>Number of students with 5 consecutive days of absences:</i></td><td>{{ $sum['absent5']['male'] }}</td><td>{{ $sum['absent5']['female'] }}</td><td>{{ $sum['absent5']['total'] }}</td></tr>
+                        <tr><td class="l" colspan="2" style="text-align:center"><b>Drop out</b></td><td>{{ $sum['nls']['male'] }}</td><td>{{ $sum['nls']['female'] }}</td><td>{{ $sum['nls']['total'] }}</td></tr>
+                        <tr><td class="l" colspan="2" style="text-align:center"><b>Transferred out</b></td><td>{{ $sum['transferredOut']['male'] }}</td><td>{{ $sum['transferredOut']['female'] }}</td><td>{{ $sum['transferredOut']['total'] }}</td></tr>
+                        <tr><td class="l" colspan="2" style="text-align:center"><b>Transferred in</b></td><td>{{ $sum['transferredIn']['male'] }}</td><td>{{ $sum['transferredIn']['female'] }}</td><td>{{ $sum['transferredIn']['total'] }}</td></tr>
                     </table>
 
-                    <p style="margin-top:8px;text-align:center">I certify that this is a true and correct report.</p>
+                    <p style="margin-top:10px"><i>I certify that this is a true and correct report.</i></p>
                     <div class="sig">
                         <span class="name">{{ $adviser ?? '' }}</span>
-                        <div class="cap">(Signature of Adviser over Printed Name)</div>
+                        <div class="cap">(Signature of Teacher over Printed Name)</div>
                     </div>
-                    <p style="margin-top:6px"><b>Attested by:</b></p>
+                    <p style="margin-top:6px">Attested by:</p>
                     <div class="sig">
-                        <span class="name">&nbsp;</span>
+                        <span class="name">@if(!empty($schoolHead)){{ $schoolHead }}@else&nbsp;@endif</span>
                         <div class="cap">(Signature of School Head over Printed Name)</div>
                     </div>
                 </td>

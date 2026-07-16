@@ -35,6 +35,33 @@ class TeacherDashboardController extends Controller
             'markedToday' => $markedToday,
             'gradeLevels' => GradeLevel::orderBy('id')->get(),
             'cuttingToday' => $this->cutting->countForAdviser($user, $today),
+            'promotable' => $this->promotableCount($user),
         ]);
+    }
+
+    /**
+     * Advisory learners from previous years still without an enrollment in the
+     * active year — the ones waiting to be moved up by their adviser.
+     */
+    private function promotableCount($user): int
+    {
+        $teacherId = $user->teacher?->id;
+        $activeYear = \App\Models\SchoolYear::activeFor($user);
+
+        if (! $teacherId || ! $activeYear) {
+            return 0;
+        }
+
+        return \App\Models\StudentEnrollment::query()
+            ->whereIn('status', [
+                \App\Models\StudentEnrollment::STATUS_ENROLLED,
+                \App\Models\StudentEnrollment::STATUS_TRANSFERRED_IN,
+            ])
+            ->whereHas('section', fn ($q) => $q->where('adviser_id', $teacherId)
+                ->where('school_year_id', '!=', $activeYear->id))
+            ->whereNotExists(fn ($q) => $q->from('student_enrollments as cur')
+                ->whereColumn('cur.student_id', 'student_enrollments.student_id')
+                ->where('cur.school_year_id', $activeYear->id))
+            ->count();
     }
 }

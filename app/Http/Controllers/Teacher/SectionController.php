@@ -8,7 +8,6 @@ use App\Models\Section;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 /**
  * Lets a teacher create their own advisory class for the active school year.
@@ -31,18 +30,29 @@ class SectionController extends Controller
         }
 
         $data = $request->validate([
-            'name' => [
-                'required', 'string', 'max:50',
-                // Section names only need to be unique within a grade level for the year.
-                Rule::unique('sections', 'name')
-                    ->where(fn ($q) => $q->where('school_year_id', $activeYear->id)
-                        ->where('grade_level_id', $request->integer('grade_level_id'))
-                        ->whereNull('deleted_at')),
-            ],
+            'name' => ['required', 'string', 'max:50'],
             'grade_level_id' => ['required', 'exists:grade_levels,id'],
             'room' => ['nullable', 'string', 'max:50'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
         ], [], ['grade_level_id' => 'grade level']);
+
+        // The only gate: that grade + section name must not already exist in the
+        // teacher's school for the active year. Checked manually so the error can
+        // actually say WHICH class exists instead of "name has already been taken".
+        $existing = Section::query()
+            ->with(['gradeLevel', 'adviser'])
+            ->where('school_year_id', $activeYear->id)
+            ->where('grade_level_id', $data['grade_level_id'])
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])
+            ->when($request->user()->school_id, fn ($q, $s) => $q->where('school_id', $s))
+            ->first();
+
+        if ($existing) {
+            return back()->withInput()->withErrors([
+                'name' => "{$existing->gradeLevel?->name} — {$existing->name} already exists for SY {$activeYear->name}"
+                    .($existing->adviser ? " (adviser: {$existing->adviser->full_name})" : '').'.',
+            ]);
+        }
 
         // school_id is stamped by the BelongsToSchool trait.
         $section = Section::create($data + [

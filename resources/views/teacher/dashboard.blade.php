@@ -36,6 +36,18 @@
             </a>
         </div>
 
+        {{-- New-school-year prompt: previous advisory learners waiting to move up --}}
+        @if (($promotable ?? 0) > 0)
+            <a href="{{ route('teacher.promotion.index') }}"
+               class="flex animate-slide-up items-center justify-between gap-3 rounded-card border border-brand-300 bg-brand-50/60 px-5 py-4 transition-all hover:-translate-y-0.5 hover:shadow-glow-pink-sm dark:border-brand-500/40 dark:bg-brand-500/10">
+                <div>
+                    <p class="text-sm font-bold text-brand-700 dark:text-brand-300">{{ $promotable }} {{ Str::plural('learner', $promotable) }} from your previous advisory can move up</p>
+                    <p class="mt-0.5 text-xs text-brand-600/80 dark:text-brand-400/80">Pick who advances — they join your class in the current school year and you stay their adviser.</p>
+                </div>
+                <span class="btn-primary btn-sm shrink-0">Move class up</span>
+            </a>
+        @endif
+
         {{-- Class list --}}
         <div class="stagger-2 animate-slide-up" x-data="{ addClass: {{ $errors->any() ? 'true' : 'false' }} }">
             <x-card :padding="false">
@@ -99,9 +111,16 @@
                             </div>
                         </div>
                     @empty
-                        <x-empty-state title="No classes yet"
-                                       description="Add your advisory class to start building a roster — or ask an administrator to assign you as a subject teacher."
-                                       icon="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        <div class="px-6 py-10 text-center">
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white">No classes yet</p>
+                            <p class="mx-auto mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
+                                Create your advisory class — pick the grade, name the section (e.g. Grade 8 — JADEITE), and you become its adviser.
+                            </p>
+                            <button type="button" @click="addClass = true" class="btn-primary btn-md mt-4">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                Add my class
+                            </button>
+                        </div>
                     @endforelse
                 </div>
             </x-card>

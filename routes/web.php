@@ -26,6 +26,7 @@ use App\Http\Controllers\QrCheckinController;
 use App\Http\Controllers\Sf2Controller;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Teacher\CuttingClassController as TeacherCuttingClassController;
+use App\Http\Controllers\Teacher\PromotionController as TeacherPromotionController;
 use App\Http\Controllers\Teacher\SectionController as TeacherSectionController;
 use App\Http\Controllers\Teacher\StudentController as TeacherStudentController;
 use App\Http\Controllers\Teacher\SubjectController as TeacherSubjectController;
@@ -100,6 +101,10 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
 
     // Advisory learners who skipped a period today.
     Route::get('/cutting', [TeacherCuttingClassController::class, 'index'])->name('teacher.cutting.index');
+
+    // Adviser-driven promotion: move my class into the active school year.
+    Route::get('/my-class/promotion', [TeacherPromotionController::class, 'index'])->name('teacher.promotion.index');
+    Route::post('/my-class/promotion', [TeacherPromotionController::class, 'promote'])->name('teacher.promotion.promote');
 
     Route::resource('students', TeacherStudentController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])

@@ -52,8 +52,7 @@ class School extends Model
     /** Public URL of the uploaded school logo, or null (usable on reports/forms). */
     public function logoUrl(): ?string
     {
-        return $this->logo_path
-            ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->logo_path)
-            : null;
+        // Logos live directly under public/ — no storage:link involved.
+        return $this->logo_path ? asset($this->logo_path) : null;
     }
 }

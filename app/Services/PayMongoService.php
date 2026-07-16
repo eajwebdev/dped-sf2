@@ -61,7 +61,7 @@ class PayMongoService
                             'name' => config('app.name').' — Monthly Subscription',
                             'quantity' => 1,
                         ]],
-                        'payment_method_types' => ['card', 'gcash', 'paymaya'],
+                        'payment_method_types' => $this->availablePaymentMethods(),
                         'description' => 'Monthly teacher subscription',
                         'reference_number' => $reference,
                         'success_url' => route('subscribe.success'),
@@ -82,6 +82,30 @@ class PayMongoService
             'id' => $response->json('data.id'),
             'url' => $response->json('data.attributes.checkout_url'),
         ];
+    }
+
+    /**
+     * The payment methods actually activated on the merchant account. A
+     * hardcoded list gets intersected with these by PayMongo, and any mismatch
+     * renders a checkout with "No payment methods are available".
+     *
+     * @return array<string>
+     */
+    public function availablePaymentMethods(): array
+    {
+        $methods = Http::withBasicAuth(Setting::paymongoSecretKey(), '')
+            ->acceptJson()
+            ->get(self::BASE_URL.'/merchants/capabilities/payment_methods')
+            ->json();
+
+        if (! is_array($methods) || $methods === []) {
+            throw new RuntimeException(
+                'Your PayMongo account has no activated payment methods. '
+                .'Enable them in the PayMongo dashboard under Settings → Payment methods.'
+            );
+        }
+
+        return array_values($methods);
     }
 
     /**

@@ -94,4 +94,66 @@ class PromotionService
 
         return $result;
     }
+
+    /**
+     * Adviser-driven promotion: move hand-picked learners from the adviser's
+     * old-year section into a target section (theirs, in the active year).
+     * Same rules as promote() — graduating grades graduate instead, learners
+     * already enrolled in the target year are skipped, history is preserved.
+     *
+     * @param  array<int>  $enrollmentIds  source StudentEnrollment ids
+     * @return array{promoted:int, graduated:int, skipped:int}
+     */
+    public function promoteSelected(array $enrollmentIds, Section $target, User $actor): array
+    {
+        $result = ['promoted' => 0, 'graduated' => 0, 'skipped' => 0];
+
+        $enrollments = StudentEnrollment::with(['gradeLevel', 'student'])
+            ->whereIn('id', $enrollmentIds)
+            ->whereIn('status', [StudentEnrollment::STATUS_ENROLLED, StudentEnrollment::STATUS_TRANSFERRED_IN])
+            ->get();
+
+        $alreadyInTarget = StudentEnrollment::where('school_year_id', $target->school_year_id)
+            ->pluck('student_id')->flip();
+
+        DB::transaction(function () use ($enrollments, $target, &$result, $alreadyInTarget) {
+            foreach ($enrollments as $enrollment) {
+                if ($enrollment->gradeLevel->is_graduating) {
+                    $enrollment->update([
+                        'status' => StudentEnrollment::STATUS_GRADUATED,
+                        'promotion_status' => 'graduated',
+                    ]);
+                    $enrollment->student->update(['status' => 'graduated']);
+                    $this->audit->log('graduated', $enrollment, "{$enrollment->student->full_name} graduated");
+                    $result['graduated']++;
+
+                    continue;
+                }
+
+                if ($alreadyInTarget->has($enrollment->student_id)) {
+                    $result['skipped']++;
+
+                    continue;
+                }
+
+                StudentEnrollment::create([
+                    'student_id' => $enrollment->student_id,
+                    'school_year_id' => $target->school_year_id,
+                    'grade_level_id' => $target->grade_level_id,
+                    'section_id' => $target->id,
+                    'status' => StudentEnrollment::STATUS_ENROLLED,
+                    'promotion_status' => 'pending',
+                    'enrollment_date' => $target->schoolYear->start_date->toDateString(),
+                ]);
+                $enrollment->update(['promotion_status' => 'promoted']);
+                $alreadyInTarget->put($enrollment->student_id, true);
+                $result['promoted']++;
+            }
+
+            $this->audit->log('promotion', $target,
+                "Adviser promotion into {$target->name}: {$result['promoted']} promoted, {$result['graduated']} graduated, {$result['skipped']} skipped");
+        });
+
+        return $result;
+    }
 }

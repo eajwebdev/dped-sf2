@@ -7,7 +7,7 @@ use App\Http\Requests\SchoolRequest;
 use App\Models\School;
 use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
 class SchoolController extends Controller
 {
@@ -30,7 +30,7 @@ class SchoolController extends Controller
         $data = $request->safe()->except('logo');
 
         if ($request->hasFile('logo')) {
-            $data['logo_path'] = $request->file('logo')->store('school-logos', 'public');
+            $data['logo_path'] = $this->storeLogo($request);
         }
 
         $school = School::create($data);
@@ -50,16 +50,28 @@ class SchoolController extends Controller
         $data = $request->safe()->except('logo');
 
         if ($request->hasFile('logo')) {
-            if ($school->logo_path) {
-                Storage::disk('public')->delete($school->logo_path);
+            // Logos live directly in public/ (no storage:link needed) so the
+            // PDF renderer and web both read the same real file.
+            if ($school->logo_path && file_exists(public_path($school->logo_path))) {
+                @unlink(public_path($school->logo_path));
             }
-            $data['logo_path'] = $request->file('logo')->store('school-logos', 'public');
+            $data['logo_path'] = $this->storeLogo($request);
         }
 
         $school->update($data);
         $this->audit->updated($school, $original);
 
         return redirect()->route('admin.schools.index')->with('success', "{$school->name} updated.");
+    }
+
+    /** Save the uploaded logo under public/school-logos, returning its public-relative path. */
+    private function storeLogo(Request $request): string
+    {
+        $file = $request->file('logo');
+        $name = uniqid('school-', true).'.'.$file->getClientOriginalExtension();
+        $file->move(public_path('school-logos'), $name);
+
+        return 'school-logos/'.$name;
     }
 
     public function destroy(School $school): RedirectResponse
