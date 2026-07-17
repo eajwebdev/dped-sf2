@@ -5,7 +5,9 @@
     $section = $data['section'];
     $sy = $data['schoolYear'];
     $sum = $data['summary'];
-    $school = $section->school ?? null;
+    // The section's school, falling back to the logged-in teacher's school so
+    // the form always carries the branding of the school they belong to.
+    $school = $section->school ?? auth()->user()?->school;
     $adviser = $section->adviser?->full_name;
     $dec = fn ($v) => number_format((float) $v, 2);
 @endphp
@@ -45,6 +47,7 @@
         .val { border-bottom: 1px solid #000; display: inline-block; min-width: 60px; text-align: center; font-weight: bold; padding: 0 6px; }
 
         table.grid { border-collapse: collapse; width: 100%; margin-top: 4px; }
+        .grid th.band { background: #d9d9d9; font-size: 9px; letter-spacing: 1px; text-align: left; padding-left: 4px; }
         .grid th, .grid td { border: 1px solid #000; font-size: 8px; text-align: center; padding: 0 1px; height: 16px; }
         .grid th { font-weight: bold; }
         .grid th.col-name { white-space: nowrap; }
@@ -127,7 +130,9 @@
             </tr>
         </table>
 
-        {{-- ===== Attendance grid ===== --}}
+        {{-- ===== Attendance grids: one table per gender (Male A–Z first, then Female A–Z) ===== --}}
+        @foreach ([['label' => 'MALE', 'rows' => $data['males'], 'genderKey' => 'male'],
+                   ['label' => 'FEMALE', 'rows' => $data['females'], 'genderKey' => 'female']] as $grid)
         <table class="grid">
             <colgroup>
                 <col class="num"><col class="col-name">
@@ -135,6 +140,9 @@
                 <col class="tot"><col class="tot"><col class="col-remarks">
             </colgroup>
             <thead>
+                <tr>
+                    <th colspan="{{ 5 + max($nDays, 1) }}" class="band">{{ $grid['label'] }} (A–Z)</th>
+                </tr>
                 <tr>
                     <th rowspan="3">No.</th>
                     <th rowspan="3" class="col-name">NAME<br>(Last Name, First Name, Middle Name)</th>
@@ -154,9 +162,9 @@
                 </tr>
             </thead>
             <tbody>
-                @include('reports.sf2.partials.rows', ['rows' => $data['males'], 'label' => 'MALE', 'totals' => $data['dailyTotals'], 'genderKey' => 'male', 'days' => $days])
-                @include('reports.sf2.partials.rows', ['rows' => $data['females'], 'label' => 'FEMALE', 'totals' => $data['dailyTotals'], 'genderKey' => 'female', 'days' => $days])
+                @include('reports.sf2.partials.rows', ['rows' => $grid['rows'], 'label' => $grid['label'], 'totals' => $data['dailyTotals'], 'genderKey' => $grid['genderKey'], 'days' => $days])
 
+                @if ($grid['genderKey'] === 'female')
                 <tr class="totrow">
                     <td class="num">{{ count($data['males']) + count($data['females']) }}</td>
                     <td class="name totlabel">Combined TOTAL Per Day</td>
@@ -166,8 +174,10 @@
                     <td class="tot">{{ collect($data['males'])->sum('present') + collect($data['females'])->sum('present') }}</td>
                     <td class="remarks">&nbsp;</td>
                 </tr>
+                @endif
             </tbody>
         </table>
+        @endforeach
 
         {{-- ===== Footer: guidelines | codes+reasons | summary+signatures ===== --}}
         <table class="foot">
