@@ -1,4 +1,5 @@
 import './bootstrap';
+import './qr-scan';
 
 import Alpine from 'alpinejs';
 import intersect from '@alpinejs/intersect';

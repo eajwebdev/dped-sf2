@@ -65,7 +65,7 @@ class StudentController extends Controller
             'enrollments' => fn ($q) => $q->with(['schoolYear', 'gradeLevel', 'section'])->latest('enrollment_date'),
         ]);
 
-        $qrDataUri = $this->qr->dataUri($student->qr_token ?? (string) $student->id, 180);
+        $qrDataUri = $this->qr->dataUri($student->ensureQrToken(), 180);
 
         return view('admin.students.show', compact('student', 'qrDataUri'));
     }

@@ -46,6 +46,19 @@ class Student extends Model
         });
     }
 
+    /**
+     * Return the QR token, generating and persisting one for legacy rows
+     * created before tokens were auto-assigned.
+     */
+    public function ensureQrToken(): string
+    {
+        if (blank($this->qr_token)) {
+            $this->forceFill(['qr_token' => (string) Str::uuid()])->saveQuietly();
+        }
+
+        return $this->qr_token;
+    }
+
     public function enrollments(): HasMany
     {
         return $this->hasMany(StudentEnrollment::class);

@@ -51,7 +51,7 @@
         document.addEventListener('alpine:init', () => {
             window.Alpine.data('qrScanner', (config) => ({
                 cameraOn: false,
-                supported: 'BarcodeDetector' in window,
+                supported: window.qrScan.supported,
                 manual: '',
                 message: '',
                 ok: false,
@@ -62,14 +62,13 @@
 
                 async toggleCamera() {
                     if (this.cameraOn) { this.stopCamera(); return; }
-                    if (!this.supported) { this.flash(false, 'This browser has no barcode scanner. Use manual entry.'); return; }
+                    if (!this.supported) { this.flash(false, window.qrScan.unsupportedReason); return; }
                     try {
-                        this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                        this.$refs.video.srcObject = this.stream;
-                        this.detector = new BarcodeDetector({ formats: ['qr_code'] });
+                        this.stream = await window.qrScan.open(this.$refs.video);
+                        this.detector = window.qrScan.createEngine();
                         this.cameraOn = true;
                         this.loop();
-                    } catch (e) { this.flash(false, 'Could not access camera.'); }
+                    } catch (e) { this.flash(false, window.qrScan.errorMessage(e)); }
                 },
                 stopCamera() {
                     this.cameraOn = false;
@@ -78,8 +77,8 @@
                 async loop() {
                     if (!this.cameraOn) return;
                     try {
-                        const codes = await this.detector.detect(this.$refs.video);
-                        if (codes.length && !this.busy) { await this.submit(codes[0].rawValue); }
+                        const token = await this.detector.detect(this.$refs.video);
+                        if (token && !this.busy) { await this.submit(token); }
                     } catch (e) { /* frame not ready */ }
                     setTimeout(() => this.loop(), 600);
                 },

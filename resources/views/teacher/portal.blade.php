@@ -148,7 +148,7 @@
                 sections: config.sections,
                 sectionId: config.currentSectionId ? String(config.currentSectionId) : (config.sections.length === 1 ? String(config.sections[0].id) : ''),
                 cameraOn: false,
-                supported: 'BarcodeDetector' in window,
+                supported: window.qrScan.supported,
                 manual: '',
                 log: [],
                 stream: null,
@@ -169,14 +169,13 @@
                 },
                 async startCamera() {
                     if (!this.sectionId) return;
-                    if (!this.supported) { this.flash(false, 'Not supported', 'Use the code box below'); return; }
+                    if (!this.supported) { this.flash(false, 'Camera unavailable', window.qrScan.unsupportedReason); return; }
                     try {
-                        this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                        this.$refs.video.srcObject = this.stream;
-                        this.detector = new BarcodeDetector({ formats: ['qr_code'] });
+                        this.stream = await window.qrScan.open(this.$refs.video);
+                        this.detector = window.qrScan.createEngine();
                         this.cameraOn = true;
                         this.loop();
-                    } catch (e) { this.flash(false, 'Camera blocked', 'Allow camera access and retry'); }
+                    } catch (e) { this.flash(false, 'Camera blocked', window.qrScan.errorMessage(e)); }
                 },
                 stopCamera() {
                     this.cameraOn = false;
@@ -185,8 +184,8 @@
                 async loop() {
                     if (!this.cameraOn) return;
                     try {
-                        const codes = await this.detector.detect(this.$refs.video);
-                        if (codes.length && !this.busy) await this.submit(codes[0].rawValue);
+                        const token = await this.detector.detect(this.$refs.video);
+                        if (token && !this.busy) await this.submit(token);
                     } catch (e) { /* frame not ready */ }
                     setTimeout(() => this.loop(), 500);
                 },

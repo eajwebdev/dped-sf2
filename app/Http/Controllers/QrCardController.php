@@ -98,7 +98,7 @@ class QrCardController extends Controller
         $qr = imagecreatefromstring(
             (new Builder(
                 writer: new PngWriter,
-                data: $student->qr_token,
+                data: $student->ensureQrToken(),
                 errorCorrectionLevel: ErrorCorrectionLevel::High,
                 size: 340,
                 margin: 0,
