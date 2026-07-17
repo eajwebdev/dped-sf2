@@ -97,48 +97,57 @@
 
         <p class="mb-2 text-[11px] text-gray-400">Shortcuts: click a row, then press <b>P</b> Present · <b>A</b> Absent · <b>L</b> Late · <b>E</b> Excused · <b>H</b> Half-day · <b>↑/↓/Enter</b> to move.</p>
 
-        {{-- Grid --}}
-        <div class="overflow-auto rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800" style="max-height: 70vh">
-            <table class="min-w-full text-sm">
-                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-navy-900">
-                    <tr class="text-left text-xs uppercase tracking-wide text-gray-400">
-                        <th class="sticky left-0 z-20 bg-gray-50 dark:bg-navy-900 px-3 py-2 w-10">#</th>
-                        <th class="sticky left-10 z-20 bg-gray-50 dark:bg-navy-900 px-3 py-2 min-w-[16rem]">Learner</th>
-                        <th class="px-3 py-2 text-center">Status</th>
-                        <th class="px-3 py-2 min-w-[12rem]">Remarks</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-                    <template x-for="(row, i) in rows" :key="row.enrollment_id">
-                        <tr :data-row="i" @click="cursor = i"
-                            :class="cursor === i ? 'bg-brand-50/60 dark:bg-brand-500/10' : 'hover:bg-gray-50 dark:hover:bg-navy-700/30'">
-                            <td class="sticky left-0 z-10 px-3 py-2 text-gray-400"
-                                :class="cursor === i ? 'bg-brand-50 dark:bg-navy-800' : 'bg-white dark:bg-navy-800'" x-text="i + 1"></td>
-                            <td class="sticky left-10 z-10 px-3 py-2"
-                                :class="cursor === i ? 'bg-brand-50 dark:bg-navy-800' : 'bg-white dark:bg-navy-800'">
-                                <span class="font-medium" x-text="row.name"></span>
-                                <span class="block font-mono text-[11px] text-gray-400" x-text="row.lrn"></span>
-                            </td>
-                            <td class="px-3 py-2">
-                                <div class="flex items-center justify-center gap-1">
-                                    <template x-for="(meta, slug) in statuses" :key="slug">
-                                        <button type="button" @click="setStatus(i, slug)" :disabled="!editable"
-                                                class="h-8 w-8 rounded-md text-xs font-bold text-white transition disabled:cursor-not-allowed"
-                                                :class="row.status === slug ? meta.class + ' ring-2 ring-offset-1 ring-gray-400 dark:ring-offset-gray-800' : 'bg-gray-200 text-gray-500 dark:bg-navy-700 hover:opacity-80'"
-                                                x-text="meta.key" :title="meta.label"></button>
-                                    </template>
-                                </div>
-                            </td>
-                            <td class="px-3 py-2">
-                                <input type="text" x-model="row.remarks" @input="markDirty(row.enrollment_id)" :disabled="!editable"
-                                       placeholder="—" class="w-full rounded-md border-gray-200 dark:border-white/15 dark:bg-navy-900 text-xs py-1 focus:border-brand-500 focus:ring-brand-500 disabled:bg-gray-100 dark:disabled:bg-gray-800">
-                            </td>
-                        </tr>
-                    </template>
-                    <tr x-show="rows.length === 0"><td colspan="4" class="px-3 py-10 text-center text-gray-400">No active learners enrolled in this section.</td></tr>
-                </tbody>
-            </table>
-        </div>
+        {{-- Grids: one labeled table per gender, sharing the same state/shortcuts --}}
+        @foreach (['Male' => ['label' => 'Male', 'band' => 'bg-blue-600', 'icon' => '♂'],
+                   'Female' => ['label' => 'Female', 'band' => 'bg-pink-600', 'icon' => '♀']] as $gender => $meta)
+            <div class="mb-4 overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800">
+                <div class="flex items-center justify-between {{ $meta['band'] }} px-4 py-2 text-white">
+                    <span class="text-sm font-bold uppercase tracking-wide">{{ $meta['icon'] }} {{ $meta['label'] }}</span>
+                    <span class="text-xs font-medium opacity-90" x-text="group('{{ $gender }}').length + ' learner' + (group('{{ $gender }}').length === 1 ? '' : 's')"></span>
+                </div>
+                <div class="overflow-auto" style="max-height: 60vh">
+                    <table class="min-w-full text-sm">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-navy-900">
+                            <tr class="text-left text-xs uppercase tracking-wide text-gray-400">
+                                <th class="sticky left-0 z-20 bg-gray-50 dark:bg-navy-900 px-3 py-2 w-10">#</th>
+                                <th class="sticky left-10 z-20 bg-gray-50 dark:bg-navy-900 px-3 py-2 min-w-[16rem]">Learner</th>
+                                <th class="px-3 py-2 text-center">Status</th>
+                                <th class="px-3 py-2 min-w-[12rem]">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-white/5">
+                            <template x-for="(item, n) in group('{{ $gender }}')" :key="item.row.enrollment_id">
+                                <tr :data-row="item.idx" @click="cursor = item.idx"
+                                    :class="cursor === item.idx ? 'bg-brand-50/60 dark:bg-brand-500/10' : 'hover:bg-gray-50 dark:hover:bg-navy-700/30'">
+                                    <td class="sticky left-0 z-10 px-3 py-2 text-gray-400"
+                                        :class="cursor === item.idx ? 'bg-brand-50 dark:bg-navy-800' : 'bg-white dark:bg-navy-800'" x-text="n + 1"></td>
+                                    <td class="sticky left-10 z-10 px-3 py-2"
+                                        :class="cursor === item.idx ? 'bg-brand-50 dark:bg-navy-800' : 'bg-white dark:bg-navy-800'">
+                                        <span class="font-medium" x-text="item.row.name"></span>
+                                        <span class="block font-mono text-[11px] text-gray-400" x-text="item.row.lrn"></span>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <template x-for="(meta, slug) in statuses" :key="slug">
+                                                <button type="button" @click="setStatus(item.idx, slug)" :disabled="!editable"
+                                                        class="h-8 w-8 rounded-md text-xs font-bold text-white transition disabled:cursor-not-allowed"
+                                                        :class="item.row.status === slug ? meta.class + ' ring-2 ring-offset-1 ring-gray-400 dark:ring-offset-gray-800' : 'bg-gray-200 text-gray-500 dark:bg-navy-700 hover:opacity-80'"
+                                                        x-text="meta.key" :title="meta.label"></button>
+                                            </template>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="text" x-model="item.row.remarks" @input="markDirty(item.row.enrollment_id)" :disabled="!editable"
+                                               placeholder="—" class="w-full rounded-md border-gray-200 dark:border-white/15 dark:bg-navy-900 text-xs py-1 focus:border-brand-500 focus:ring-brand-500 disabled:bg-gray-100 dark:disabled:bg-gray-800">
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr x-show="group('{{ $gender }}').length === 0"><td colspan="4" class="px-3 py-6 text-center text-gray-400">No {{ strtolower($meta['label']) }} learners enrolled in this section.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endforeach
     </div>
 
     <script>
@@ -159,6 +168,13 @@
                 summary: config.summary,
                 timer: null,
 
+                // Rows of one gender with their global index kept, so the shared
+                // cursor/shortcuts work across both tables.
+                group(gender) {
+                    return this.rows
+                        .map((row, idx) => ({ row, idx }))
+                        .filter((item) => item.row.gender === gender);
+                },
                 init() {
                     window.addEventListener('beforeunload', (e) => {
                         if (Object.keys(this.dirty).length) { e.preventDefault(); e.returnValue = ''; }
