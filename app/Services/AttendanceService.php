@@ -41,7 +41,7 @@ class AttendanceService
             ->where('section_id', $section->id)
             ->whereIn('status', [StudentEnrollment::STATUS_ENROLLED, StudentEnrollment::STATUS_TRANSFERRED_IN])
             ->get()
-            ->sortBy(fn ($e) => $e->student->last_name.$e->student->first_name)
+            ->sortBy(fn ($e) => ($e->student->gender === 'Male' ? '0' : '1').$e->student->last_name.$e->student->first_name)
             ->values();
     }
 
