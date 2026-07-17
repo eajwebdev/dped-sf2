@@ -42,6 +42,9 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Teachers cannot delete their own account; removal is an admin action.
+        abort_unless($request->user()->isAdmin(), 403);
+
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);
