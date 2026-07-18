@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\SubscriptionPlans;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -40,15 +41,25 @@ class PayMongoService
     }
 
     /**
-     * Create a hosted checkout session for one month of subscription.
+     * Create a hosted checkout session for a plan bought for one or more months.
      *
+     * The whole purchase is charged as a single line item, because PayMongo
+     * multiplies amount x quantity and the advance-payment discount would be
+     * lost if the months were sent as the quantity.
+     *
+     * @param  array{months:int, monthly:int, subtotal:int, discount:int, promo:int, total:int, saved:int}  $quote
      * @return array{id: string, url: string}
      */
-    public function createCheckoutSession(User $user, string $reference): array
+    public function createCheckoutSession(User $user, string $reference, string $plan = SubscriptionPlans::STARTER, ?array $quote = null): array
     {
         if (! $this->isConfigured()) {
             throw new RuntimeException('PayMongo is not configured. Set the secret key under Admin → Settings → Payments.');
         }
+
+        $quote ??= SubscriptionPlans::quote($plan, 1);
+        $meta = SubscriptionPlans::find($plan);
+        $months = $quote['months'];
+        $label = $months === 1 ? '1 month' : $months.' months';
 
         $response = Http::withBasicAuth(Setting::paymongoSecretKey(), '')
             ->acceptJson()
@@ -57,12 +68,13 @@ class PayMongoService
                     'attributes' => [
                         'line_items' => [[
                             'currency' => 'PHP',
-                            'amount' => $this->price(),
-                            'name' => config('app.name').' — Monthly Subscription',
+                            'amount' => $quote['total'],
+                            'name' => config('app.name')." - {$meta['name']} Plan ({$label})",
                             'quantity' => 1,
                         ]],
                         'payment_method_types' => $this->availablePaymentMethods(),
-                        'description' => 'Monthly teacher subscription',
+                        'description' => "{$meta['name']} plan - {$label}"
+                            .($quote['discount'] > 0 ? " - {$quote['discount']}% advance discount" : ''),
                         'reference_number' => $reference,
                         'success_url' => route('subscribe.success'),
                         'cancel_url' => route('subscribe.cancel'),
@@ -109,8 +121,11 @@ class PayMongoService
     }
 
     /**
-     * Verify a webhook payload against the Paymongo-Signature header. Returns
-     * true when no webhook secret is configured (dev/sandbox convenience).
+     * Verify a webhook payload against the Paymongo-Signature header.
+     *
+     * An unsigned webhook grants paid access to whoever calls it, so a missing
+     * secret fails CLOSED everywhere except local/testing, where sandbox events
+     * are replayed by hand. Configure the secret before taking real payments.
      *
      * Header format: "t=<timestamp>,te=<test sig>,li=<live sig>".
      */
@@ -118,7 +133,7 @@ class PayMongoService
     {
         $secret = Setting::paymongoWebhookSecret();
         if (empty($secret)) {
-            return true;
+            return app()->environment(['local', 'testing']);
         }
 
         if (empty($signatureHeader)) {
