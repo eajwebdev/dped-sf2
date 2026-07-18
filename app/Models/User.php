@@ -61,6 +61,7 @@ class User extends Authenticatable
         'contact_number',
         'trial_ends_at',
         'subscribed_until',
+        'subscription_plan',
         'free_access',
         'approved_at',
         'approved_by',

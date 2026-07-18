@@ -63,6 +63,9 @@ export default {
                 lift: '0 4px 8px -2px rgb(9 20 61 / 0.08), 0 16px 32px -8px rgb(9 20 61 / 0.14)',
                 'glow-pink': '0 0 24px -4px rgb(252 15 93 / 0.45)',
                 'glow-pink-sm': '0 4px 14px -2px rgb(252 15 93 / 0.35)',
+                // Emerald marks the one School Form module that is live today.
+                'glow-emerald': '0 0 24px -4px rgb(52 211 153 / 0.45)',
+                'glow-emerald-sm': '0 4px 14px -2px rgb(52 211 153 / 0.35)',
             },
 
             keyframes: {

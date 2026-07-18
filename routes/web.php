@@ -23,6 +23,7 @@ use App\Http\Controllers\ClassSessionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrCardController;
 use App\Http\Controllers\QrCheckinController;
+use App\Http\Controllers\Sf1Controller;
 use App\Http\Controllers\Sf2Controller;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Teacher\CuttingClassController as TeacherCuttingClassController;
@@ -138,6 +139,10 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     Route::get('/attendance/{section}/scan', [QrCheckinController::class, 'scan'])->name('attendance.scan');
     Route::post('/attendance/{section}/checkin', [QrCheckinController::class, 'checkIn'])
         ->middleware('throttle:240,1')->name('attendance.checkin');
+
+    // SF1 School Register.
+    Route::get('/reports/sf1', [Sf1Controller::class, 'index'])->name('reports.sf1.index');
+    Route::get('/reports/sf1/{section}', [Sf1Controller::class, 'show'])->name('reports.sf1.show');
 
     // SF2 Daily Attendance Report of Learners.
     Route::get('/reports/sf2', [Sf2Controller::class, 'index'])->name('reports.sf2.index');

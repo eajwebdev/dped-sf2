@@ -1,7 +1,7 @@
 <x-app-shell title="My Students" :wide="true">
     <div x-data="resourceModal({
             base: '{{ url('students') }}',
-            defaults: { lrn: '', first_name: '', middle_name: '', last_name: '', suffix: '', gender: 'Male', birthdate: '', address: '', guardian_name: '', guardian_contact: '', status: 'active' },
+            defaults: { lrn: '', first_name: '', middle_name: '', last_name: '', suffix: '', gender: 'Male', birthdate: '', address: '', guardian_name: '', guardian_contact: '', status: 'active', birth_place: '', mother_tongue: '', ethnic_group: '', religion: '', address_street: '', address_barangay: '', address_municipality: '', address_province: '', father_name: '', mother_name: '', guardian_relationship: '' },
             autoOpen: @js($openModal ?? null),
             editRow: @js($editModel ?? null),
             reopen: @js($errors->any() ? ['id' => old('_edit_id') ?: null, 'old' => old()] : null),
@@ -131,10 +131,59 @@
                     <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Guardian Contact</label>
                     <input type="text" name="guardian_contact" x-model="form.guardian_contact" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
                 </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Guardian Relationship</label>
+                    <input type="text" name="guardian_relationship" x-model="form.guardian_relationship" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+
             </div>
             <div>
                 <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Address</label>
                 <input type="text" name="address" x-model="form.address" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+            </div>
+
+            {{-- SF1 (School Register) profile --}}
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Birth Place (Province)</label>
+                    <input type="text" name="birth_place" x-model="form.birth_place" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Mother Tongue</label>
+                    <input type="text" name="mother_tongue" x-model="form.mother_tongue" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">IP (Ethnic Group)</label>
+                    <input type="text" name="ethnic_group" x-model="form.ethnic_group" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Religion</label>
+                    <input type="text" name="religion" x-model="form.religion" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">House # / Street / Sitio / Purok</label>
+                    <input type="text" name="address_street" x-model="form.address_street" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Barangay</label>
+                    <input type="text" name="address_barangay" x-model="form.address_barangay" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Municipality / City</label>
+                    <input type="text" name="address_municipality" x-model="form.address_municipality" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Province</label>
+                    <input type="text" name="address_province" x-model="form.address_province" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Father's Name</label>
+                    <input type="text" name="father_name" x-model="form.father_name" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Mother's Maiden Name</label>
+                    <input type="text" name="mother_name" x-model="form.mother_name" class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                </div>
             </div>
         </x-form-modal>
     </div>

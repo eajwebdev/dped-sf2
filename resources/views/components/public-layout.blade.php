@@ -25,7 +25,8 @@
             </a>
             {{-- Absolute so the sections stay reachable from pages other than the landing page --}}
             <nav class="hidden items-center gap-7 text-sm font-medium text-slate-300 md:flex">
-                <a href="{{ url('/#features') }}" class="transition-colors hover:text-white">Features</a>
+                <a href="{{ url('/#features') }}" class="transition-colors hover:text-white">Modules</a>
+                <a href="{{ url('/#capabilities') }}" class="transition-colors hover:text-white">Platform</a>
                 <a href="{{ url('/#how-it-works') }}" class="transition-colors hover:text-white">How it works</a>
                 <a href="{{ url('/#pricing') }}" class="transition-colors hover:text-white">Pricing</a>
                 <a href="{{ url('/#faq') }}" class="transition-colors hover:text-white">FAQ</a>
@@ -48,16 +49,24 @@
                 <div>
                     <div class="flex items-center gap-2.5">
                         <img src="{{ asset('eaj-appicon.png') }}" alt="" class="h-9 w-9 rounded-xl object-contain">
-                        <span class="text-base font-extrabold tracking-tight text-white">{{ config('app.name') }}</span>
+                        <div>
+                            <span class="block text-base font-extrabold tracking-tight text-white">{{ config('app.name') }}</span>
+                            <span class="block text-xs font-medium text-slate-500">Automated School Forms System</span>
+                        </div>
                     </div>
-                    <p class="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
-                        QR attendance and DepEd SF2 reporting for Filipino teachers — scan in seconds, print-ready reports.
+                    <p class="mt-4 text-lg font-extrabold tracking-tight text-white">
+                        One Platform. <span class="text-gradient-pink">Every DepEd School Form.</span>
+                    </p>
+                    <p class="mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
+                        Automate DepEd School Forms. Simplify Classroom Reporting. — starting with QR attendance
+                        and one-click SF2, and expanding across the forms a class adviser is responsible for.
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-x-10 gap-y-4 text-sm">
                     <div class="flex flex-col gap-2.5">
                         <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Product</span>
-                        <a href="{{ url('/#features') }}" class="text-slate-300 transition-colors hover:text-white">Features</a>
+                        <a href="{{ url('/#features') }}" class="text-slate-300 transition-colors hover:text-white">Modules</a>
+                        <a href="{{ url('/#capabilities') }}" class="text-slate-300 transition-colors hover:text-white">Platform</a>
                         <a href="{{ url('/#pricing') }}" class="text-slate-300 transition-colors hover:text-white">Pricing</a>
                     </div>
                     <div class="flex flex-col gap-2.5">
@@ -68,7 +77,8 @@
                 </div>
             </div>
             <div class="mt-10 border-t border-white/10 pt-6 text-center text-xs text-slate-500">
-                © {{ date('Y') }} {{ config('app.name') }} · An EAJ Systems product · DepEd SF2 Attendance Management
+                © {{ date('Y') }} EAJ ASFS — Automated School Forms System · An EAJ Systems product ·
+                The Future of DepEd School Forms Automation
             </div>
         </div>
     </footer>

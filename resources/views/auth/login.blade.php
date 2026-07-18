@@ -23,7 +23,10 @@
             <div class="relative p-10">
                 <a href="{{ url('/') }}" class="inline-flex items-center gap-3">
                     <img src="{{ asset('eaj-appicon.png') }}" alt="" class="h-10 w-10 rounded-xl object-contain">
-                    <span class="text-lg font-extrabold tracking-tight text-white">{{ config('app.name') }}</span>
+                    <span class="flex flex-col">
+                        <span class="text-lg font-extrabold leading-tight tracking-tight text-white">{{ config('app.name') }}</span>
+                        <span class="text-[11px] font-medium text-slate-400">Automated School Forms System</span>
+                    </span>
                 </a>
             </div>
 
@@ -35,7 +38,8 @@
                     </p>
                     <p class="mt-4 text-sm leading-relaxed text-slate-300">
                         QR check-in for your whole class, automatic absences, and a print-ready
-                        DepEd School Form 2 — built for Filipino teachers.
+                        DepEd School Form 2 — the first module of EAJ ASFS, the Automated School
+                        Forms System built for Filipino teachers. More DepEd forms coming soon.
                     </p>
                 </blockquote>
 

@@ -9,8 +9,15 @@
         $isTeacher ? ['route' => 'teacher.students.index', 'match' => 'teacher.students.*', 'label' => 'Students'] : null,
         $isTeacher ? ['route' => 'teacher.subjects.index', 'match' => 'teacher.subjects.*', 'label' => 'Subjects'] : null,
         ['route' => 'attendance.index', 'match' => 'attendance.*', 'label' => 'Attendance'],
-        ['route' => 'reports.sf2.index', 'match' => 'reports.sf2.*', 'label' => 'SF2 Report'],
     ]));
+
+    // Reports live in their own dropdown so new School Forms can be added
+    // without pushing the rest of the nav off the bar.
+    $reports = [
+        ['route' => 'reports.sf1.index', 'match' => 'reports.sf1.*', 'label' => 'SF1 — School Register', 'desc' => 'Class master list'],
+        ['route' => 'reports.sf2.index', 'match' => 'reports.sf2.*', 'label' => 'SF2 — Daily Attendance', 'desc' => 'Monthly attendance report'],
+    ];
+    $reportsActive = collect($reports)->contains(fn ($r) => request()->routeIs($r['match']));
 @endphp
 
 <!DOCTYPE html>
@@ -27,7 +34,7 @@
 </head>
 <body class="h-full bg-slate-50 text-slate-800 antialiased dark:bg-navy-900 dark:text-slate-100">
 <div x-data="{ mobileNav: false }" class="min-h-full">
-    <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-navy-900/80">
+    <header class="relative sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-2xl dark:border-white/10 dark:bg-navy-900/80">
         <div class="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
             {{-- Logo only: the mark carries the brand, so the name is on the label instead. --}}
             <a href="{{ route($home) }}" class="flex shrink-0 items-center" aria-label="{{ config('app.name') }} — Home">
@@ -47,6 +54,52 @@
                         @endif
                     </a>
                 @endforeach
+
+                {{-- Reports dropdown: opens on hover, and on click for keyboard/touch --}}
+                <div class="relative" x-data="{ open: false }"
+                     @mouseenter="open = true" @mouseleave="open = false"
+                     @keydown.escape.window="open = false">
+                    <button type="button" @click="open = !open"
+                            :aria-expanded="open" aria-haspopup="true"
+                            class="relative flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 font-medium transition-all duration-200 {{ $reportsActive
+                                ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300'
+                                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5' }}">
+                        Reports
+                        <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-180' : ''"
+                             fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                        @if ($reportsActive)
+                            <span class="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-full bg-brand-500"></span>
+                        @endif
+                    </button>
+
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                         class="absolute left-0 top-full z-30 w-72 pt-2">
+                        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lift dark:border-white/10 dark:bg-navy-800">
+                            <p class="border-b border-slate-100 bg-slate-50 px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
+                                DepEd School Forms
+                            </p>
+                            @foreach ($reports as $r)
+                                <a href="{{ route($r['route']) }}"
+                                   class="flex items-start gap-3 px-4 py-3 transition-colors {{ request()->routeIs($r['match'])
+                                        ? 'bg-brand-50 dark:bg-brand-500/10'
+                                        : 'hover:bg-slate-50 dark:hover:bg-white/5' }}">
+                                    <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                                    </span>
+                                    <span class="min-w-0">
+                                        <span class="block text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $r['label'] }}</span>
+                                        <span class="block text-xs text-slate-500 dark:text-slate-400">{{ $r['desc'] }}</span>
+                                    </span>
+                                </a>
+                            @endforeach
+                            <p class="border-t border-slate-100 px-4 py-2.5 text-[11px] text-slate-400 dark:border-white/10">
+                                More School Forms coming soon.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </nav>
 
             @if ($activeSchoolYear ?? null)
@@ -160,8 +213,17 @@
             </div>
         </div>
 
-        {{-- Mobile nav panel --}}
-        <nav x-show="mobileNav" x-cloak x-transition class="border-t border-slate-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-navy-900 lg:hidden">
+        {{-- Mobile nav: absolutely positioned so opening it overlays the page
+             instead of growing the sticky header and pushing content down. --}}
+        <div x-show="mobileNav" x-cloak @click="mobileNav = false"
+             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-x-0 bottom-0 top-16 z-30 bg-slate-900/40 backdrop-blur-sm lg:hidden" aria-hidden="true"></div>
+
+        <nav x-show="mobileNav" x-cloak
+             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
+             class="absolute inset-x-0 top-full z-40 max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-slate-200 bg-white px-4 py-3 shadow-lift dark:border-white/10 dark:bg-navy-900 lg:hidden">
             <div class="flex flex-col gap-1 text-sm">
                 @foreach ($nav as $item)
                     <a href="{{ route($item['route']) }}"
@@ -171,6 +233,33 @@
                         {{ $item['label'] }}
                     </a>
                 @endforeach
+
+                {{-- Reports group: collapsed by default, open when you are inside one --}}
+                <div x-data="{ reportsOpen: {{ $reportsActive ? 'true' : 'false' }} }" class="mt-1">
+                    <button type="button" @click="reportsOpen = !reportsOpen"
+                            :aria-expanded="reportsOpen"
+                            class="flex w-full cursor-pointer items-center justify-between rounded-xl px-4 py-3 font-medium transition-colors {{ $reportsActive
+                                ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300'
+                                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5' }}">
+                        Reports
+                        <svg class="h-4 w-4 transition-transform duration-200" :class="reportsOpen ? 'rotate-180' : ''"
+                             fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </button>
+                    <div x-show="reportsOpen" x-collapse x-cloak>
+                        <div class="mt-1 space-y-1 border-l-2 border-slate-200 pl-3 dark:border-white/10">
+                            @foreach ($reports as $r)
+                                <a href="{{ route($r['route']) }}"
+                                   class="block rounded-xl px-4 py-2.5 transition-colors {{ request()->routeIs($r['match'])
+                                        ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300'
+                                        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5' }}">
+                                    <span class="block text-sm font-semibold">{{ $r['label'] }}</span>
+                                    <span class="block text-xs text-slate-400">{{ $r['desc'] }}</span>
+                                </a>
+                            @endforeach
+                            <p class="px-4 py-2 text-[11px] text-slate-400">More School Forms coming soon.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </nav>
     </header>

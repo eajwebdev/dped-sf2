@@ -1,4 +1,4 @@
-<x-public-layout title="QR Attendance for Every Classroom">
+<x-public-layout title="Automated School Forms System — Automate DepEd School Forms">
 
     {{-- ══════════════ HERO ══════════════ --}}
     <section class="bg-animated-gradient relative flex min-h-screen items-center overflow-hidden pt-16"
@@ -27,18 +27,42 @@
                         <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75"></span>
                         <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-500"></span>
                     </span>
-                    DepEd SF2-ready · Built for Filipino teachers
+                    🇵🇭 EAJ ASFS • DepEd-Compliant Automated School Forms System
                 </span>
 
                 <h1 class="stagger-1 mt-6 animate-slide-up text-4xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl xl:text-6xl">
-                    Attendance in seconds.<br>
-                    <span class="text-gradient-pink">SF2 reports</span> in one click.
+                    One Platform.<br>
+                    Every DepEd School Form.
                 </h1>
 
-                <p class="stagger-2 mx-auto mt-6 max-w-xl animate-slide-up text-lg leading-relaxed text-slate-300 lg:mx-0">
-                    Start a class, hand off the scanner, and let students tap in. Absences are marked
-                    automatically and your DepEd School Form 2 is ready to print — no paperwork, no late nights.
+                {{-- The strongest marketing line: kept visually loud, directly under the headline. --}}
+                <p class="stagger-1 mt-5 animate-slide-up text-2xl font-extrabold leading-snug tracking-tight text-white sm:text-3xl">
+                    Attendance in seconds.<br class="hidden sm:block">
+                    <span class="text-gradient-pink">SF2 reports</span> in one click.
                 </p>
+
+                <p class="stagger-2 mx-auto mt-6 max-w-xl animate-slide-up text-lg leading-relaxed text-slate-300 lg:mx-0">
+                    A modular platform that automates DepEd school reporting. Start a class, hand off the
+                    scanner, and let students tap in — absences are recorded automatically and your School
+                    Form 2 is ready to print in one click.
+                </p>
+
+                {{-- Compact module strip: one live module, the rest by code only (full names live in #features). --}}
+                <div class="stagger-3 mt-6 flex animate-slide-up flex-wrap items-center justify-center gap-2 lg:justify-start">
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-200 shadow-glow-emerald-sm">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        SF2 — Daily Attendance
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-200 shadow-glow-emerald-sm">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        SF1 — School Register
+                    </span>
+                    <span class="text-xs font-medium text-slate-500">then</span>
+                    @foreach (['SF3', 'SF5', 'SF8', 'SF9', 'SF10'] as $code)
+                        <span class="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-bold text-slate-400">{{ $code }}</span>
+                    @endforeach
+                    <a href="#features" class="text-xs font-semibold text-slate-400 underline decoration-brand-500/50 underline-offset-2 transition-colors hover:text-white">coming soon</a>
+                </div>
 
                 <div class="stagger-3 mt-9 flex animate-slide-up flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
                     <a href="{{ route('register') }}" class="btn-primary btn-lg w-full sm:w-auto">
@@ -49,61 +73,233 @@
                         I already have an account
                     </a>
                 </div>
-                <p class="stagger-4 mt-4 animate-slide-up text-xs text-slate-400">2-week free trial · No credit card required</p>
+                <p class="stagger-4 mx-auto mt-4 max-w-xl animate-slide-up text-xs leading-relaxed text-slate-400 lg:mx-0">
+                    Start with SF1 and SF2 today and seamlessly expand with additional DepEd School Form modules as they become available.
+                </p>
             </div>
 
-            {{-- Product mockup with mouse parallax --}}
+            @php
+                // The mock dashboard's module list. `available` gates whether the panel
+                // shows the real product or an explicit "coming soon" preview — an
+                // unreleased module must never look like a working screen.
+                // SF2 leads: it is the live module, so it is both the landing state and
+                // the start of the scroll sweep (which then runs forward, never backward).
+                $mockModules = [
+                    ['emoji' => '✅', 'code' => 'SF2',  'label' => 'Attendance',       'title' => 'Daily Attendance',           'blurb' => 'Daily attendance monitoring and automated SF2 generation.',                       'available' => true],
+                    ['emoji' => '📋', 'code' => 'SF1',  'label' => 'School Register',  'title' => 'School Register',            'blurb' => 'The class master list — learner profile, address, parents, and enrolment indicators.', 'available' => true],
+                    ['emoji' => '📚', 'code' => 'SF3',  'label' => 'Books Issued',     'title' => 'Books Issued & Returned',    'blurb' => 'Every textbook handed out, and what is still outstanding at year-end.',            'available' => false],
+                    ['emoji' => '🎓', 'code' => 'SF5',  'label' => 'Promotion',        'title' => 'Promotion & Progress',       'blurb' => 'End-of-year promotion, retention, and level of proficiency per learner.',          'available' => false],
+                    ['emoji' => '❤️', 'code' => 'SF8',  'label' => 'Health',           'title' => 'Health & Nutrition',         'blurb' => 'Height, weight, and BMI per learner, with nutritional status computed for you.',   'available' => false],
+                    ['emoji' => '📝', 'code' => 'SF9',  'label' => 'Report Card',      'title' => 'Learner Progress Card',      'blurb' => 'The report card parents receive each grading period — formerly Form 138.',         'available' => false],
+                    ['emoji' => '📖', 'code' => 'SF10', 'label' => 'Permanent Rec.',   'title' => 'Permanent Academic Record',  'blurb' => 'The transcript that follows a learner between schools — formerly Form 137.',       'available' => false],
+                ];
+            @endphp
+
+            {{-- Product mockup: mouse parallax + a module showcase that advances as you scroll --}}
             <div class="stagger-3 relative animate-slide-up"
                  :style="`transform: perspective(1200px) rotateY(${mx * -3}deg) rotateX(${my * 3}deg)`"
-                 style="transform-style: preserve-3d">
+                 style="transform-style: preserve-3d"
+                 x-data="{
+                     i: 0,
+                     n: {{ count($mockModules) }},
+                     modules: @js($mockModules),
+                     paused: false,
+                     reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+                     get current() { return this.modules[this.i] },
+                     init() {
+                         this.sync();
+                         window.addEventListener('scroll', () => this.sync(), { passive: true });
+                         // Idle at the top of the page, the showcase demos itself.
+                         if (! this.reduced) {
+                             setInterval(() => { if (! this.paused) this.i = (this.i + 1) % this.n }, 2800);
+                         }
+                     },
+                     sync() {
+                         // Above the fold the carousel autoplays; once scrolling starts the
+                         // scroll position drives which module is on screen.
+                         if (window.scrollY < 24) { this.paused = false; return }
+                         this.paused = true;
+                         const p = Math.min(window.scrollY / (window.innerHeight * 0.85), 1);
+                         this.i = Math.min(this.n - 1, Math.round(p * (this.n - 1)));
+                     },
+                     select(k) { this.paused = true; this.i = k },
+                 }">
+
                 {{-- Browser frame --}}
                 <div class="card-glass overflow-hidden rounded-card border-white/15 !bg-white/[0.07] shadow-2xl shadow-navy-950/60">
                     <div class="flex items-center gap-2 border-b border-white/10 px-4 py-3">
                         <span class="h-3 w-3 rounded-full bg-red-400/80"></span>
                         <span class="h-3 w-3 rounded-full bg-amber-400/80"></span>
                         <span class="h-3 w-3 rounded-full bg-emerald-400/80"></span>
-                        <span class="ml-3 flex-1 truncate rounded-lg bg-white/5 px-3 py-1 text-[11px] text-slate-400">sf2.eajwebdev.com</span>
+                        <span class="ml-3 flex-1 truncate rounded-lg bg-white/5 px-3 py-1 text-[11px] text-slate-400">asfs.eajwebdev.com</span>
                     </div>
-                    <div class="space-y-4 p-5">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="h-2.5 w-32 rounded-full bg-white/25"></div>
-                                <div class="mt-2 h-2 w-20 rounded-full bg-white/10"></div>
+
+                    <div class="flex">
+                        {{-- Module sidebar: highlight follows the showcase --}}
+                        <aside class="hidden w-36 shrink-0 border-r border-white/10 bg-navy-950/40 p-2.5 sm:block">
+                            <p class="px-1.5 pb-2 text-[9px] font-bold uppercase tracking-widest text-slate-500">Dashboard</p>
+                            <ul class="space-y-px">
+                                @foreach ($mockModules as $k => $m)
+                                    <li>
+                                        <button type="button" @click="select({{ $k }})"
+                                                class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left transition-all duration-300"
+                                                :class="i === {{ $k }}
+                                                    ? '{{ $m['available'] ? 'bg-gradient-to-r from-emerald-400/25 to-emerald-500/5 ring-1 ring-inset ring-emerald-400/40' : 'bg-gradient-to-r from-brand-500/25 to-brand-600/10 ring-1 ring-inset ring-brand-500/30' }}'
+                                                    : 'opacity-40 hover:opacity-70'">
+                                            <span class="text-[9px] leading-none">{{ $m['emoji'] }}</span>
+                                            <span class="min-w-0 flex-1 leading-tight">
+                                                <span class="block truncate text-[9px] font-bold transition-colors"
+                                                      :class="i === {{ $k }} ? 'text-white' : 'text-slate-400'">{{ $m['code'] }}</span>
+                                                <span class="block truncate text-[7px] transition-colors"
+                                                      :class="i === {{ $k }} ? '{{ $m['available'] ? 'text-emerald-200' : 'text-brand-200' }}' : 'text-slate-500'">{{ $m['label'] }}</span>
+                                            </span>
+                                            @unless ($m['available'])
+                                                <span class="shrink-0 text-[6px] font-bold uppercase tracking-wide text-slate-600">Soon</span>
+                                            @endunless
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </aside>
+
+                        {{-- Panel --}}
+                        <div class="min-h-[272px] min-w-0 flex-1 p-5">
+                            {{-- Breadcrumb tracks the active module --}}
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold">
+                                <span class="text-slate-500">Modules</span>
+                                <svg class="h-2.5 w-2.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+                                <span :class="current.available ? 'text-emerald-300' : 'text-brand-300'"
+                                      x-text="current.code + ' · ' + current.title">SF2 · Daily Attendance</span>
                             </div>
-                            <div class="rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2 text-xs font-bold text-white shadow-glow-pink-sm">Start Class</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-3">
-                            @foreach ([['Present', '42', 'bg-emerald-400', '91%'], ['Absent', '3', 'bg-red-400', '7%'], ['Late', '1', 'bg-amber-400', '2%']] as [$label, $n, $barClass, $w])
-                                <div class="rounded-2xl border border-white/10 bg-white/5 p-3.5">
-                                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ $label }}</div>
-                                    <div class="mt-1 text-2xl font-extrabold text-white">{{ $n }}</div>
-                                    <div class="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
-                                        <div class="h-full rounded-full {{ $barClass }}" style="width: {{ $w }}"></div>
+
+                            {{-- ── Live module: the real SF2 attendance dashboard ── --}}
+                            <div x-show="current.code === 'SF2'" x-transition:enter="transition duration-500 ease-out"
+                                 x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-4 space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="h-2.5 w-32 rounded-full bg-white/25"></div>
+                                        <div class="mt-2 h-2 w-20 rounded-full bg-white/10"></div>
                                     </div>
+                                    <div class="rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2 text-xs font-bold text-white shadow-glow-pink-sm">Start Class</div>
                                 </div>
-                            @endforeach
-                        </div>
-                        <div class="space-y-2">
-                            @foreach ([['JD', 'w-40', true], ['MA', 'w-32', true], ['RC', 'w-36', false]] as [$init, $w, $in])
-                                <div class="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.04] px-3.5 py-2.5">
-                                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-500/70 to-navy-500/70 text-[10px] font-bold text-white">{{ $init }}</span>
-                                    <div class="flex-1"><div class="h-2 {{ $w }} rounded-full bg-white/15"></div></div>
-                                    @if ($in)
-                                        <span class="flex items-center gap-1 rounded-full bg-emerald-400/15 px-2.5 py-1 text-[10px] font-bold text-emerald-300">
-                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                            Present
-                                        </span>
-                                    @else
-                                        <span class="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold text-slate-400">Scanning…</span>
-                                    @endif
+                                <div class="grid grid-cols-3 gap-3">
+                                    @foreach ([['Present', '42', 'bg-emerald-400', '91%'], ['Absent', '3', 'bg-red-400', '7%'], ['Late', '1', 'bg-amber-400', '2%']] as [$label, $n, $barClass, $w])
+                                        <div class="rounded-2xl border border-white/10 bg-white/5 p-3.5">
+                                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ $label }}</div>
+                                            <div class="mt-1 text-2xl font-extrabold text-white">{{ $n }}</div>
+                                            <div class="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
+                                                <div class="h-full rounded-full {{ $barClass }}" style="width: {{ $w }}"></div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
+                                <div class="space-y-2">
+                                    @foreach ([['JD', 'w-40', true], ['MA', 'w-32', true], ['RC', 'w-36', false]] as [$init, $w, $in])
+                                        <div class="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.04] px-3.5 py-2.5">
+                                            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-500/70 to-navy-500/70 text-[10px] font-bold text-white">{{ $init }}</span>
+                                            <div class="flex-1"><div class="h-2 {{ $w }} rounded-full bg-white/15"></div></div>
+                                            @if ($in)
+                                                <span class="flex items-center gap-1 rounded-full bg-emerald-400/15 px-2.5 py-1 text-[10px] font-bold text-emerald-300">
+                                                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                                    Present
+                                                </span>
+                                            @else
+                                                <span class="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold text-slate-400">Scanning…</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            {{-- ── Live module: the SF1 School Register ── --}}
+                            <div x-show="current.code === 'SF1'" x-cloak
+                                 x-transition:enter="transition duration-500 ease-out"
+                                 x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="h-2.5 w-28 rounded-full bg-white/25"></div>
+                                        <div class="mt-2 h-2 w-20 rounded-full bg-white/10"></div>
+                                    </div>
+                                    <div class="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-xs font-bold text-white">Generate SF1</div>
+                                </div>
+                                {{-- Register rows: LRN, name, sex, age --}}
+                                <div class="overflow-hidden rounded-xl border border-white/10">
+                                    <div class="flex items-center gap-2 border-b border-white/10 bg-white/[0.06] px-3 py-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                                        <span class="w-3">#</span><span class="w-14">LRN</span><span class="flex-1">Learner</span><span class="w-4">Sex</span><span class="w-5">Age</span>
+                                    </div>
+                                    @foreach ([['1', 'w-24', 'M', '12'], ['2', 'w-20', 'M', '11'], ['3', 'w-28', 'F', '12'], ['4', 'w-24', 'F', '11']] as [$n, $w, $sex, $age])
+                                        <div class="flex items-center gap-2 border-b border-white/5 px-3 py-1.5 last:border-0">
+                                            <span class="w-3 text-[9px] font-bold text-slate-500">{{ $n }}</span>
+                                            <span class="h-1.5 w-14 rounded-full bg-white/15"></span>
+                                            <span class="flex-1"><span class="block h-1.5 {{ $w }} rounded-full bg-white/20"></span></span>
+                                            <span class="w-4 text-[9px] font-bold {{ $sex === 'M' ? 'text-sky-300' : 'text-pink-300' }}">{{ $sex }}</span>
+                                            <span class="w-5 text-[9px] font-semibold text-slate-400">{{ $age }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="flex items-center gap-2 text-[9px] font-bold">
+                                    <span class="rounded-md bg-white/[0.06] px-2 py-1 text-slate-400">BoSY <span class="text-white">42</span></span>
+                                    <span class="rounded-md bg-white/[0.06] px-2 py-1 text-slate-400">EoSY <span class="text-white">41</span></span>
+                                    <span class="rounded-md bg-emerald-400/15 px-2 py-1 text-emerald-300">T/I 1</span>
+                                    <span class="rounded-md bg-amber-400/15 px-2 py-1 text-amber-300">T/O 2</span>
+                                </div>
+                            </div>
+
+                            {{-- ── Unreleased module: an explicit preview, never a fake working screen ── --}}
+                            <div x-show="! current.available" x-cloak
+                                 x-transition:enter="transition duration-500 ease-out"
+                                 x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="relative mt-4">
+                                {{-- Faint wireframe of the form, deliberately unreadable --}}
+                                <div class="space-y-2.5 opacity-25 blur-[1.5px]" aria-hidden="true">
+                                    <div class="flex gap-2">
+                                        <div class="h-8 flex-1 rounded-lg bg-white/10"></div>
+                                        <div class="h-8 w-16 rounded-lg bg-white/10"></div>
+                                    </div>
+                                    @foreach (['w-full', 'w-11/12', 'w-full', 'w-10/12'] as $w)
+                                        <div class="flex items-center gap-2">
+                                            <div class="h-6 w-6 shrink-0 rounded bg-white/10"></div>
+                                            <div class="h-6 {{ $w }} rounded bg-white/[0.07]"></div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                {{-- Coming-soon overlay --}}
+                                <div class="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+                                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-navy-900/80 text-lg shadow-lg backdrop-blur-sm"
+                                          x-text="current.emoji">📋</span>
+                                    <p class="mt-2.5 text-sm font-bold text-white">
+                                        <span x-text="current.code">SF1</span> —
+                                        <span x-text="current.title">School Register</span>
+                                    </p>
+                                    <p class="mt-1 max-w-[15rem] text-[11px] leading-relaxed text-slate-400" x-text="current.blurb"></p>
+                                    <span class="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.07] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-300">
+                                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                                        Coming soon
+                                    </span>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+
+                    {{-- Progress rail: which module of seven you are looking at --}}
+                    <div class="flex items-center gap-1 border-t border-white/10 px-4 py-2.5">
+                        @foreach ($mockModules as $k => $m)
+                            <button type="button" @click="select({{ $k }})" aria-label="Preview {{ $m['code'] }}"
+                                    class="h-1 flex-1 rounded-full transition-all duration-500"
+                                    :class="i === {{ $k }} ? '{{ $m['available'] ? 'bg-emerald-400' : 'bg-brand-500' }}' : 'bg-white/10 hover:bg-white/25'"></button>
+                        @endforeach
                     </div>
                 </div>
 
-                {{-- Floating QR card --}}
-                <div class="card-glass absolute -left-6 -top-8 hidden w-36 animate-float rounded-2xl border-white/15 !bg-white/10 p-3 text-center shadow-xl sm:block" style="transform: translateZ(60px)">
+                {{-- Attendance-specific props: only shown while the SF2 panel is up --}}
+                <div x-show="current.code === 'SF2'" x-cloak
+                     x-transition:enter="transition duration-500 ease-out" x-transition:enter-start="opacity-0 scale-90"
+                     x-transition:leave="transition duration-200 ease-in" x-transition:leave-end="opacity-0 scale-90"
+                     class="card-glass absolute -left-6 bottom-14 hidden w-32 animate-float rounded-2xl border-white/15 !bg-white/10 p-3 text-center shadow-xl lg:block"
+                     style="transform: translateZ(60px)">
                     <div class="mx-auto grid h-20 w-20 grid-cols-5 gap-0.5 rounded-lg bg-white p-1.5">
                         @foreach ([1,0,1,1,1, 0,1,0,0,1, 1,0,1,0,1, 1,0,0,1,0, 1,1,1,0,1] as $cell)
                             <span class="{{ $cell ? 'bg-navy-900' : 'bg-white' }} rounded-[2px]"></span>
@@ -112,8 +308,11 @@
                     <p class="mt-2 text-[10px] font-bold text-white">Scan to check in</p>
                 </div>
 
-                {{-- Floating success toast --}}
-                <div class="card-glass absolute -bottom-6 -right-4 hidden animate-float-slow items-center gap-2.5 rounded-2xl border-white/15 !bg-white/10 px-4 py-3 shadow-xl sm:flex" style="transform: translateZ(40px)">
+                <div x-show="current.code === 'SF2'" x-cloak
+                     x-transition:enter="transition duration-500 ease-out" x-transition:enter-start="opacity-0 scale-90"
+                     x-transition:leave="transition duration-200 ease-in" x-transition:leave-end="opacity-0 scale-90"
+                     class="card-glass absolute -bottom-6 -right-4 hidden animate-float-slow items-center gap-2.5 rounded-2xl border-white/15 !bg-white/10 px-4 py-3 shadow-xl lg:flex"
+                     style="transform: translateZ(40px)">
                     <span class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/20">
                         <svg class="h-4 w-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
                     </span>
@@ -150,26 +349,118 @@
     <section id="features" class="relative py-24">
         <div class="mx-auto max-w-7xl px-4 sm:px-6">
             <div class="mx-auto max-w-2xl text-center">
-                <span class="eyebrow">Features</span>
-                <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Everything a class adviser needs</h2>
-                <p class="mt-4 text-lg text-slate-400">From the first scan of the morning to the printed SF2 at month-end.</p>
+                <span class="eyebrow">School Form Modules</span>
+                <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">One platform, every DepEd School Form</h2>
+                <p class="mt-4 text-lg text-slate-400">
+                    Built for teachers, class advisers, registrars, and school heads. SF2 is live today —
+                    the rest of the adviser's forms are on the way.
+                </p>
             </div>
 
             @php
-                $features = [
-                    ['QR check-in', 'Start a class to generate a one-time QR key. The assigned scanner unlocks with the key, then students scan themselves present.', 'M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z'],
-                    ['Absent by default', 'Every learner in the section is pre-marked absent when class starts — only the ones who scan flip to present. No one slips through.', 'M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z'],
-                    ['SF2, done', 'Daily attendance rolls straight into a print-ready DepEd School Form 2 — open it as a PDF in the official format.', 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'],
-                    ['Your classes, your data', 'Manage your students and subjects for the active school year set by your school — everything scoped to you.', 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342'],
-                    ['Weekly schedule', 'Lay out your timetable once and launch the right class at the right time, straight from your dashboard.', 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5'],
-                    ['Works on any phone', 'Camera scanning runs in the browser — no app to install on the scanning device. Any Android or iPhone works.', 'M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3'],
+                // The adviser-owned DepEd School Forms. Only SF2 ships today; every other
+                // module is explicitly flagged so nothing unfinished reads as available.
+                $modules = [
+                    ['SF1', 'School Register', 'Your class master list — LRN, learner profile, four-part address, parents, and enrolment indicators, in the official DepEd layout.', true, 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z'],
+                    ['SF2', 'Daily Attendance', 'QR check-in, learners pre-marked absent, autosaving marking grid, and a print-ready DepEd School Form 2 PDF in one click.', true, 'M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z'],
+                    ['SF3', 'Books Issued &amp; Returned', 'Track every textbook and learning material handed out to your learners, and what is still outstanding at year-end.', false, 'M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25'],
+                    ['SF5', 'Promotion &amp; Learning Progress', 'End-of-year promotion, retention, and level of proficiency per learner, building on the class promotion tools you already use.', false, 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5'],
+                    ['SF8', 'Health &amp; Nutrition Report', 'Height, weight, and BMI per learner across the year, with nutritional status computed for you.', false, 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z'],
+                    ['SF9', 'Learner Progress Report Card', 'The report card parents receive each grading period — formerly Form 138 — generated from your class records.', false, 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'],
+                    ['SF10', 'Learner Permanent Record', 'The transcript that follows a learner between schools — formerly Form 137 — kept complete and always current.', false, 'M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z'],
                 ];
             @endphp
 
             <div class="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($features as $i => [$heading, $body, $icon])
+                @foreach ($modules as [$code, $name, $body, $available, $icon])
+                    <div class="group relative flex flex-col overflow-hidden rounded-card border p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5
+                                {{ $available
+                                    ? 'border-emerald-400/30 bg-emerald-400/[0.06] hover:border-emerald-400/60 hover:shadow-glow-emerald'
+                                    : 'border-white/10 bg-white/[0.04] hover:border-brand-500/40 hover:bg-white/[0.07] hover:shadow-glow-pink-sm' }}">
+                        {{-- Gradient border sweep --}}
+                        <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent {{ $available ? 'via-emerald-400/70' : 'via-brand-500/70 opacity-0 transition-opacity duration-300 group-hover:opacity-100' }} to-transparent"></div>
+
+                        <div class="flex items-start justify-between gap-3">
+                            <span class="flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-300 group-hover:scale-110
+                                         {{ $available
+                                             ? 'bg-emerald-400/15 text-emerald-300'
+                                             : 'bg-gradient-to-br from-brand-500/20 to-navy-500/20 text-brand-400 group-hover:from-brand-500 group-hover:to-brand-600 group-hover:text-white group-hover:shadow-glow-pink-sm' }}">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $icon }}"/></svg>
+                            </span>
+                            @if ($available)
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                                    <span class="relative flex h-1.5 w-1.5">
+                                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                                    </span>
+                                    Available
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.07] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                    Coming soon
+                                </span>
+                            @endif
+                        </div>
+
+                        <div class="mt-5 flex items-baseline gap-2">
+                            <span class="text-xl font-extrabold tracking-tight {{ $available ? 'text-white' : 'text-slate-300' }}">{{ $code }}</span>
+                            <span class="text-xs font-bold uppercase tracking-wider {{ $available ? 'text-emerald-300/70' : 'text-slate-600' }}">Module</span>
+                        </div>
+                        <h3 class="mt-1 text-base font-bold {{ $available ? 'text-emerald-100' : 'text-slate-200' }}">{!! $name !!}</h3>
+                        <p class="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{{ $body }}</p>
+
+                        @if ($available)
+                            <a href="{{ route('register') }}" class="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-emerald-300 transition-colors hover:text-emerald-200">
+                                Start using it today
+                                <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                            </a>
+                        @else
+                            <p class="mt-5 text-xs font-semibold text-slate-500">In development — not yet included</p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+
+            <p class="mx-auto mt-10 max-w-2xl text-center text-xs leading-relaxed text-slate-500">
+                School Forms 1 and 2 are included today. Every other module is in development and clearly marked
+                <span class="font-semibold text-slate-400">Coming soon</span> — it is not part of your subscription until released.
+            </p>
+        </div>
+    </section>
+
+    {{-- ══════════════ PLATFORM CAPABILITIES ══════════════ --}}
+    <section id="capabilities" class="relative border-t border-white/5 py-24">
+        <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            <div class="absolute -right-32 top-10 h-72 w-72 rounded-full bg-brand-500/10 blur-3xl"></div>
+        </div>
+        <div class="relative mx-auto max-w-7xl px-4 sm:px-6">
+            <div class="mx-auto max-w-2xl text-center">
+                <span class="eyebrow">Platform</span>
+                <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Built to scale with your school</h2>
+                <p class="mt-4 text-lg text-slate-400">
+                    One learner record, one school year, one account — shared by every module. Set your school
+                    up once and each DepEd form plugs into data you already have, instead of asking you to
+                    encode the same learners again.
+                </p>
+            </div>
+
+            @php
+                // Platform-level capabilities: these describe the shared foundation behind
+                // every form, not any single module's features.
+                $capabilities = [
+                    ['One learner record', 'Enrol a learner once and every form draws from the same profile, LRN, and section. No re-encoding the same class for each new form.', 'M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z'],
+                    ['Totals computed for you', 'Counts, tallies, averages, and percentages are worked out from your records — every form arrives with its summary already filled in.', 'M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm2.498-4.5h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm2.504-2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5ZM8.25 6h7.5v2.25h-7.5V6ZM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0 0 12 2.25Z'],
+                    ['Official DepEd output', 'Records roll straight into the official form layout — a PDF you can print and submit, carrying your school name, School ID, and logo.', 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'],
+                    ['Your school, your data', 'Multi-school by design: each school keeps its own logo, active school year, and records — scoped and isolated from every other school.', 'M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z'],
+                    ['Roles that fit a school', 'Administrators manage schools, school years, and sections. Advisers see only their own classes — the same permissions apply to every form.', 'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z'],
+                    ['Nothing to install', 'Everything runs in the browser on any phone, tablet, or laptop — including camera scanning. No app, no setup on the devices you already own.', 'M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3'],
+                ];
+            @endphp
+
+            <div class="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($capabilities as [$heading, $body, $icon])
                     <div class="group relative overflow-hidden rounded-card border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-500/40 hover:bg-white/[0.07] hover:shadow-glow-pink-sm">
-                        {{-- Gradient border sweep on hover --}}
                         <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                         <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500/20 to-navy-500/20 text-brand-400 transition-all duration-300 group-hover:scale-110 group-hover:from-brand-500 group-hover:to-brand-600 group-hover:text-white group-hover:shadow-glow-pink-sm">
                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $icon }}"/></svg>
@@ -186,7 +477,7 @@
     <section class="border-y border-white/5 bg-gradient-to-b from-navy-950/60 to-transparent py-16">
         <div class="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-4 text-center sm:px-6 lg:grid-cols-4"
              x-data="{ shown: false }" x-intersect.once="shown = true">
-            @foreach ([['3', 's', 'per student scan'], ['100', '%', 'official SF2 format'], ['14', ' days', 'free on approval'], ['0', '', 'apps to install']] as $i => [$n, $suffix, $label])
+            @foreach ([['3', 's', 'per student scan'], ['100', '%', 'official DepEd format'], ['2', '', 'forms live today'], ['0', '', 'apps to install']] as $i => [$n, $suffix, $label])
                 <div>
                     <p class="text-4xl font-extrabold tabular-nums text-white sm:text-5xl"
                        x-data="{ v: 0 }"
@@ -205,6 +496,7 @@
             <div class="mx-auto max-w-2xl text-center">
                 <span class="eyebrow">How it works</span>
                 <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Four steps to a finished SF2</h2>
+                <p class="mt-4 text-lg text-slate-400">The same setup carries over to every module released after it.</p>
             </div>
 
             @php
@@ -241,45 +533,130 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6">
             <div class="mx-auto max-w-2xl text-center">
                 <span class="eyebrow">Pricing</span>
-                <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">One plan. Everything included.</h2>
-                <p class="mt-4 text-lg text-slate-400">Per teacher, starts after your 2-week free trial.</p>
+                <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Pick a plan. Pay ahead, pay less.</h2>
+                <p class="mt-4 text-lg text-slate-400">
+                    Per teacher, starting after your 2-week free trial. Pay several months up front and save
+                    {{ \App\Support\SubscriptionPlans::DISCOUNT_PER_EXTRA_MONTH }}% for every extra month, up to
+                    {{ \App\Support\SubscriptionPlans::MAX_DISCOUNT_PERCENT }}%.
+                </p>
             </div>
 
-            <div class="relative mx-auto mt-14 max-w-md">
-                <div class="absolute -inset-px rounded-[20px] bg-gradient-to-b from-brand-500 via-brand-500/40 to-navy-500/40"></div>
-                <div class="relative rounded-[19px] bg-navy-900 p-8 text-center">
-                    <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-glow-pink-sm">Most popular</span>
-                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Teacher Plan</h3>
+            @php
+                // Prices come from the same source the checkout uses, so this page
+                // can never advertise an amount the payment page won't honour.
+                $plans = \App\Support\SubscriptionPlans::class;
+                $tiers = $plans::all();
+                $featured = $plans::STARTER;
+            @endphp
+
+            <div class="mt-14 grid items-start gap-6 lg:grid-cols-3">
+                @foreach ($tiers as $key => $tier)
                     @php
-                        // Read the live price so the page can never advertise a stale amount.
-                        $listPrice = \App\Models\Setting::priceCentavos() / 100;
-                        $planPrice = \App\Models\Setting::effectivePriceCentavos() / 100;
-                        $planDiscount = \App\Models\Setting::discountPercent();
+                        $price = $plans::monthlyPrice($key) / 100;
+                        $isFeatured = $key === $featured;
                     @endphp
-                    <div class="mt-5 flex items-end justify-center gap-1">
-                        <span class="text-6xl font-extrabold tracking-tight text-white">₱{{ number_format($planPrice, 0) }}</span>
-                        <span class="mb-2 text-sm text-slate-400">/ month</span>
-                    </div>
-                    @if ($planDiscount > 0)
-                        <p class="mt-2 flex items-center justify-center gap-2 text-sm">
-                            <span class="text-slate-500 line-through">₱{{ number_format($listPrice, 0) }}</span>
-                            <span class="rounded-full bg-brand-500/15 px-2.5 py-0.5 text-xs font-bold text-brand-300">Save {{ $planDiscount }}%</span>
-                        </p>
+
+                    @if ($isFeatured)
+                        {{-- Featured tier keeps the gradient border treatment --}}
+                        <div class="relative lg:order-1">
+                            <div class="absolute -inset-px rounded-[20px] bg-gradient-to-b from-brand-500 via-brand-500/40 to-navy-500/40"></div>
+                            <div class="relative flex h-full flex-col rounded-[19px] bg-navy-900 p-8">
+                                <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-glow-pink-sm">Most popular</span>
+                                <div class="text-center">
+                                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ $tier['name'] }} Plan</h3>
+                                    <div class="mt-5 flex items-end justify-center gap-1">
+                                        <span class="text-5xl font-extrabold tracking-tight text-white sm:text-6xl">₱{{ number_format($price, 0) }}</span>
+                                        <span class="mb-2 text-sm text-slate-400">/ month</span>
+                                    </div>
+                                    <p class="mt-3 text-sm leading-relaxed text-slate-400">{{ $tier['tagline'] }}</p>
+                                </div>
+                                <ul class="mt-8 flex-1 space-y-3.5 text-left text-sm text-slate-300">
+                                    @foreach ($tier['perks'] as $perk)
+                                        <li class="flex items-start gap-3">
+                                            <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/15">
+                                                <svg class="h-3 w-3 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                            </span>
+                                            {{ $perk }}
+                                        </li>
+                                    @endforeach
+                                    <li class="flex items-start gap-3">
+                                        <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/15">
+                                            <svg class="h-3 w-3 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                        </span>
+                                        2-week free trial on approval
+                                    </li>
+                                </ul>
+                                <a href="{{ route('register') }}" class="btn-primary btn-lg mt-9 w-full">Create your account</a>
+                                <p class="mt-3 text-center text-xs text-slate-500">No credit card required for the trial.</p>
+                            </div>
+                        </div>
+                    @else
+                        <div class="relative flex h-full flex-col overflow-hidden rounded-card border border-white/10 bg-white/[0.04] p-8 backdrop-blur-sm transition-all duration-300 hover:border-brand-500/40 hover:bg-white/[0.07] {{ $key === $plans::PROFESSIONAL ? 'lg:order-2' : 'lg:order-3' }}">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ $tier['name'] }} Plan</h3>
+                            <div class="mt-5 flex items-end gap-1">
+                                <span class="text-4xl font-extrabold tracking-tight text-white">₱{{ number_format($price, 0) }}</span>
+                                <span class="mb-1.5 text-sm text-slate-400">/ month</span>
+                            </div>
+                            <p class="mt-3 text-sm leading-relaxed text-slate-400">{{ $tier['tagline'] }}</p>
+                            <ul class="mt-8 flex-1 space-y-3.5 text-left text-sm">
+                                @foreach ($tier['perks'] as $i => $perk)
+                                    @php
+                                        // Only the "everything in …" roll-up is live today; the rest
+                                        // depend on School Form modules that have not shipped.
+                                        $live = str_starts_with($perk, 'Everything in');
+                                    @endphp
+                                    <li class="flex items-start gap-3 {{ $live ? 'text-slate-300' : 'text-slate-500' }}">
+                                        <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full {{ $live ? 'bg-emerald-400/15' : 'bg-white/[0.06]' }}">
+                                            @if ($live)
+                                                <svg class="h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                            @else
+                                                <svg class="h-3 w-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                            @endif
+                                        </span>
+                                        <span>
+                                            {{ $perk }}
+                                            @unless ($live)
+                                                <span class="ml-1 rounded bg-white/[0.07] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-500">On release</span>
+                                            @endunless
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            <a href="{{ route('register') }}" class="btn btn-lg mt-9 w-full border border-white/15 text-slate-200 hover:bg-white/5">Create your account</a>
+                            <p class="mt-3 text-center text-xs text-slate-500">Includes every module that is live today.</p>
+                        </div>
                     @endif
-                    <ul class="mt-8 space-y-3.5 text-left text-sm text-slate-300">
-                        @foreach (['2-week free trial on approval', 'Unlimited classes & students', 'QR attendance + printable QR ID cards', 'DepEd SF2 — print-ready PDF', 'Weekly schedule & scan portal', 'Cancel anytime — renew when you need it'] as $perk)
-                            <li class="flex items-start gap-3">
-                                <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/15">
-                                    <svg class="h-3 w-3 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                </span>
-                                {{ $perk }}
-                            </li>
-                        @endforeach
-                    </ul>
-                    <a href="{{ route('register') }}" class="btn-primary btn-lg mt-9 w-full">Create your account</a>
-                    <p class="mt-3 text-xs text-slate-500">No credit card required for the trial.</p>
+                @endforeach
+            </div>
+
+            {{-- Advance-payment savings table --}}
+            <div class="mx-auto mt-12 max-w-3xl rounded-card border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm">
+                <p class="text-center text-sm font-bold text-white">Pay ahead and save</p>
+                <p class="mt-1 text-center text-xs text-slate-400">
+                    Choose 1–{{ $plans::MAX_MONTHS }} months at checkout. The discount applies to the whole purchase.
+                </p>
+                <div class="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
+                    @foreach ([1, 3, 6, 9, 12] as $m)
+                        @php $q = $plans::quote($featured, $m); @endphp
+                        <div class="rounded-xl border {{ $q['discount'] > 0 ? 'border-emerald-400/25 bg-emerald-400/[0.06]' : 'border-white/10 bg-white/[0.03]' }} px-3 py-3 text-center">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ $m }} {{ $m === 1 ? 'month' : 'months' }}</p>
+                            <p class="mt-1 text-lg font-extrabold text-white">₱{{ number_format($q['total'] / 100, 0) }}</p>
+                            <p class="mt-0.5 text-[10px] font-bold {{ $q['discount'] > 0 ? 'text-emerald-300' : 'text-slate-500' }}">
+                                {{ $q['discount'] > 0 ? '−'.$q['discount'].'%' : 'standard' }}
+                            </p>
+                        </div>
+                    @endforeach
+                    <div class="col-span-3 flex items-center justify-center rounded-xl border border-dashed border-white/10 px-3 py-3 text-center sm:col-span-1">
+                        <p class="text-[10px] leading-relaxed text-slate-400">Starter plan shown</p>
+                    </div>
                 </div>
             </div>
+
+            <p class="mx-auto mt-8 max-w-2xl text-center text-xs leading-relaxed text-slate-500">
+                Every plan includes each School Form module that is already live. Items marked
+                <span class="font-semibold text-slate-400">On release</span> unlock automatically when that
+                module ships — you are never billed separately for it.
+            </p>
         </div>
     </section>
 
@@ -293,10 +670,11 @@
 
             @php
                 $faqs = [
+                    ['Which School Form modules can I use today?', 'Two are live: SF1 — School Register and SF2 — Daily Attendance, both generated as print-ready PDFs in the official DepEd layout. SF3, SF5, SF8, SF9, and SF10 are in development and clearly marked Coming soon across this page. You are never billed for a module before it is released.'],
                     ['Do students need to install an app?', 'No. Scanning runs entirely in the browser of the scanning device. Students just present their QR ID card — printed straight from the system.'],
-                    ['Is the SF2 report really DepEd-compliant?', 'Yes. Attendance rolls into the official School Form 2 layout, generated as a PDF you can view and print.'],
-                    ['What happens when my trial ends?', 'Your data stays safe. Subscribe for ₱'.number_format(\App\Models\Setting::effectivePriceCentavos() / 100, 0).'/month to keep recording attendance — you can renew only for the months you need.'],
-                    ['Can I use it for multiple sections and subjects?', 'Yes — unlimited classes, sections, subjects, and students are included in the single plan.'],
+                    ['Is the SF2 report really DepEd-compliant?', 'Yes. Attendance rolls into the official School Form 2 layout, generated as a PDF you can view and print, carrying your school\'s name, School ID, and logo.'],
+                    ['What happens when my trial ends?', 'Your data stays safe. Subscribe from ₱'.number_format(\App\Support\SubscriptionPlans::monthlyPrice(\App\Support\SubscriptionPlans::STARTER) / 100, 0).'/month to keep recording attendance. You choose how many months to buy — 1 to '.\App\Support\SubscriptionPlans::MAX_MONTHS.' — and each extra month paid in advance takes another '.\App\Support\SubscriptionPlans::DISCOUNT_PER_EXTRA_MONTH.'% off, up to '.\App\Support\SubscriptionPlans::MAX_DISCOUNT_PERCENT.'%.'],
+                    ['Can I use it for multiple sections and subjects?', 'Yes — unlimited classes, sections, subjects, and students are included in the Starter Plan.'],
                     ['What devices do I need?', 'Any phone, tablet, or laptop with a camera and a browser. One device acts as the class scanner; you manage everything from your own dashboard.'],
                 ];
             @endphp
@@ -331,11 +709,12 @@
                 Ready to leave the paper logbook behind?
             </h2>
             <p class="relative mx-auto mt-4 max-w-xl text-lg text-slate-300">
-                Join teachers who finish their SF2 in one click, not one weekend.
+                Join teachers who finish their SF2 in one click, not one weekend — on a platform
+                built to take on every DepEd School Form next.
             </p>
             <div class="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a href="{{ route('register') }}" class="btn-primary btn-lg w-full sm:w-auto">Start your free trial</a>
-                <a href="#features" class="btn btn-lg w-full border border-white/15 text-slate-200 hover:bg-white/5 sm:w-auto">See the features</a>
+                <a href="#features" class="btn btn-lg w-full border border-white/15 text-slate-200 hover:bg-white/5 sm:w-auto">See the modules</a>
             </div>
         </div>
     </section>

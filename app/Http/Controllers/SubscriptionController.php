@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\SubscriptionPayment;
 use App\Services\PayMongoService;
+use App\Support\SubscriptionPlans;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Throwable;
 
 class SubscriptionController extends Controller
@@ -37,13 +39,27 @@ class SubscriptionController extends Controller
             return redirect()->route('dashboard');
         }
 
+        // Pre-compute a quote per plan per month count so the page can show a
+        // live total without a round trip, and the server stays the authority.
+        $quotes = [];
+        foreach (SubscriptionPlans::keys() as $plan) {
+            for ($m = 1; $m <= SubscriptionPlans::MAX_MONTHS; $m++) {
+                $quotes[$plan][$m] = SubscriptionPlans::quote($plan, $m);
+            }
+        }
+
         return view('subscribe.show', [
-            'price' => $this->paymongo->price() / 100,
+            'plans' => SubscriptionPlans::all(),
+            'quotes' => $quotes,
+            'maxMonths' => SubscriptionPlans::MAX_MONTHS,
+            'perMonthDiscount' => SubscriptionPlans::DISCOUNT_PER_EXTRA_MONTH,
+            'maxDiscount' => SubscriptionPlans::MAX_DISCOUNT_PERCENT,
+            'currentPlan' => $user->subscription_plan ?? SubscriptionPlans::STARTER,
             'configured' => $this->paymongo->isConfigured(),
         ]);
     }
 
-    /** Start a PayMongo checkout for one month. */
+    /** Start a PayMongo checkout for a plan bought for one or more months. */
     public function checkout(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -52,16 +68,28 @@ class SubscriptionController extends Controller
             return back()->with('error', 'Online payment is not available yet. Please contact your administrator.');
         }
 
+        $validated = $request->validate([
+            'plan' => ['required', Rule::in(SubscriptionPlans::keys())],
+            'months' => ['required', 'integer', 'min:1', 'max:'.SubscriptionPlans::MAX_MONTHS],
+        ]);
+
+        // The quote is recomputed here so a tampered form cannot set the price.
+        $plan = $validated['plan'];
+        $quote = SubscriptionPlans::quote($plan, (int) $validated['months']);
+
         $payment = SubscriptionPayment::create([
             'user_id' => $user->id,
             'provider' => 'paymongo',
-            'amount' => $this->paymongo->price(),
+            'plan' => $plan,
+            'months' => $quote['months'],
+            'amount' => $quote['total'],
+            'discount_percent' => $quote['discount'],
             'currency' => 'PHP',
             'status' => SubscriptionPayment::STATUS_PENDING,
         ]);
 
         try {
-            $session = $this->paymongo->createCheckoutSession($user, (string) $payment->id);
+            $session = $this->paymongo->createCheckoutSession($user, (string) $payment->id, $plan, $quote);
         } catch (Throwable $e) {
             Log::error('PayMongo checkout failed', ['user' => $user->id, 'error' => $e->getMessage()]);
             $payment->update(['status' => SubscriptionPayment::STATUS_FAILED]);
@@ -120,7 +148,11 @@ class SubscriptionController extends Controller
         }
 
         $user = $payment->user;
-        $newUntil = $user->extendSubscription(1);
+        $months = max(1, (int) $payment->months);
+        $newUntil = $user->extendSubscription($months);
+
+        // Record which tier the access came from so entitlements can key off it.
+        $user->forceFill(['subscription_plan' => $payment->plan])->save();
 
         $payment->update([
             'status' => SubscriptionPayment::STATUS_PAID,
@@ -132,6 +164,8 @@ class SubscriptionController extends Controller
 
         Log::info('Subscription extended via PayMongo', [
             'user' => $user->id,
+            'plan' => $payment->plan,
+            'months' => $months,
             'until' => $newUntil->toDateString(),
         ]);
 
