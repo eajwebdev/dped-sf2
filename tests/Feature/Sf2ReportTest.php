@@ -87,40 +87,30 @@ class Sf2ReportTest extends TestCase
         $this->assertSame(1, $f1Row['tardy']);
     }
 
-    public function test_preview_renders_with_learner_and_totals(): void
-    {
-        $e = $this->enroll('Male');
-        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
-
-        $this->actingAs($admin)
-            ->get(route('reports.sf2.show', ['section' => $this->section, 'year' => 2025, 'month' => 6]))
-            ->assertOk()
-            ->assertSee($e->student->last_name)
-            ->assertSee('Daily Attendance Report of Learners');
-    }
-
-    public function test_pdf_export_returns_a_pdf(): void
+    /** The SF2 renders straight to an inline PDF — there is no HTML preview or Excel export. */
+    public function test_report_streams_an_inline_pdf(): void
     {
         $this->enroll('Male');
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
         $response = $this->actingAs($admin)
-            ->get(route('reports.sf2.pdf', ['section' => $this->section, 'year' => 2025, 'month' => 6]));
+            ->get(route('reports.sf2.show', ['section' => $this->section, 'year' => 2025, 'month' => 6]));
 
         $response->assertOk();
         $this->assertSame('application/pdf', $response->headers->get('content-type'));
+        $this->assertStringStartsWith('%PDF', $response->getContent());
     }
 
-    public function test_excel_export_downloads(): void
+    public function test_report_generation_is_audited(): void
     {
-        $this->enroll('Female');
+        $this->enroll('Male');
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
-        $response = $this->actingAs($admin)
-            ->get(route('reports.sf2.excel', ['section' => $this->section, 'year' => 2025, 'month' => 6]));
+        $this->actingAs($admin)
+            ->get(route('reports.sf2.show', ['section' => $this->section, 'year' => 2025, 'month' => 6]))
+            ->assertOk();
 
-        $response->assertOk();
-        $this->assertStringContainsString('spreadsheetml', $response->headers->get('content-type'));
+        $this->assertDatabaseHas('audit_logs', ['action' => 'report_generated']);
     }
 
     public function test_unassigned_teacher_cannot_open_report(): void

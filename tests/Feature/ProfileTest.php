@@ -61,12 +61,12 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
-    public function test_user_can_delete_their_account(): void
+    public function test_admin_can_delete_their_account(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
         $response = $this
-            ->actingAs($user)
+            ->actingAs($admin)
             ->delete('/profile', [
                 'password' => 'password',
             ]);
@@ -76,15 +76,15 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+        $this->assertNull($admin->fresh());
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
-        $user = User::factory()->create();
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
         $response = $this
-            ->actingAs($user)
+            ->actingAs($admin)
             ->from('/profile')
             ->delete('/profile', [
                 'password' => 'wrong-password',
@@ -94,6 +94,18 @@ class ProfileTest extends TestCase
             ->assertSessionHasErrorsIn('userDeletion', 'password')
             ->assertRedirect('/profile');
 
-        $this->assertNotNull($user->fresh());
+        $this->assertNotNull($admin->fresh());
+    }
+
+    /** Self-service deletion is an admin action — teachers are removed by an admin. */
+    public function test_teacher_cannot_delete_their_own_account(): void
+    {
+        $teacher = User::factory()->create(['role' => User::ROLE_TEACHER]);
+
+        $this->actingAs($teacher)
+            ->delete('/profile', ['password' => 'password'])
+            ->assertForbidden();
+
+        $this->assertNotNull($teacher->fresh());
     }
 }

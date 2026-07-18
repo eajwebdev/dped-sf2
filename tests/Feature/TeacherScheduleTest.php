@@ -121,23 +121,21 @@ class TeacherScheduleTest extends TestCase
         ])->assertSessionHasErrors('section_id');
     }
 
-    public function test_scan_portal_loads_and_preselects_current_class(): void
+    /**
+     * The scan portal is key-gated rather than login-gated: /portal now lands
+     * on class-key entry, so the class key is the credential and no schedule
+     * lookup happens up front.
+     */
+    public function test_scan_portal_redirects_to_class_key_entry(): void
     {
-        $now = now();
-
-        TeacherSchedule::create([
-            'teacher_id' => $this->teacher->id,
-            'school_year_id' => $this->year->id,
-            'section_id' => $this->section->id,
-            'day_of_week' => $now->isoWeekday(),
-            'start_time' => $now->copy()->subHour()->format('H:i:s'),
-            'end_time' => $now->copy()->addHour()->format('H:i:s'),
-        ]);
-
         $this->actingAs($this->teacherUser)
             ->get(route('portal'))
-            ->assertOk()
-            ->assertSee('Happening now');
+            ->assertRedirect('/class-scan');
+    }
+
+    public function test_class_key_entry_page_loads_without_login(): void
+    {
+        $this->get(route('class-scan.enter'))->assertOk();
     }
 
     public function test_qr_cards_zip_downloads_for_authorized_teacher(): void
