@@ -27,6 +27,21 @@ class SchoolYear extends Model
         'status',
     ];
 
+    /**
+     * The per-day calendar is derived from the date range, so any change to the
+     * range must regenerate it — no matter which code path did the update
+     * (admin UI, seeder, tinker). Stale calendars make every uncovered date
+     * read as a non-class day and lock attendance.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (self $schoolYear) {
+            if ($schoolYear->wasChanged(['start_date', 'end_date'])) {
+                app(\App\Services\SchoolCalendarService::class)->generate($schoolYear);
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [

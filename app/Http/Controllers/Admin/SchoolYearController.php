@@ -54,14 +54,10 @@ class SchoolYearController extends Controller
     {
         $this->authorize('update', $schoolYear);
         $original = $schoolYear->getOriginal();
-        $datesChanged = $schoolYear->start_date->toDateString() !== $request->date('start_date')->toDateString()
-            || $schoolYear->end_date->toDateString() !== $request->date('end_date')->toDateString();
 
+        // SchoolYear model regenerates the calendar itself when the dates change.
         $schoolYear->update($request->validated());
 
-        if ($datesChanged) {
-            $this->calendar->generate($schoolYear); // regenerate calendar for the new range
-        }
         $this->audit->updated($schoolYear, $original);
 
         return redirect()->route('admin.school-years.index')
