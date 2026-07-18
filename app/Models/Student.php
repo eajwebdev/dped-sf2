@@ -24,8 +24,19 @@ class Student extends Model
         'suffix',
         'gender',
         'birthdate',
+        'birth_place',
+        'mother_tongue',
+        'ethnic_group',
+        'religion',
         'address',
+        'address_street',
+        'address_barangay',
+        'address_municipality',
+        'address_province',
+        'father_name',
+        'mother_name',
         'guardian_name',
+        'guardian_relationship',
         'guardian_contact',
         'status',
         'photo_path',
@@ -37,6 +48,15 @@ class Student extends Model
         return [
             'birthdate' => 'date',
         ];
+    }
+
+    /**
+     * Age in whole years on the SF1 cut-off — the first Friday of June of the
+     * school year the learner is being registered for ("as per last birthday").
+     */
+    public function ageAsOf(?\Illuminate\Support\Carbon $date): ?int
+    {
+        return $this->birthdate && $date ? $this->birthdate->diffInYears($date) : null;
     }
 
     protected static function booted(): void

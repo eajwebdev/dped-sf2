@@ -33,12 +33,43 @@
             </div>
         </div>
 
+        {{-- SF1 (School Register) profile — every field below is a column on the official form. --}}
         <div class="border-t border-gray-200 dark:border-white/10 pt-5">
-            <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Contact & Guardian</h3>
-            <x-form.input label="Address" name="address" :value="$student->address" />
-            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <x-form.input label="Guardian Name" name="guardian_name" :value="$student->guardian_name" />
-                <x-form.input label="Guardian Contact" name="guardian_contact" :value="$student->guardian_contact" />
+            <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">SF1 Learner Profile</h3>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <x-form.input label="Birth Place (Province)" name="birth_place" :value="$student->birth_place" />
+                <x-form.input label="Mother Tongue" name="mother_tongue" :value="$student->mother_tongue" />
+                <x-form.input label="IP (Ethnic Group)" name="ethnic_group" :value="$student->ethnic_group" hint="Leave blank if not IP" />
+                <x-form.input label="Religion" name="religion" :value="$student->religion" />
+            </div>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-white/10 pt-5">
+            <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Address</h3>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <x-form.input label="House # / Street / Sitio / Purok" name="address_street" :value="$student->address_street" />
+                <x-form.input label="Barangay" name="address_barangay" :value="$student->address_barangay" />
+                <x-form.input label="Municipality / City" name="address_municipality" :value="$student->address_municipality" />
+                <x-form.input label="Province" name="address_province" :value="$student->address_province" />
+            </div>
+            <div class="mt-4">
+                <x-form.input label="Address (single line)" name="address" :value="$student->address"
+                              hint="Legacy field — used on SF1 only when the four parts above are blank" />
+            </div>
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-white/10 pt-5">
+            <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Parents & Guardian</h3>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <x-form.input label="Father's Name" name="father_name" :value="$student->father_name"
+                              hint="First name only if the family name matches the learner" />
+                <x-form.input label="Mother's Maiden Name" name="mother_name" :value="$student->mother_name"
+                              hint="First, middle & last name" />
+            </div>
+            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <x-form.input label="Guardian Name" name="guardian_name" :value="$student->guardian_name" hint="If not a parent" />
+                <x-form.input label="Relationship" name="guardian_relationship" :value="$student->guardian_relationship" />
+                <x-form.input label="Contact Number" name="guardian_contact" :value="$student->guardian_contact" />
             </div>
         </div>
 

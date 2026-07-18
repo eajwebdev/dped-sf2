@@ -35,7 +35,21 @@ class StudentRequest extends FormRequest
             'gender' => ['required', Rule::in(['Male', 'Female'])],
             'birthdate' => ['nullable', 'date', 'before:today'],
             'address' => ['nullable', 'string', 'max:500'],
+
+            // SF1 (School Register) learner profile.
+            'birth_place' => ['nullable', 'string', 'max:255'],
+            'mother_tongue' => ['nullable', 'string', 'max:255'],
+            'ethnic_group' => ['nullable', 'string', 'max:255'],
+            'religion' => ['nullable', 'string', 'max:255'],
+            'address_street' => ['nullable', 'string', 'max:255'],
+            'address_barangay' => ['nullable', 'string', 'max:255'],
+            'address_municipality' => ['nullable', 'string', 'max:255'],
+            'address_province' => ['nullable', 'string', 'max:255'],
+            'father_name' => ['nullable', 'string', 'max:255'],
+            'mother_name' => ['nullable', 'string', 'max:255'],
+
             'guardian_name' => ['nullable', 'string', 'max:150'],
+            'guardian_relationship' => ['nullable', 'string', 'max:50'],
             'guardian_contact' => ['nullable', 'string', 'max:30'],
             'status' => ['required', Rule::in(['active', 'transferred', 'dropped', 'graduated', 'inactive'])],
             'photo' => ['nullable', 'image', 'max:2048'], // 2 MB

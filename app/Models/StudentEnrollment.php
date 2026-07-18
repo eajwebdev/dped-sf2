@@ -38,6 +38,17 @@ class StudentEnrollment extends Model
         'enrollment_date',
         'is_late_enrollment',
         'remarks',
+
+        // SF1 REMARKS indicators (see Sf1ReportService::INDICATORS).
+        'transfer_school',
+        'transfer_date',
+        'dropped_reason',
+        'dropped_date',
+        'late_enrollment_reason',
+        'cct_reference',
+        'balik_aral_detail',
+        'disability_detail',
+        'accelerated_detail',
     ];
 
     protected function casts(): array
@@ -45,6 +56,8 @@ class StudentEnrollment extends Model
         return [
             'enrollment_date' => 'date',
             'is_late_enrollment' => 'boolean',
+            'transfer_date' => 'date',
+            'dropped_date' => 'date',
         ];
     }
 
