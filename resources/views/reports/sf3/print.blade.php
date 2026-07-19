@@ -120,8 +120,6 @@
             <tbody>
                 @foreach ([['label' => 'MALE', 'rows' => $males, 'key' => 'male'],
                            ['label' => 'FEMALE', 'rows' => $females, 'key' => 'female']] as $block)
-                    <tr><th colspan="{{ $totalCols }}" class="band">{{ $block['label'] }} (A–Z)</th></tr>
-
                     @forelse ($block['rows'] as $row)
                         <tr>
                             <td>{{ $row['no'] }}</td>
@@ -139,7 +137,8 @@
                     @endforelse
 
                     <tr class="totrow">
-                        <td colspan="2" class="l">TOTAL FOR {{ $block['label'] }} — {{ $totals[$block['key']]['learners'] }} | TOTAL COPIES</td>
+                        <td>{{ $totals[$block['key']]['learners'] }}</td>
+                        <td class="l">TOTAL FOR {{ $block['label'] }} | TOTAL COPIES</td>
                         @forelse ($pageBooks as $book)
                             <td>{{ $totals[$block['key']]['issued'][$book->id] ?? 0 }}</td>
                             <td>{{ $totals[$block['key']]['returned'][$book->id] ?? 0 }}</td>
@@ -151,7 +150,8 @@
                 @endforeach
 
                 <tr class="totrow">
-                    <td colspan="2" class="l">TOTAL LEARNERS — {{ $totals['all']['learners'] }} | TOTAL COPIES</td>
+                    <td>{{ $totals['all']['learners'] }}</td>
+                    <td class="l">TOTAL LEARNERS | TOTAL COPIES</td>
                     @forelse ($pageBooks as $book)
                         <td>{{ $totals['all']['issued'][$book->id] ?? 0 }}</td>
                         <td>{{ $totals['all']['returned'][$book->id] ?? 0 }}</td>

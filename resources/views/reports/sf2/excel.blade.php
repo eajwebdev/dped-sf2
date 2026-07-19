@@ -24,9 +24,8 @@
            ['label' => 'FEMALE', 'rows' => $data['females'], 'genderKey' => 'female']] as $grid)
 <table>
     <thead>
-        <tr>
-            <th colspan="{{ 5 + max($nDays, 1) }}"><b>{{ $grid['label'] }} (A–Z)</b></th>
-        </tr>
+        {{-- Each block is closed by the form's own "<=== MALE | TOTAL Per Day ===>"
+             marker row (see partials/rows), so no band header is emitted. --}}
         <tr>
             <th rowspan="3">No.</th>
             <th rowspan="3">LEARNER'S NAME (Last, First, Middle)</th>
@@ -49,7 +48,7 @@
         @include('reports.sf2.partials.rows', ['rows' => $grid['rows'], 'label' => $grid['label'], 'totals' => $data['dailyTotals'], 'genderKey' => $grid['genderKey'], 'days' => $days])
         @if ($grid['genderKey'] === 'female')
         <tr>
-            <td colspan="2"><b>Combined TOTAL PER DAY</b></td>
+            <td colspan="2"><b>Combined TOTAL Per Day</b></td>
             @foreach ($days as $d)<td>{{ $data['dailyTotals'][$d['date']]['combined'] ?? 0 }}</td>@endforeach
             @if ($nDays === 0)<td></td>@endif
             <td></td><td></td><td></td>

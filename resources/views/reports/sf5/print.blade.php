@@ -13,7 +13,8 @@
     $units = [];
     foreach ([['label' => 'MALE', 'rows' => $males, 'totalLabel' => 'TOTAL MALE'],
               ['label' => 'FEMALE', 'rows' => $females, 'totalLabel' => 'TOTAL FEMALE']] as $block) {
-        $units[] = ['type' => 'band', 'label' => $block['label']];
+        // No band header: the official form closes each sex block with its
+        // own TOTAL row instead of announcing it with one.
         if (empty($block['rows'])) {
             $units[] = ['type' => 'empty', 'label' => $block['label']];
         }
@@ -155,9 +156,7 @@
                         </thead>
                         <tbody>
                             @foreach ($pageUnits as $unit)
-                                @if ($unit['type'] === 'band')
-                                    <tr><th colspan="6" class="band">{{ $unit['label'] }} (A–Z)</th></tr>
-                                @elseif ($unit['type'] === 'empty')
+                                @if ($unit['type'] === 'empty')
                                     <tr><td colspan="6" style="font-style:italic">No {{ strtolower($unit['label']) }} learners on the register.</td></tr>
                                 @elseif ($unit['type'] === 'total')
                                     <tr class="totrow">

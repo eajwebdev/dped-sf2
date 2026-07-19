@@ -151,9 +151,9 @@
                 </tr>
             </thead>
             <tbody>
+                {{-- The official form carries no band header: each sex block is
+                     closed by its own TOTAL row, exactly as in SF2/SF3/SF5. --}}
                 @foreach ($blocks as $block)
-                    <tr><th colspan="{{ $totalCols }}" class="band">{{ $block['label'] }} (A–Z)</th></tr>
-
                     @forelse ($block['rows'] as $row)
                         <tr>
                             <td>{{ $row['no'] }}</td>
@@ -188,7 +188,7 @@
                 @endforeach
 
                 <tr class="totrow">
-                    <td colspan="{{ $totalCols - 1 }}" class="l">COMBINED TOTAL</td>
+                    <td colspan="{{ $totalCols - 1 }}" class="l">COMBINED</td>
                     <td>{{ count($males) + count($females) }}</td>
                 </tr>
             </tbody>
