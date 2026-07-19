@@ -1,0 +1,19 @@
+<!-- converted from SF1 REPORT FINAL FORM.xlsx -->
+
+## Sheet: School Form 1 (SF1)
+| School Form 1 (SF 1) School Register |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| (This replaced  Form 1, Master List & STS Form 2-Family Background and Profile) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+|  |  |  | School ID |  |  |  | Region |  |  | Division |  |  |  |  |  | District |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+|  |  | School Name |  |  |  |  |  |  |  |  | School Year |  |  |  |  | Grade Level |  |  |  | Section |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+|  | LRN | NAME
+(Last Name, First Name, Middle Name)  |  |  |  | Sex (M/F) | BIRTH DATE  (mm/ dd/yy) | AGE as of 1st Friday of June |  BIRTH PLACE (Province) | MOTHER TONGUE | IP 
+(Specify Ethnic Group) | RELIGION | ADDRESS |  |  |  | NAME OF PARENTS |  |  |  | GUARDIAN (If not Parent) |  | Contact Number (Parent /Guardian) | REMARK/S |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+|  |  |  |  |  |  |  |  | (nos. of years as per last birthday) |  |  |  |  | House # / Street/Sitio/
+Purok | Barangay | Municipality/ City  | Province | Father (1st name only if family name identical to learner)      |  | Mother (Maiden: 1st Name, Middle & Last Name) |  | Name | Relationship |  | (Please refer to the legend on last page) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+|                                                                 List and code of Indicators under REMARK column |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | Prepared by: |  |  | Certified Correct: |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Indicator |  | Code |  | Required Information |  |  |  |  | Indicator |  | Code | Required Information |  |  |  |  | BoSY | EoSY |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Transferred Out |  | T/O |  | Name of  Public (P) Private (PR) School  & Effectivity Date |  |  |  |  | CCT Recipient |  | CCT | CCT Control/reference number & Effectivity Date |  |  |  | MALE |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Transferred IN |  | T/I |  | Name of  Public (P) Private (PR) School  & Effectivity Date |  |  |  |  | Balik-Aral |  | B/A | Name of school last attended & Year |  |  |  | FEMALE |  |  |  | (Signature of Adviser over Printed Name) |  |  | (Signature of School Head over Printed Name) |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Dropped |  | DRP |  | Reason  and Effectivity Date |  |  |  |  | Learner With Dissability |  | LWD | Specify |  |  |  | TOTAL |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| Late Enrollment |  | LE |  | Reason (Enrollment beyond 1st Friday of June) |  |  |  |  | Accelarated |  | ACL | Specify Level & Effectivity Data |  |  |  |  |  |  |  | BoSY Date:                  EoSYDate: |  |  | BoSY Date:                  EoSYDate: |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |

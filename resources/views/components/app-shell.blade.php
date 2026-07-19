@@ -18,6 +18,7 @@
         ['route' => 'reports.sf2.index', 'match' => 'reports.sf2.*', 'label' => 'SF2 — Daily Attendance', 'desc' => 'Monthly attendance report'],
         ['route' => 'reports.sf3.index', 'match' => ['reports.sf3.*', 'books.*'], 'label' => 'SF3 — Books Issued', 'desc' => 'Textbook issuance & returns'],
         ['route' => 'reports.sf5.index', 'match' => 'reports.sf5.*', 'label' => 'SF5 — Promotion', 'desc' => 'Promotion & proficiency report'],
+        ['route' => 'reports.sf8.index', 'match' => 'reports.sf8.*', 'label' => 'SF8 — Health & Nutrition', 'desc' => 'Learner health & nutrition report'],
         ['route' => 'insights.index', 'match' => 'insights.*', 'label' => 'Advanced Reports', 'desc' => 'Class insights & watchlists'],
     ];
     $reportsActive = collect($reports)->contains(fn ($r) => request()->routeIs($r['match']));

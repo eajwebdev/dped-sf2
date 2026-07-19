@@ -29,6 +29,7 @@ use App\Http\Controllers\Sf1Controller;
 use App\Http\Controllers\Sf2Controller;
 use App\Http\Controllers\Sf3Controller;
 use App\Http\Controllers\Sf5Controller;
+use App\Http\Controllers\Sf8Controller;
 use App\Http\Controllers\TeacherTextbookController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Teacher\CuttingClassController as TeacherCuttingClassController;
@@ -153,6 +154,10 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     // SF1 School Register.
     Route::get('/reports/sf1', [Sf1Controller::class, 'index'])->name('reports.sf1.index');
     Route::get('/reports/sf1/{section}', [Sf1Controller::class, 'show'])->name('reports.sf1.show');
+
+    // SF8 Learner's Basic Health and Nutrition Report.
+    Route::get('/reports/sf8', [Sf8Controller::class, 'index'])->name('reports.sf8.index');
+    Route::get('/reports/sf8/{section}', [Sf8Controller::class, 'show'])->name('reports.sf8.show');
 
     // SF3 Books Issued and Returned, plus the adviser's issuance screen behind it.
     // Professional-plan module: Starter subscribers get an upgrade prompt.
