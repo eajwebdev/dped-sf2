@@ -60,8 +60,7 @@ class SubscriptionPlans
                     ['label' => 'Everything in Starter', 'live' => true],
                     ['label' => 'SF3 — Books Issued & Returned', 'live' => true],
                     ['label' => 'SF5 — Promotion & Level of Proficiency', 'live' => true],
-                    ['label' => 'Advanced reports', 'live' => false],
-                    ['label' => 'Priority email support', 'live' => false],
+                    ['label' => 'Advanced reports — class insights dashboard', 'live' => true],
                 ],
             ],
             self::ENTERPRISE => [
@@ -86,6 +85,7 @@ class SubscriptionPlans
     public const MODULE_MIN_PLAN = [
         'sf3' => self::PROFESSIONAL,
         'sf5' => self::PROFESSIONAL,
+        'insights' => self::PROFESSIONAL,
     ];
 
     /** Whether a subscriber on $plan may use $module (ungated modules: yes). */

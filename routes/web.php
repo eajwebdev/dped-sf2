@@ -24,6 +24,7 @@ use App\Http\Controllers\ClassSessionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrCardController;
 use App\Http\Controllers\QrCheckinController;
+use App\Http\Controllers\InsightsController;
 use App\Http\Controllers\Sf1Controller;
 use App\Http\Controllers\Sf2Controller;
 use App\Http\Controllers\Sf3Controller;
@@ -174,6 +175,12 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
         Route::get('/reports/sf5/{section}/grades', [Sf5Controller::class, 'grades'])->name('reports.sf5.grades');
         Route::post('/reports/sf5/{section}/grades', [Sf5Controller::class, 'saveGrades'])
             ->middleware('throttle:60,1')->name('reports.sf5.grades.save');
+    });
+
+    // Advanced Reports (Professional): per-class insight dashboards.
+    Route::middleware('module:insights')->group(function () {
+        Route::get('/insights', [InsightsController::class, 'index'])->name('insights.index');
+        Route::get('/insights/{section}', [InsightsController::class, 'show'])->name('insights.show');
     });
 
     // SF2 Daily Attendance Report of Learners.

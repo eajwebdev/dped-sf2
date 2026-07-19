@@ -23,10 +23,11 @@ class EnsureModuleAccess
         }
 
         $required = SubscriptionPlans::MODULE_MIN_PLAN[strtolower($module)] ?? SubscriptionPlans::PROFESSIONAL;
+        $label = ['insights' => 'The Advanced Reports dashboard'][strtolower($module)] ?? strtoupper($module);
 
         return redirect()->route('subscribe.show')->with('error', sprintf(
             '%s is part of the %s plan. Upgrade to unlock it — you only pay the difference for the months you have left.',
-            strtoupper($module),
+            $label,
             SubscriptionPlans::find($required)['name'],
         ));
     }
