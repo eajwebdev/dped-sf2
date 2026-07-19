@@ -74,7 +74,7 @@
                     <h1>School Form 3 (SF3) Books Issued and Returned</h1>
                     <p class="sub">(This replaces Form 1 &amp; Inventory of Textbooks)</p>
                 </td>
-                <td class="logo" style="text-align:right">
+                <td class="logo" style="text-align:right; vertical-align:top">
                     @if (file_exists($depedLogo))<img class="deped" src="{{ $depedLogo }}" alt="DepEd">@endif
                 </td>
             </tr>

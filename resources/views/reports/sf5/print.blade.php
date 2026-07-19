@@ -106,7 +106,7 @@
                     <h1>School Form 5 (SF5) Report on Promotion &amp; Level of Proficiency</h1>
                     <p class="sub">(This replaced Forms 18-E1, 18-E2, 18A and List of Graduates)</p>
                 </td>
-                <td class="logo" style="text-align:right">
+                <td class="logo" style="text-align:right; vertical-align:top">
                     @if (file_exists($depedLogo))<img class="deped" src="{{ $depedLogo }}" alt="DepEd">@endif
                 </td>
             </tr>
