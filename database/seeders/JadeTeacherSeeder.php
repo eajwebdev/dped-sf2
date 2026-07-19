@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Attendance;
+use App\Models\ClassSession;
 use App\Models\GradeLevel;
 use App\Models\School;
 use App\Models\SchoolYear;
@@ -31,12 +33,26 @@ class JadeTeacherSeeder extends Seeder
          * Every teacher belongs to a school. The tenant scope fails closed, so
          * an account without one sees nothing at all — this seeder used to
          * create exactly that, leaving Jade unable to open her own class.
-         * Defaults to the first school; set JADE_SCHOOL to pick another.
+         * Defaults to the first school; set JADE_SCHOOL to pick another, by
+         * DepEd School ID ("303244") or by name, exact or partial.
          */
+        $want = env('JADE_SCHOOL');
+
         $school = School::query()
-            ->when(env('JADE_SCHOOL'), fn ($q) => $q->where('name', env('JADE_SCHOOL')))
+            ->when($want, fn ($q) => $q->where(fn ($w) => $w
+                ->where('school_id', $want)
+                ->orWhere('name', $want)
+                ->orWhere('name', 'like', '%'.$want.'%')))
             ->orderBy('id')
-            ->firstOrFail();
+            ->first();
+
+        if (! $school) {
+            // Without a school nothing this seeder writes is readable, so stop
+            // with an instruction rather than an opaque ModelNotFoundException.
+            throw new \RuntimeException($want
+                ? "No school matches JADE_SCHOOL=\"{$want}\"."
+                : 'No schools exist — run SchoolSeeder first (php artisan db:seed --class=SchoolSeeder).');
+        }
 
         $user = User::updateOrCreate(
             ['email' => 'jade@dpch.edu.ph'],
@@ -76,10 +92,16 @@ class JadeTeacherSeeder extends Seeder
             ]
         );
 
-        // Her advisory class.
-        $section = Section::updateOrCreate(
-            ['school_year_id' => $sy->id, 'grade_level_id' => $g8->id, 'name' => 'JADEITE'],
-            ['adviser_id' => $teacher->id, 'school_id' => $school->id]
+        /*
+         * Her advisory class. Keyed on the adviser, not the school. Matching name alone would find
+         * another school's "JADEITE" and hand it to Jade; adding school_id to
+         * the key instead would fork a second section whenever JADE_SCHOOL
+         * changes, leaving the roster enrolled in the abandoned one. Keying on
+         * her teacher id moves the one section she owns.
+         */
+        $section = Section::withoutGlobalScopes()->updateOrCreate(
+            ['adviser_id' => $teacher->id, 'school_year_id' => $sy->id, 'grade_level_id' => $g8->id, 'name' => 'JADEITE'],
+            ['school_id' => $school->id]
         );
 
         // Roster: [last, first, middle initial, suffix] — SF2 order, males then females.
@@ -172,15 +194,20 @@ class JadeTeacherSeeder extends Seeder
          * Repair rows seeded before every record needed a school. firstOrCreate
          * leaves an existing row untouched, so learners created by an earlier
          * run would keep a null school_id — and the scope now hides those from
-         * Jade herself. Only rows this seeder owns are touched.
+         * Jade herself. Rows pointing at a *different* school are realigned
+         * too, so re-running with a new JADE_SCHOOL moves the whole class
+         * rather than stranding the roster behind Jade's new tenant scope.
+         * Only rows this seeder owns are touched.
          */
         Student::withoutGlobalScopes()
-            ->where('lrn', 'like', '8260%')->whereNull('school_id')
+            ->where('lrn', 'like', '8260%')
+            ->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', '!=', $school->id))
             ->update(['school_id' => $school->id]);
 
-        foreach ([StudentEnrollment::class, \App\Models\Attendance::class, \App\Models\ClassSession::class] as $model) {
+        foreach ([StudentEnrollment::class, Attendance::class, ClassSession::class] as $model) {
             $model::withoutGlobalScopes()
-                ->where('section_id', $section->id)->whereNull('school_id')
+                ->where('section_id', $section->id)
+                ->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', '!=', $school->id))
                 ->update(['school_id' => $school->id]);
         }
     }
