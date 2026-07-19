@@ -152,9 +152,14 @@
                             <p class="mt-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">{{ $meta['tagline'] }}</p>
                             <ul class="mt-4 space-y-2 text-xs text-gray-600 dark:text-gray-300">
                                 @foreach ($meta['perks'] as $perk)
-                                    <li class="flex items-start gap-2">
-                                        <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                        {{ $perk }}
+                                    <li class="flex items-start gap-2 {{ $perk['live'] ? '' : 'opacity-60' }}">
+                                        <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 {{ $perk['live'] ? 'text-brand-500' : 'text-gray-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                        <span>
+                                            {{ $perk['label'] }}
+                                            @unless ($perk['live'])
+                                                <span class="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-400 dark:bg-white/10">On release</span>
+                                            @endunless
+                                        </span>
                                     </li>
                                 @endforeach
                             </ul>

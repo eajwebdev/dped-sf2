@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureActiveSubscription;
+use App\Http\Middleware\EnsureModuleAccess;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsTeacher;
 use Illuminate\Foundation\Application;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => EnsureUserIsAdmin::class,
             'teacher' => EnsureUserIsTeacher::class,
             'subscription' => EnsureActiveSubscription::class,
+            'module' => EnsureModuleAccess::class,
         ]);
 
         // PayMongo posts webhooks server-to-server (no CSRF token).

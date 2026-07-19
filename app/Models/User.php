@@ -270,6 +270,22 @@ class User extends Authenticatable
         return $this->isSubscribed() && SubscriptionPlans::isUpgradeFrom($this->currentPlan(), $plan);
     }
 
+    /**
+     * Whether this account may use a gated School Form module (e.g. 'sf3').
+     *
+     * Admins, comped accounts, managed (never-billed) teachers and trial users
+     * all get the full product — the plan gate only applies once someone is
+     * actually paying for a specific tier.
+     */
+    public function hasModule(string $module): bool
+    {
+        if ($this->isAdmin() || $this->free_access || ! $this->isBillingEnrolled() || $this->onTrial()) {
+            return true;
+        }
+
+        return SubscriptionPlans::planCovers($this->currentPlan(), $module);
+    }
+
     public function extendSubscription(int $months = 1): Carbon
     {
         $base = $this->isSubscribed() ? $this->subscribed_until->copy() : Carbon::today();

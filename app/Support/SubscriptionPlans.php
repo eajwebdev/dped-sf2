@@ -28,7 +28,13 @@ class SubscriptionPlans
     /** Longest advance purchase allowed in one checkout. */
     public const MAX_MONTHS = 12;
 
-    /** @return array<string, array{key:string, name:string, default:int, tagline:string, perks:array<int,string>}> */
+    /**
+     * Each perk carries a `live` flag: a live perk is usable the day you pay,
+     * an upcoming one is shown with an explicit "On release" badge so a tier
+     * never sells something that does not exist yet.
+     *
+     * @return array<string, array{key:string, name:string, default:int, tagline:string, perks:array<int,array{label:string,live:bool}>}>
+     */
     public static function all(): array
     {
         return [
@@ -38,11 +44,11 @@ class SubscriptionPlans
                 'default' => 19900,
                 'tagline' => 'Everything a class adviser needs today.',
                 'perks' => [
-                    'SF1 — School Register',
-                    'SF2 — Daily Attendance',
-                    'QR check-in + printable QR ID cards',
-                    'Unlimited classes & learners',
-                    'Weekly schedule & scan portal',
+                    ['label' => 'SF1 — School Register', 'live' => true],
+                    ['label' => 'SF2 — Daily Attendance', 'live' => true],
+                    ['label' => 'QR check-in + printable QR ID cards', 'live' => true],
+                    ['label' => 'Unlimited classes & learners', 'live' => true],
+                    ['label' => 'Weekly schedule & scan portal', 'live' => true],
                 ],
             ],
             self::PROFESSIONAL => [
@@ -51,10 +57,11 @@ class SubscriptionPlans
                 'default' => 26900,
                 'tagline' => 'For advisers who want their whole form load automated.',
                 'perks' => [
-                    'Everything in Starter',
-                    'Next 2 School Form modules on release',
-                    'Advanced reports',
-                    'Priority email support',
+                    ['label' => 'Everything in Starter', 'live' => true],
+                    ['label' => 'SF3 — Books Issued & Returned', 'live' => true],
+                    ['label' => 'SF5 — Promotion & Level of Proficiency', 'live' => true],
+                    ['label' => 'Advanced reports', 'live' => false],
+                    ['label' => 'Priority email support', 'live' => false],
                 ],
             ],
             self::ENTERPRISE => [
@@ -63,13 +70,30 @@ class SubscriptionPlans
                 'default' => 44900,
                 'tagline' => 'For schools standardising every form across departments.',
                 'perks' => [
-                    'Everything in Professional',
-                    'All School Form modules on release',
-                    'School-wide analytics',
-                    'Priority support',
+                    ['label' => 'Everything in Professional', 'live' => true],
+                    ['label' => 'All School Form modules on release', 'live' => false],
+                    ['label' => 'School-wide analytics', 'live' => false],
+                    ['label' => 'Priority support', 'live' => false],
                 ],
             ],
         ];
+    }
+
+    /**
+     * The minimum plan each gated School Form module belongs to. SF1 and SF2
+     * are part of every plan; SF3 and SF5 ship with Professional and up.
+     */
+    public const MODULE_MIN_PLAN = [
+        'sf3' => self::PROFESSIONAL,
+        'sf5' => self::PROFESSIONAL,
+    ];
+
+    /** Whether a subscriber on $plan may use $module (ungated modules: yes). */
+    public static function planCovers(string $plan, string $module): bool
+    {
+        $required = self::MODULE_MIN_PLAN[strtolower($module)] ?? null;
+
+        return $required === null || self::rank($plan) >= self::rank($required);
     }
 
     public static function keys(): array

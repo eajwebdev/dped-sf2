@@ -652,7 +652,7 @@
                                             <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/15">
                                                 <svg class="h-3 w-3 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
                                             </span>
-                                            {{ $perk }}
+                                            {{ $perk['label'] }}
                                         </li>
                                     @endforeach
                                     <li class="flex items-start gap-3">
@@ -675,11 +675,11 @@
                             </div>
                             <p class="mt-3 text-sm leading-relaxed text-slate-400">{{ $tier['tagline'] }}</p>
                             <ul class="mt-8 flex-1 space-y-3.5 text-left text-sm">
-                                @foreach ($tier['perks'] as $i => $perk)
+                                @foreach ($tier['perks'] as $perk)
                                     @php
-                                        // Only the "everything in …" roll-up is live today; the rest
-                                        // depend on School Form modules that have not shipped.
-                                        $live = str_starts_with($perk, 'Everything in');
+                                        // The plan data says which perks are usable today; upcoming
+                                        // ones keep the explicit "On release" badge.
+                                        $live = $perk['live'];
                                     @endphp
                                     <li class="flex items-start gap-3 {{ $live ? 'text-slate-300' : 'text-slate-500' }}">
                                         <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full {{ $live ? 'bg-emerald-400/15' : 'bg-white/[0.06]' }}">
@@ -690,7 +690,7 @@
                                             @endif
                                         </span>
                                         <span>
-                                            {{ $perk }}
+                                            {{ $perk['label'] }}
                                             @unless ($live)
                                                 <span class="ml-1 rounded bg-white/[0.07] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-500">On release</span>
                                             @endunless

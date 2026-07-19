@@ -154,21 +154,27 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     Route::get('/reports/sf1/{section}', [Sf1Controller::class, 'show'])->name('reports.sf1.show');
 
     // SF3 Books Issued and Returned, plus the adviser's issuance screen behind it.
-    Route::get('/reports/sf3', [Sf3Controller::class, 'index'])->name('reports.sf3.index');
-    Route::get('/reports/sf3/{section}', [Sf3Controller::class, 'show'])->name('reports.sf3.show');
-    Route::get('/books/{section}', [TeacherTextbookController::class, 'index'])->name('books.index');
-    Route::post('/books/{section}', [TeacherTextbookController::class, 'storeBook'])->name('books.store');
-    Route::delete('/books/{section}/{book}', [TeacherTextbookController::class, 'destroyBook'])->name('books.destroy');
-    Route::post('/books/{section}/{book}/issue-all', [TeacherTextbookController::class, 'issueAll'])->name('books.issue-all');
-    Route::post('/books/{section}/cell', [TeacherTextbookController::class, 'saveCell'])
-        ->middleware('throttle:120,1')->name('books.cell');
+    // Professional-plan module: Starter subscribers get an upgrade prompt.
+    Route::middleware('module:sf3')->group(function () {
+        Route::get('/reports/sf3', [Sf3Controller::class, 'index'])->name('reports.sf3.index');
+        Route::get('/reports/sf3/{section}', [Sf3Controller::class, 'show'])->name('reports.sf3.show');
+        Route::get('/books/{section}', [TeacherTextbookController::class, 'index'])->name('books.index');
+        Route::post('/books/{section}', [TeacherTextbookController::class, 'storeBook'])->name('books.store');
+        Route::delete('/books/{section}/{book}', [TeacherTextbookController::class, 'destroyBook'])->name('books.destroy');
+        Route::post('/books/{section}/{book}/issue-all', [TeacherTextbookController::class, 'issueAll'])->name('books.issue-all');
+        Route::post('/books/{section}/cell', [TeacherTextbookController::class, 'saveCell'])
+            ->middleware('throttle:120,1')->name('books.cell');
+    });
 
     // SF5 Promotion & Proficiency, plus the adviser's averages entry screen.
-    Route::get('/reports/sf5', [Sf5Controller::class, 'index'])->name('reports.sf5.index');
-    Route::get('/reports/sf5/{section}', [Sf5Controller::class, 'show'])->name('reports.sf5.show');
-    Route::get('/reports/sf5/{section}/grades', [Sf5Controller::class, 'grades'])->name('reports.sf5.grades');
-    Route::post('/reports/sf5/{section}/grades', [Sf5Controller::class, 'saveGrades'])
-        ->middleware('throttle:60,1')->name('reports.sf5.grades.save');
+    // Professional-plan module: Starter subscribers get an upgrade prompt.
+    Route::middleware('module:sf5')->group(function () {
+        Route::get('/reports/sf5', [Sf5Controller::class, 'index'])->name('reports.sf5.index');
+        Route::get('/reports/sf5/{section}', [Sf5Controller::class, 'show'])->name('reports.sf5.show');
+        Route::get('/reports/sf5/{section}/grades', [Sf5Controller::class, 'grades'])->name('reports.sf5.grades');
+        Route::post('/reports/sf5/{section}/grades', [Sf5Controller::class, 'saveGrades'])
+            ->middleware('throttle:60,1')->name('reports.sf5.grades.save');
+    });
 
     // SF2 Daily Attendance Report of Learners.
     Route::get('/reports/sf2', [Sf2Controller::class, 'index'])->name('reports.sf2.index');
