@@ -116,36 +116,53 @@ class SubscriptionPlans
     }
 
     /**
-     * Cost of moving an active subscription up a tier for the time it has left.
+     * Cost of moving an active subscription up a tier, prorated by day.
      *
-     * The subscriber has already paid for their remaining months at the old
-     * tier, so they top up only the difference: (new monthly − current monthly)
-     * × months remaining. Upgrading a ₱199 plan with 3 months left to a ₱449
-     * plan costs (449 − 199) × 3 = ₱750, and the end date does not move.
+     * Follows the standard SaaS proration rule: the subscriber is credited for
+     * the unused part of what they already bought and charged for the same
+     * period on the new tier, so the top-up is the gap between the two full
+     * terms, scaled by how much of the term is left. The end date never moves.
      *
-     * No advance-payment discount applies — that was already granted on the
-     * original purchase and the months here are the same ones.
+     * Both sides are priced with the same term length, so the advance-payment
+     * discount and each tier's promo apply to both. That guarantees the
+     * property customers actually check: upgrading mid-term costs exactly what
+     * choosing the higher tier from the start would have, never more. Pricing
+     * only the raw list difference would quietly make upgrading the more
+     * expensive route and punish the customer for starting small.
      *
-     * @return array{months:int, from:string, to:string, monthly_difference:int, subtotal:int, promo:int, total:int}
+     * @param  int    $termMonths     Length of the term already bought.
+     * @param  float  $remainingRatio Share of that term still unused, 0..1.
+     * @return array{months:int, from:string, to:string, monthly_difference:int, subtotal:int, promo:int, total:int, term_months:int, remaining_ratio:float, current_term_total:int, target_term_total:int}
      */
-    public static function upgradeQuote(string $current, string $target, int $remainingMonths): array
+    public static function upgradeQuote(string $current, string $target, int $termMonths, float $remainingRatio = 1.0): array
     {
-        $months = max(1, $remainingMonths);
-        $difference = max(0, self::monthlyPrice($target) - self::monthlyPrice($current));
-        $subtotal = $difference * $months;
+        $termMonths = self::clampMonths(max(1, $termMonths));
+        $ratio = max(0.0, min(1.0, $remainingRatio));
 
-        // The promo of the tier being moved to — that is what is being bought.
-        $promo = self::promoPercent($target);
-        $total = (int) round($subtotal * (100 - $promo) / 100);
+        // What the whole term costs on each tier, promos and advance discount
+        // included — the two numbers a customer would compare when choosing.
+        $currentTotal = self::quote($current, $termMonths)['total'];
+        $targetTotal = self::quote($target, $termMonths)['total'];
+
+        $gap = max(0, $targetTotal - $currentTotal);
+        $total = (int) round($gap * $ratio);
+
+        // Per-month figure for display only; the charge above is the authority.
+        $monthlyDifference = (int) round($gap / $termMonths);
 
         return [
-            'months' => $months,
+            'months' => max(1, (int) ceil($termMonths * $ratio)),
             'from' => $current,
             'to' => $target,
-            'monthly_difference' => $difference,
-            'subtotal' => $subtotal,
-            'promo' => $promo,
+            'monthly_difference' => $monthlyDifference,
+            'subtotal' => $gap,
+            'promo' => self::promoPercent($target),
             'total' => $total,
+
+            'term_months' => $termMonths,
+            'remaining_ratio' => $ratio,
+            'current_term_total' => $currentTotal,
+            'target_term_total' => $targetTotal,
         ];
     }
 

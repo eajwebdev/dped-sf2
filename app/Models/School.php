@@ -13,6 +13,32 @@ class School extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /** Memoised result of soleId(); false means "not looked up yet". */
+    private static bool|int|null $soleId = false;
+
+    /**
+     * The id of the only school on this installation, or null when there is
+     * not exactly one.
+     *
+     * Used to attribute rows created without a signed-in user (seeders,
+     * console commands). It sits on the write path, so the answer is resolved
+     * once per process; long-lived workers and tests must call forgetSoleId().
+     */
+    public static function soleId(): ?int
+    {
+        if (self::$soleId === false) {
+            $ids = static::query()->limit(2)->pluck('id');
+            self::$soleId = $ids->count() === 1 ? (int) $ids->first() : null;
+        }
+
+        return self::$soleId;
+    }
+
+    public static function forgetSoleId(): void
+    {
+        self::$soleId = false;
+    }
+
     protected $fillable = [
         'school_id',
         'name',

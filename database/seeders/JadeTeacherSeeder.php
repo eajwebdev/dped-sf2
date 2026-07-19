@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\GradeLevel;
+use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Student;
@@ -26,6 +27,17 @@ class JadeTeacherSeeder extends Seeder
         $sy = SchoolYear::active()->first() ?? SchoolYear::orderByDesc('start_date')->firstOrFail();
         $g8 = GradeLevel::where('code', 'G8')->firstOrFail();
 
+        /*
+         * Every teacher belongs to a school. The tenant scope fails closed, so
+         * an account without one sees nothing at all — this seeder used to
+         * create exactly that, leaving Jade unable to open her own class.
+         * Defaults to the first school; set JADE_SCHOOL to pick another.
+         */
+        $school = School::query()
+            ->when(env('JADE_SCHOOL'), fn ($q) => $q->where('name', env('JADE_SCHOOL')))
+            ->orderBy('id')
+            ->firstOrFail();
+
         $user = User::updateOrCreate(
             ['email' => 'jade@dpch.edu.ph'],
             [
@@ -46,6 +58,7 @@ class JadeTeacherSeeder extends Seeder
                 'free_access' => false,
                 'subscribed_until' => null,
                 'subscription_plan' => null,
+                'school_id' => $school->id,
             ]
         );
 
@@ -59,13 +72,14 @@ class JadeTeacherSeeder extends Seeder
                 'gender' => 'Female',
                 'email' => $user->email,
                 'is_active' => true,
+                'school_id' => $school->id,
             ]
         );
 
         // Her advisory class.
         $section = Section::updateOrCreate(
             ['school_year_id' => $sy->id, 'grade_level_id' => $g8->id, 'name' => 'JADEITE'],
-            ['adviser_id' => $teacher->id]
+            ['adviser_id' => $teacher->id, 'school_id' => $school->id]
         );
 
         // Roster: [last, first, middle initial, suffix] — SF2 order, males then females.
@@ -136,6 +150,7 @@ class JadeTeacherSeeder extends Seeder
                         'suffix' => $suffix,
                         'gender' => $gender,
                         'status' => 'active',
+                        'school_id' => $school->id,
                     ]
                 );
 
@@ -147,9 +162,26 @@ class JadeTeacherSeeder extends Seeder
                         'status' => StudentEnrollment::STATUS_ENROLLED,
                         'promotion_status' => 'pending',
                         'enrollment_date' => $sy->start_date,
+                        'school_id' => $school->id,
                     ]
                 );
             }
+        }
+
+        /*
+         * Repair rows seeded before every record needed a school. firstOrCreate
+         * leaves an existing row untouched, so learners created by an earlier
+         * run would keep a null school_id — and the scope now hides those from
+         * Jade herself. Only rows this seeder owns are touched.
+         */
+        Student::withoutGlobalScopes()
+            ->where('lrn', 'like', '8260%')->whereNull('school_id')
+            ->update(['school_id' => $school->id]);
+
+        foreach ([StudentEnrollment::class, \App\Models\Attendance::class, \App\Models\ClassSession::class] as $model) {
+            $model::withoutGlobalScopes()
+                ->where('section_id', $section->id)->whereNull('school_id')
+                ->update(['school_id' => $school->id]);
         }
     }
 }

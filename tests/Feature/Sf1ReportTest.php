@@ -45,7 +45,10 @@ class Sf1ReportTest extends TestCase
 
     private function enroll(string $gender, array $student = [], array $enrollment = []): StudentEnrollment
     {
-        $s = Student::factory()->create($student + ['gender' => $gender]);
+        // Suffix pinned off by default: the factory adds "Jr."/"III" 5% of the
+        // time, and these tests identify learners by the last-name segment of
+        // the printed register name — which a suffix silently becomes part of.
+        $s = Student::factory()->create($student + ['gender' => $gender, 'suffix' => null]);
 
         return StudentEnrollment::create($enrollment + [
             'student_id' => $s->id,

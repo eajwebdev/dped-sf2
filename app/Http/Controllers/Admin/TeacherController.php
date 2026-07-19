@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TeacherRequest;
+use App\Models\School;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Services\AuditLogger;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -45,6 +47,9 @@ class TeacherController extends Controller
                     'role' => User::ROLE_TEACHER,
                     'is_active' => true,
                     'email_verified_at' => now(),
+                    // Without this the account has no tenant, and the school
+                    // scope would have nothing to filter by.
+                    'school_id' => $this->schoolIdFor($request, $teacher),
                 ]);
                 $teacher->update(['user_id' => $user->id]);
             }
@@ -99,6 +104,9 @@ class TeacherController extends Controller
                         'role' => User::ROLE_TEACHER,
                         'is_active' => true,
                         'email_verified_at' => now(),
+                        // Without this the account has no tenant, and the
+                        // school scope would have nothing to filter by.
+                        'school_id' => $this->schoolIdFor($request, $teacher),
                     ]);
                     $teacher->update(['user_id' => $user->id]);
                 }
@@ -121,6 +129,21 @@ class TeacherController extends Controller
     }
 
     /** @return array<string, mixed> */
+    /**
+     * Which school a teacher account being created by an admin belongs to.
+     *
+     * A school-bound admin creates teachers for their own school. A global
+     * admin has none to hand down, so the teacher record's school is used, and
+     * failing that the single school of a one-school installation. Null is
+     * still possible, and is safe: the scope fails closed rather than open.
+     */
+    private function schoolIdFor(Request $request, Teacher $teacher): ?int
+    {
+        return $request->user()->school_id
+            ?? $teacher->school_id
+            ?? School::soleId();
+    }
+
     private function teacherAttributes(array $data): array
     {
         return collect($data)->only([

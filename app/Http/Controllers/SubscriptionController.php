@@ -67,7 +67,9 @@ class SubscriptionController extends Controller
             foreach (SubscriptionPlans::keys() as $plan) {
                 if (SubscriptionPlans::isUpgradeFrom($user->currentPlan(), $plan)) {
                     $upgradeQuotes[$plan] = SubscriptionPlans::upgradeQuote(
-                        $user->currentPlan(), $plan, $remainingMonths
+                        $user->currentPlan(), $plan,
+                        $user->subscriptionTermMonths(),
+                        $user->subscriptionRemainingRatio(),
                     );
                 }
             }
@@ -85,6 +87,7 @@ class SubscriptionController extends Controller
             'subscribed' => $subscribed,
             'subscribedUntil' => $user->subscribed_until,
             'remainingMonths' => $remainingMonths,
+            'remainingDays' => $user->subscriptionRemainingDays(),
             'upgradeQuotes' => $upgradeQuotes,
             'canRenew' => $user->canRenew(),
             'renewalWindowDays' => User::RENEWAL_WINDOW_DAYS,
@@ -153,7 +156,9 @@ class SubscriptionController extends Controller
         // The quote is recomputed here so a tampered form cannot set the price.
         if ($upgrading) {
             $upgrade = SubscriptionPlans::upgradeQuote(
-                $user->currentPlan(), $plan, $user->remainingSubscriptionMonths()
+                $user->currentPlan(), $plan,
+                $user->subscriptionTermMonths(),
+                $user->subscriptionRemainingRatio(),
             );
             $quote = ['months' => $upgrade['months'], 'total' => $upgrade['total'], 'discount' => $upgrade['promo']];
         } else {

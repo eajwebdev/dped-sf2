@@ -17,6 +17,8 @@ class SubjectFactory extends Factory
         $name = fake()->unique()->randomElement(['Mathematics', 'Science', 'English', 'Filipino', 'Araling Panlipunan', 'MAPEH', 'ESP', 'TLE']);
 
         return [
+            // Shared tenant: the scope fails closed on an unstamped row.
+            'school_id' => \App\Models\School::query()->value('id') ?? \App\Models\School::factory(),
             'name' => $name,
             'code' => strtoupper(substr($name, 0, 4)).fake()->unique()->numberBetween(1, 999),
             'grade_level_id' => null,

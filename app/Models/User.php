@@ -242,6 +242,64 @@ class User extends Authenticatable
         return max(1, $months);
     }
 
+    /**
+     * The purchase that bought the period currently running, if there is one.
+     * Upgrades are excluded — they change the tier, not the term.
+     */
+    public function currentTermPurchase(): ?SubscriptionPayment
+    {
+        return $this->payments()
+            ->where('status', SubscriptionPayment::STATUS_PAID)
+            ->where('kind', SubscriptionPayment::KIND_PURCHASE)
+            ->latest('paid_at')
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Length in months of the term currently running. Falls back to the whole
+     * months still ahead when no purchase record explains the period (an
+     * admin-granted subscription, say).
+     */
+    public function subscriptionTermMonths(): int
+    {
+        return max(1, (int) ($this->currentTermPurchase()?->months ?? $this->remainingSubscriptionMonths()));
+    }
+
+    /**
+     * Share of the paid term still unused, 0..1, measured in days.
+     *
+     * Day-level accuracy is the point: billing a part-month as a whole month
+     * overcharges anyone who upgrades early, and always in the seller's favour.
+     */
+    public function subscriptionRemainingRatio(): float
+    {
+        if (! $this->isSubscribed()) {
+            return 0.0;
+        }
+
+        $end = $this->subscribed_until->copy()->startOfDay();
+        $start = $this->currentTermPurchase()?->period_start?->copy()?->startOfDay()
+            ?? $end->copy()->subMonthsNoOverflow($this->subscriptionTermMonths());
+
+        $termDays = $start->diffInDays($end);
+        if ($termDays <= 0) {
+            return 0.0;
+        }
+
+        $remainingDays = Carbon::today()->diffInDays($end, false);
+
+        return max(0.0, min(1.0, $remainingDays / $termDays));
+    }
+
+    /** Whole days left on the paid period, for showing the maths to the user. */
+    public function subscriptionRemainingDays(): int
+    {
+        return $this->isSubscribed()
+            ? max(0, (int) Carbon::today()->diffInDays($this->subscribed_until->copy()->startOfDay(), false))
+            : 0;
+    }
+
     /** The plan currently in force, defaulting to the entry tier. */
     public function currentPlan(): string
     {

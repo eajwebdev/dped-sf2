@@ -241,6 +241,39 @@ class PayMongoService
                 'detail' => rtrim($url, '/').'/subscription/webhook — register this in the PayMongo dashboard '
                     .'for checkout_session.payment.paid.',
             ],
+            'Cache & sessions' => $this->cacheReadiness(),
+        ];
+    }
+
+    /**
+     * Cache and session storage, which decide whether reads are served from
+     * memory or turned back into database round trips.
+     *
+     * @return array{ok: bool, detail: string}
+     */
+    private function cacheReadiness(): array
+    {
+        $cache = (string) config('cache.default');
+        $session = (string) config('session.driver');
+        $slow = array_values(array_filter([
+            $cache === 'database' ? 'cache' : null,
+            $session === 'database' ? 'sessions' : null,
+        ]));
+
+        if ($slow !== []) {
+            return [
+                'ok' => false,
+                'detail' => sprintf('%s still stored in the database — every cached read becomes a query. '
+                    .'Use redis (multi-server) or file (single server).', ucfirst(implode(' and ', $slow))),
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'detail' => sprintf('cache: %s, sessions: %s.%s', $cache, $session,
+                in_array('file', [$cache, $session], true)
+                    ? ' File storage is per-server — move to redis if you run more than one web server.'
+                    : ''),
         ];
     }
 

@@ -158,14 +158,18 @@
                             </div>
 
                             {{-- What this tier actually costs an existing subscriber --}}
-                            @if (isset($upgradeQuotes[$key]))
-                                <p class="mt-2 rounded-lg bg-brand-50 px-2.5 py-1.5 text-xs font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
-                                    Upgrade for ₱{{ number_format($upgradeQuotes[$key]['total'] / 100, 0) }}
-                                    <span class="font-normal">
-                                        (+₱{{ number_format($upgradeQuotes[$key]['monthly_difference'] / 100, 0) }}/mo ×
-                                        {{ $remainingMonths }} {{ Str::plural('month', $remainingMonths) }})
-                                    </span>
-                                </p>
+            @if (isset($upgradeQuotes[$key]))
+                                @php $uq = $upgradeQuotes[$key]; @endphp
+                                <div class="mt-2 rounded-lg bg-brand-50 px-2.5 py-2 text-xs text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+                                    <p class="font-semibold">Upgrade for ₱{{ number_format($uq['total'] / 100, 2) }}</p>
+                                    {{-- Spell out the proration: an unexplained ₱183.58 reads as arbitrary. --}}
+                                    <p class="mt-0.5 font-normal leading-relaxed opacity-90">
+                                        ₱{{ number_format(($uq['target_term_total'] - $uq['current_term_total']) / 100, 2) }}
+                                        difference over {{ $uq['term_months'] }} {{ Str::plural('month', $uq['term_months']) }},
+                                        charged for the {{ $remainingDays }} {{ Str::plural('day', $remainingDays) }} you have left.
+                                        Your end date doesn't change.
+                                    </p>
+                                </div>
                             @elseif ($subscribed && $key !== $currentPlan)
                                 <p class="mt-2 text-xs italic text-gray-400">Not available while you're on a higher plan.</p>
                             @endif

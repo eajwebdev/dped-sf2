@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** One learner's copy of one textbook: when it went out, when it came back. */
 class TextbookIssuance extends Model
 {
-    use HasFactory;
+    use BelongsToSchool, HasFactory;
 
     /**
      * Codes for a copy that did not come back, printed in the Date Returned

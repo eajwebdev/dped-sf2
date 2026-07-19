@@ -17,6 +17,8 @@ class TeacherFactory extends Factory
         $gender = fake()->randomElement(['Male', 'Female']);
 
         return [
+            // Shared tenant: the scope fails closed on an unstamped row.
+            'school_id' => \App\Models\School::query()->value('id') ?? \App\Models\School::factory(),
             'employee_no' => fake()->unique()->numerify('T-#####'),
             'first_name' => fake()->firstName($gender === 'Male' ? 'male' : 'female'),
             'middle_name' => fake()->lastName(),

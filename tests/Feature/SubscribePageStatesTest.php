@@ -52,9 +52,15 @@ class SubscribePageStatesTest extends TestCase
 
         $response->assertSee("You're on Starter until", false);
         $response->assertSee('3 months left');
-        // (449 − 199) × 3 = 750, and (269 − 199) × 3 = 210.
-        $response->assertSee('Upgrade for ₱750', false);
-        $response->assertSee('Upgrade for ₱210', false);
+        /*
+         * Prorated: the gap between each pair of full 3-month terms, both after
+         * the 6% advance discount, and a full term still unused.
+         *   Enterprise ₱1,266.18 − Starter ₱561.18 = ₱705.00
+         *   Professional ₱758.58 − Starter ₱561.18 = ₱197.40
+         */
+        $response->assertSee('Upgrade for ₱705.00', false);
+        $response->assertSee('Upgrade for ₱197.40', false);
+        $response->assertSee("Your end date doesn't change", false);
     }
 
     public function test_a_subscriber_on_the_top_tier_mid_term_is_told_there_is_nothing_to_buy(): void

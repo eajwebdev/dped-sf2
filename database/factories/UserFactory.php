@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\School;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -30,6 +31,15 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+
+            /*
+             * Every real teacher belongs to a school — the tenant scope now
+             * fails closed without one, so a school-less factory user would
+             * see nothing and misrepresent production. Reuse the existing
+             * school so one test's records stay visible to its own actor;
+             * tests that need two tenants pass school_id explicitly.
+             */
+            'school_id' => School::query()->value('id') ?? School::factory(),
         ];
     }
 
