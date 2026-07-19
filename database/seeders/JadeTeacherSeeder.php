@@ -26,7 +26,17 @@ class JadeTeacherSeeder extends Seeder
 {
     public function run(): void
     {
-        $sy = SchoolYear::active()->first() ?? SchoolYear::orderByDesc('start_date')->firstOrFail();
+        /*
+         * Jade teaches in 2026-2027. Resolved by name rather than by id — ids
+         * are not stable across a fresh install — falling back to the active
+         * year, then the newest. Set JADE_SCHOOL_YEAR to target another.
+         */
+        $wantYear = env('JADE_SCHOOL_YEAR', '2026-2027');
+
+        $sy = SchoolYear::where('name', $wantYear)->first()
+            ?? SchoolYear::active()->first()
+            ?? SchoolYear::orderByDesc('start_date')->firstOrFail();
+
         $g8 = GradeLevel::where('code', 'G8')->firstOrFail();
 
         /*
@@ -53,6 +63,16 @@ class JadeTeacherSeeder extends Seeder
                 ? "No school matches JADE_SCHOOL=\"{$want}\"."
                 : 'No schools exist — run SchoolSeeder first (php artisan db:seed --class=SchoolSeeder).');
         }
+
+        /*
+         * Point the school at the year we just seeded into. Without this the
+         * app resolves Jade's year through SchoolYear::activeFor() — her
+         * school's override, else the globally active year — which is still
+         * 2025-2026, so her advisory would exist but render nowhere. Only this
+         * one school is pinned; the global active year is left alone so the
+         * other 13 tenants are unaffected.
+         */
+        $school->forceFill(['active_school_year_id' => $sy->id])->save();
 
         $user = User::updateOrCreate(
             ['email' => 'jade@dpch.edu.ph'],
