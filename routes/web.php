@@ -70,8 +70,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/subscribe/cancel', [SubscriptionController::class, 'cancel'])->name('subscribe.cancel');
 });
 
-// PayMongo server-to-server webhook (no auth, CSRF-exempt).
-Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook'])->name('subscription.webhook');
+// PayMongo server-to-server webhook (no auth, CSRF-exempt). Throttled well
+// above PayMongo's own retry rate, so genuine callbacks always land while a
+// flood of forged ones cannot tie up the app verifying signatures.
+Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook'])
+    ->middleware('throttle:120,1')
+    ->name('subscription.webhook');
 
 /*
 |--------------------------------------------------------------------------
@@ -87,7 +91,8 @@ Route::post('/class-scan', [ClassScanController::class, 'unlock'])
 Route::get('/class-scan/session', [ClassScanController::class, 'show'])->name('class-scan.show');
 Route::post('/class-scan/checkin', [ClassScanController::class, 'checkIn'])
     ->middleware('throttle:240,1')->name('class-scan.checkin');
-Route::post('/class-scan/exit', [ClassScanController::class, 'exit'])->name('class-scan.exit');
+Route::post('/class-scan/exit', [ClassScanController::class, 'exit'])
+    ->middleware('throttle:60,1')->name('class-scan.exit');
 
 /*
 |--------------------------------------------------------------------------
