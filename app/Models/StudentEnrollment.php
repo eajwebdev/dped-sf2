@@ -81,6 +81,11 @@ class StudentEnrollment extends Model
         return $this->belongsTo(Section::class);
     }
 
+    public function textbookIssuances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TextbookIssuance::class);
+    }
+
     public function attendance(): HasMany
     {
         return $this->hasMany(Attendance::class);

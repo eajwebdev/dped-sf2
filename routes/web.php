@@ -26,6 +26,8 @@ use App\Http\Controllers\QrCardController;
 use App\Http\Controllers\QrCheckinController;
 use App\Http\Controllers\Sf1Controller;
 use App\Http\Controllers\Sf2Controller;
+use App\Http\Controllers\Sf3Controller;
+use App\Http\Controllers\TeacherTextbookController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Teacher\CuttingClassController as TeacherCuttingClassController;
 use App\Http\Controllers\Teacher\PromotionController as TeacherPromotionController;
@@ -149,6 +151,16 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     // SF1 School Register.
     Route::get('/reports/sf1', [Sf1Controller::class, 'index'])->name('reports.sf1.index');
     Route::get('/reports/sf1/{section}', [Sf1Controller::class, 'show'])->name('reports.sf1.show');
+
+    // SF3 Books Issued and Returned, plus the adviser's issuance screen behind it.
+    Route::get('/reports/sf3', [Sf3Controller::class, 'index'])->name('reports.sf3.index');
+    Route::get('/reports/sf3/{section}', [Sf3Controller::class, 'show'])->name('reports.sf3.show');
+    Route::get('/books/{section}', [TeacherTextbookController::class, 'index'])->name('books.index');
+    Route::post('/books/{section}', [TeacherTextbookController::class, 'storeBook'])->name('books.store');
+    Route::delete('/books/{section}/{book}', [TeacherTextbookController::class, 'destroyBook'])->name('books.destroy');
+    Route::post('/books/{section}/{book}/issue-all', [TeacherTextbookController::class, 'issueAll'])->name('books.issue-all');
+    Route::post('/books/{section}/cell', [TeacherTextbookController::class, 'saveCell'])
+        ->middleware('throttle:120,1')->name('books.cell');
 
     // SF2 Daily Attendance Report of Learners.
     Route::get('/reports/sf2', [Sf2Controller::class, 'index'])->name('reports.sf2.index');
