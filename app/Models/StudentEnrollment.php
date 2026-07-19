@@ -35,6 +35,10 @@ class StudentEnrollment extends Model
         'section_id',
         'status',
         'promotion_status',
+        'general_average',
+        'is_irregular',
+        'subjects_completed',
+        'subjects_incomplete',
         'enrollment_date',
         'is_late_enrollment',
         'remarks',
@@ -56,6 +60,8 @@ class StudentEnrollment extends Model
         return [
             'enrollment_date' => 'date',
             'is_late_enrollment' => 'boolean',
+            'general_average' => 'decimal:3',
+            'is_irregular' => 'boolean',
             'transfer_date' => 'date',
             'dropped_date' => 'date',
         ];

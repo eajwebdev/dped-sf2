@@ -27,6 +27,7 @@ use App\Http\Controllers\QrCheckinController;
 use App\Http\Controllers\Sf1Controller;
 use App\Http\Controllers\Sf2Controller;
 use App\Http\Controllers\Sf3Controller;
+use App\Http\Controllers\Sf5Controller;
 use App\Http\Controllers\TeacherTextbookController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Teacher\CuttingClassController as TeacherCuttingClassController;
@@ -161,6 +162,13 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     Route::post('/books/{section}/{book}/issue-all', [TeacherTextbookController::class, 'issueAll'])->name('books.issue-all');
     Route::post('/books/{section}/cell', [TeacherTextbookController::class, 'saveCell'])
         ->middleware('throttle:120,1')->name('books.cell');
+
+    // SF5 Promotion & Proficiency, plus the adviser's averages entry screen.
+    Route::get('/reports/sf5', [Sf5Controller::class, 'index'])->name('reports.sf5.index');
+    Route::get('/reports/sf5/{section}', [Sf5Controller::class, 'show'])->name('reports.sf5.show');
+    Route::get('/reports/sf5/{section}/grades', [Sf5Controller::class, 'grades'])->name('reports.sf5.grades');
+    Route::post('/reports/sf5/{section}/grades', [Sf5Controller::class, 'saveGrades'])
+        ->middleware('throttle:60,1')->name('reports.sf5.grades.save');
 
     // SF2 Daily Attendance Report of Learners.
     Route::get('/reports/sf2', [Sf2Controller::class, 'index'])->name('reports.sf2.index');
