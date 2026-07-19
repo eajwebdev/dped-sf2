@@ -38,7 +38,7 @@
                 {{-- The strongest marketing line: kept visually loud, directly under the headline. --}}
                 <p class="stagger-1 mt-5 animate-slide-up text-2xl font-extrabold leading-snug tracking-tight text-white sm:text-3xl">
                     Attendance in seconds.<br class="hidden sm:block">
-                    <span class="text-gradient-pink">SF2 reports</span> in one click.
+                    <span class="text-gradient-pink">School Forms</span> in one click.
                 </p>
 
                 <p class="stagger-2 mx-auto mt-6 max-w-xl animate-slide-up text-lg leading-relaxed text-slate-300 lg:mx-0">
@@ -57,8 +57,16 @@
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
                         SF1 — School Register
                     </span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-200 shadow-glow-emerald-sm">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        SF3 — Books
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-200 shadow-glow-emerald-sm">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        SF5 — Promotion
+                    </span>
                     <span class="text-xs font-medium text-slate-500">then</span>
-                    @foreach (['SF3', 'SF5', 'SF8', 'SF9', 'SF10'] as $code)
+                    @foreach (['SF8', 'SF9', 'SF10'] as $code)
                         <span class="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-bold text-slate-400">{{ $code }}</span>
                     @endforeach
                     <a href="#features" class="text-xs font-semibold text-slate-400 underline decoration-brand-500/50 underline-offset-2 transition-colors hover:text-white">coming soon</a>
@@ -74,7 +82,7 @@
                     </a>
                 </div>
                 <p class="stagger-4 mx-auto mt-4 max-w-xl animate-slide-up text-xs leading-relaxed text-slate-400 lg:mx-0">
-                    Start with SF1 and SF2 today and seamlessly expand with additional DepEd School Form modules as they become available.
+                    Start with SF1, SF2, SF3, and SF5 today and seamlessly expand with additional DepEd School Form modules as they become available.
                 </p>
             </div>
 
@@ -87,8 +95,8 @@
                 $mockModules = [
                     ['emoji' => '✅', 'code' => 'SF2',  'label' => 'Attendance',       'title' => 'Daily Attendance',           'blurb' => 'Daily attendance monitoring and automated SF2 generation.',                       'available' => true],
                     ['emoji' => '📋', 'code' => 'SF1',  'label' => 'School Register',  'title' => 'School Register',            'blurb' => 'The class master list — learner profile, address, parents, and enrolment indicators.', 'available' => true],
-                    ['emoji' => '📚', 'code' => 'SF3',  'label' => 'Books Issued',     'title' => 'Books Issued & Returned',    'blurb' => 'Every textbook handed out, and what is still outstanding at year-end.',            'available' => false],
-                    ['emoji' => '🎓', 'code' => 'SF5',  'label' => 'Promotion',        'title' => 'Promotion & Progress',       'blurb' => 'End-of-year promotion, retention, and level of proficiency per learner.',          'available' => false],
+                    ['emoji' => '📚', 'code' => 'SF3',  'label' => 'Books Issued',     'title' => 'Books Issued & Returned',    'blurb' => 'Every textbook handed out, and what is still outstanding at year-end.',            'available' => true],
+                    ['emoji' => '🎓', 'code' => 'SF5',  'label' => 'Promotion',        'title' => 'Promotion & Progress',       'blurb' => 'End-of-year promotion, retention, and level of proficiency per learner.',          'available' => true],
                     ['emoji' => '❤️', 'code' => 'SF8',  'label' => 'Health',           'title' => 'Health & Nutrition',         'blurb' => 'Height, weight, and BMI per learner, with nutritional status computed for you.',   'available' => false],
                     ['emoji' => '📝', 'code' => 'SF9',  'label' => 'Report Card',      'title' => 'Learner Progress Card',      'blurb' => 'The report card parents receive each grading period — formerly Form 138.',         'available' => false],
                     ['emoji' => '📖', 'code' => 'SF10', 'label' => 'Permanent Rec.',   'title' => 'Permanent Academic Record',  'blurb' => 'The transcript that follows a learner between schools — formerly Form 137.',       'available' => false],
@@ -247,6 +255,74 @@
                                 </div>
                             </div>
 
+                            {{-- ── Live module: SF3 book issuance grid ── --}}
+                            <div x-show="current.code === 'SF3'" x-cloak
+                                 x-transition:enter="transition duration-500 ease-out"
+                                 x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="h-2.5 w-28 rounded-full bg-white/25"></div>
+                                        <div class="mt-2 h-2 w-20 rounded-full bg-white/10"></div>
+                                    </div>
+                                    <div class="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-xs font-bold text-white">Generate SF3</div>
+                                </div>
+                                {{-- Issuance rows: learner × book status chips --}}
+                                <div class="overflow-hidden rounded-xl border border-white/10">
+                                    <div class="flex items-center gap-2 border-b border-white/10 bg-white/[0.06] px-3 py-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                                        <span class="flex-1">Learner</span><span class="w-14 text-center">Math</span><span class="w-14 text-center">Science</span><span class="w-14 text-center">Filipino</span>
+                                    </div>
+                                    @foreach ([['w-24', 'ret', 'out', 'ret'], ['w-20', 'ret', 'ret', 'ret'], ['w-28', 'out', 'out', 'lost'], ['w-24', 'ret', 'out', 'ret']] as [$w, $b1, $b2, $b3])
+                                        <div class="flex items-center gap-2 border-b border-white/5 px-3 py-1.5 last:border-0">
+                                            <span class="flex-1"><span class="block h-1.5 {{ $w }} rounded-full bg-white/20"></span></span>
+                                            @foreach ([$b1, $b2, $b3] as $s)
+                                                <span class="w-14 text-center text-[8px] font-bold {{ $s === 'ret' ? 'text-emerald-300' : ($s === 'lost' ? 'text-red-300' : 'text-amber-300') }}">
+                                                    {{ $s === 'ret' ? '✓ ret' : ($s === 'lost' ? 'NEG' : 'out') }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="flex items-center gap-2 text-[9px] font-bold">
+                                    <span class="rounded-md bg-white/[0.06] px-2 py-1 text-slate-400">Issued <span class="text-white">126</span></span>
+                                    <span class="rounded-md bg-emerald-400/15 px-2 py-1 text-emerald-300">Returned 118</span>
+                                    <span class="rounded-md bg-amber-400/15 px-2 py-1 text-amber-300">Out 7</span>
+                                    <span class="rounded-md bg-red-400/15 px-2 py-1 text-red-300">Lost 1</span>
+                                </div>
+                            </div>
+
+                            {{-- ── Live module: SF5 promotion & proficiency ── --}}
+                            <div x-show="current.code === 'SF5'" x-cloak
+                                 x-transition:enter="transition duration-500 ease-out"
+                                 x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="h-2.5 w-28 rounded-full bg-white/25"></div>
+                                        <div class="mt-2 h-2 w-20 rounded-full bg-white/10"></div>
+                                    </div>
+                                    <div class="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-xs font-bold text-white">Generate SF5</div>
+                                </div>
+                                {{-- Promotion rows: average + action --}}
+                                <div class="overflow-hidden rounded-xl border border-white/10">
+                                    <div class="flex items-center gap-2 border-b border-white/10 bg-white/[0.06] px-3 py-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                                        <span class="flex-1">Learner</span><span class="w-16 text-center">Gen. Ave.</span><span class="w-16 text-center">Action</span>
+                                    </div>
+                                    @foreach ([['w-24', '92.375 (A)', 'PROMOTED', 'text-emerald-300'], ['w-20', '86.50 (P)', 'PROMOTED', 'text-emerald-300'], ['w-28', '78.25 (D)', '*IRREG', 'text-pink-300'], ['w-24', '73.10 (B)', 'RETAINED', 'text-amber-300']] as [$w, $ave, $act, $color])
+                                        <div class="flex items-center gap-2 border-b border-white/5 px-3 py-1.5 last:border-0">
+                                            <span class="flex-1"><span class="block h-1.5 {{ $w }} rounded-full bg-white/20"></span></span>
+                                            <span class="w-16 text-center text-[8px] font-semibold text-slate-300">{{ $ave }}</span>
+                                            <span class="w-16 text-center text-[8px] font-bold {{ $color }}">{{ $act }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="flex items-center gap-2 text-[9px] font-bold">
+                                    <span class="rounded-md bg-emerald-400/15 px-2 py-1 text-emerald-300">Promoted 40</span>
+                                    <span class="rounded-md bg-amber-400/15 px-2 py-1 text-amber-300">Retained 2</span>
+                                    <span class="rounded-md bg-white/[0.06] px-2 py-1 text-slate-400">Advanced <span class="text-white">12</span></span>
+                                </div>
+                            </div>
+
                             {{-- ── Unreleased module: an explicit preview, never a fake working screen ── --}}
                             <div x-show="! current.available" x-cloak
                                  x-transition:enter="transition duration-500 ease-out"
@@ -352,19 +428,19 @@
                 <span class="eyebrow">School Form Modules</span>
                 <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">One platform, every DepEd School Form</h2>
                 <p class="mt-4 text-lg text-slate-400">
-                    Built for teachers, class advisers, registrars, and school heads. SF2 is live today —
-                    the rest of the adviser's forms are on the way.
+                    Built for teachers, class advisers, registrars, and school heads. SF1, SF2, SF3, and SF5
+                    are live today — the rest of the adviser's forms are on the way.
                 </p>
             </div>
 
             @php
-                // The adviser-owned DepEd School Forms. Only SF2 ships today; every other
-                // module is explicitly flagged so nothing unfinished reads as available.
+                // The adviser-owned DepEd School Forms. SF1, SF2, SF3, and SF5 ship today;
+                // every other module is explicitly flagged so nothing unfinished reads as available.
                 $modules = [
                     ['SF1', 'School Register', 'Your class master list — LRN, learner profile, four-part address, parents, and enrolment indicators, in the official DepEd layout.', true, 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z'],
                     ['SF2', 'Daily Attendance', 'QR check-in, learners pre-marked absent, autosaving marking grid, and a print-ready DepEd School Form 2 PDF in one click.', true, 'M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z'],
-                    ['SF3', 'Books Issued &amp; Returned', 'Track every textbook and learning material handed out to your learners, and what is still outstanding at year-end.', false, 'M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25'],
-                    ['SF5', 'Promotion &amp; Learning Progress', 'End-of-year promotion, retention, and level of proficiency per learner, building on the class promotion tools you already use.', false, 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5'],
+                    ['SF3', 'Books Issued &amp; Returned', 'Issue textbooks to the whole class in one click, record returns and lost-book codes, and print the official SF3 at year-end.', true, 'M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25'],
+                    ['SF5', 'Promotion &amp; Learning Progress', 'Enter general averages once — the action taken, honor formatting, and level-of-proficiency summary are derived and printed in the official layout.', true, 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5'],
                     ['SF8', 'Health &amp; Nutrition Report', 'Height, weight, and BMI per learner across the year, with nutritional status computed for you.', false, 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z'],
                     ['SF9', 'Learner Progress Report Card', 'The report card parents receive each grading period — formerly Form 138 — generated from your class records.', false, 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'],
                     ['SF10', 'Learner Permanent Record', 'The transcript that follows a learner between schools — formerly Form 137 — kept complete and always current.', false, 'M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z'],
@@ -423,7 +499,7 @@
             </div>
 
             <p class="mx-auto mt-10 max-w-2xl text-center text-xs leading-relaxed text-slate-500">
-                School Forms 1 and 2 are included today. Every other module is in development and clearly marked
+                School Forms 1, 2, 3, and 5 are included today. Every other module is in development and clearly marked
                 <span class="font-semibold text-slate-400">Coming soon</span> — it is not part of your subscription until released.
             </p>
         </div>
@@ -670,7 +746,7 @@
 
             @php
                 $faqs = [
-                    ['Which School Form modules can I use today?', 'Two are live: SF1 — School Register and SF2 — Daily Attendance, both generated as print-ready PDFs in the official DepEd layout. SF3, SF5, SF8, SF9, and SF10 are in development and clearly marked Coming soon across this page. You are never billed for a module before it is released.'],
+                    ['Which School Form modules can I use today?', 'Four are live: SF1 — School Register, SF2 — Daily Attendance, SF3 — Books Issued and Returned, and SF5 — Promotion and Level of Proficiency, all generated as print-ready PDFs in the official DepEd layout. SF8, SF9, and SF10 are in development and clearly marked Coming soon across this page. You are never billed for a module before it is released.'],
                     ['Do students need to install an app?', 'No. Scanning runs entirely in the browser of the scanning device. Students just present their QR ID card — printed straight from the system.'],
                     ['Is the SF2 report really DepEd-compliant?', 'Yes. Attendance rolls into the official School Form 2 layout, generated as a PDF you can view and print, carrying your school\'s name, School ID, and logo.'],
                     ['What happens when my trial ends?', 'Your data stays safe. Subscribe from ₱'.number_format(\App\Support\SubscriptionPlans::monthlyPrice(\App\Support\SubscriptionPlans::STARTER) / 100, 0).'/month to keep recording attendance. You choose how many months to buy — 1 to '.\App\Support\SubscriptionPlans::MAX_MONTHS.' — and each extra month paid in advance takes another '.\App\Support\SubscriptionPlans::DISCOUNT_PER_EXTRA_MONTH.'% off, up to '.\App\Support\SubscriptionPlans::MAX_DISCOUNT_PERCENT.'%.'],
