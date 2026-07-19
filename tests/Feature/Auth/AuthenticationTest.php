@@ -30,6 +30,26 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
+    /**
+     * A stale deep link stashed in the session must not hijack the landing
+     * page: signing in always opens the dashboard, never the last page the
+     * user was bounced off of.
+     */
+    public function test_login_ignores_a_stashed_intended_url(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->withSession(['url.intended' => '/reports/some-old-page'])
+            ->post('/login', [
+                'email' => $user->email,
+                'password' => 'password',
+            ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertNull(session('url.intended'));
+    }
+
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();
