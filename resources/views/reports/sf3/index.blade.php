@@ -8,9 +8,25 @@
                 </p>
             </div>
 
-            <div class="p-6">
+            @php $schoolYears = $sections->pluck('schoolYear')->unique('id')->values(); @endphp
+            <div class="p-6" x-data="{ sy: @js($schoolYears->first()?->id) }">
+                @if ($schoolYears->count() > 1)
+                    <div class="mb-4 flex flex-wrap gap-1.5">
+                        @foreach ($schoolYears as $sy)
+                            <button type="button" @click="sy = {{ $sy->id }}"
+                                    class="cursor-pointer rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                                    :class="sy === {{ $sy->id }}
+                                        ? 'bg-brand-600 text-white'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/15'">
+                                SY {{ $sy->name }}
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+
                 @forelse ($sections as $s)
-                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 py-3 last:border-0 dark:border-white/5">
+                    <div x-show="sy === {{ $s->school_year_id }}"
+                         class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 py-3 last:border-0 dark:border-white/5">
                         <div>
                             <p class="text-sm font-semibold text-slate-900 dark:text-white">
                                 {{ $s->gradeLevel->name }} — {{ $s->name }}

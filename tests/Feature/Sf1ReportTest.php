@@ -192,6 +192,42 @@ class Sf1ReportTest extends TestCase
         ]);
     }
 
+    /**
+     * The picker offers every school year the teacher advised in, and a
+     * past-year section still generates — tracking previous years is the
+     * whole point of the SY selector.
+     */
+    public function test_previous_school_years_stay_listed_and_generate(): void
+    {
+        $oldYear = SchoolYear::factory()->create([
+            'name' => '2024-2025', 'is_active' => false,
+            'start_date' => '2024-06-01', 'end_date' => '2025-03-31',
+        ]);
+        $oldSection = Section::factory()->create([
+            'school_year_id' => $oldYear->id,
+            'grade_level_id' => $this->section->grade_level_id,
+            'adviser_id' => $this->section->adviser_id,
+        ]);
+        $student = Student::factory()->create(['gender' => 'Male']);
+        StudentEnrollment::create([
+            'student_id' => $student->id, 'school_year_id' => $oldYear->id,
+            'grade_level_id' => $oldSection->grade_level_id, 'section_id' => $oldSection->id,
+            'status' => 'enrolled', 'promotion_status' => 'pending', 'enrollment_date' => '2024-06-01',
+        ]);
+
+        // Both years appear on the picker.
+        $this->actingAs($this->adviser)->get(route('reports.sf1.index'))
+            ->assertOk()
+            ->assertSee('School Year')
+            ->assertSee('2024-2025')
+            ->assertSee($this->year->name);
+
+        // And the old year's register still prints.
+        $response = $this->actingAs($this->adviser)->get(route('reports.sf1.show', $oldSection));
+        $response->assertOk();
+        $this->assertSame('application/pdf', $response->headers->get('content-type'));
+    }
+
     public function test_non_adviser_cannot_generate_the_report(): void
     {
         $other = User::factory()->create(['role' => 'teacher']);

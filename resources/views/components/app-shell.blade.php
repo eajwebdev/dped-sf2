@@ -65,7 +65,7 @@
                             class="relative flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 font-medium transition-all duration-200 {{ $reportsActive
                                 ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300'
                                 : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5' }}">
-                        Reports
+                        School Forms
                         <svg class="h-3.5 w-3.5 transition-transform duration-200" :class="open ? 'rotate-180' : ''"
                              fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                         @if ($reportsActive)
@@ -189,7 +189,7 @@
                             class="flex w-full cursor-pointer items-center justify-between rounded-xl px-4 py-3 font-medium transition-colors {{ $reportsActive
                                 ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300'
                                 : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5' }}">
-                        Reports
+                        School Forms
                         <svg class="h-4 w-4 transition-transform duration-200" :class="reportsOpen ? 'rotate-180' : ''"
                              fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                     </button>

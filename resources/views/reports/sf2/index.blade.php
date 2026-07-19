@@ -6,19 +6,52 @@
                 <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Pick one of your advisory classes and a month — the PDF opens in a new tab.</p>
             </div>
 
-            <form method="GET" action="" x-data="{ section: '' }"
+            @php
+                $schoolYears = $sections->pluck('schoolYear')->unique('id')->values();
+                $sectionData = $sections->map(fn ($s) => [
+                    'id' => $s->id,
+                    'sy' => $s->school_year_id,
+                    'startYear' => $s->schoolYear->start_date->year,
+                    'label' => $s->gradeLevel->name.' — '.$s->name,
+                ])->values();
+            @endphp
+            <form method="GET" action=""
+                  x-data="{
+                      sy: @js($schoolYears->first()?->id),
+                      section: '',
+                      sections: @js($sectionData),
+                      get filtered() { return this.sections.filter(s => s.sy === this.sy) },
+                      /* Jumping to a past year points the report year at that SY's opening year. */
+                      syncYear() {
+                          this.section = '';
+                          const first = this.filtered[0];
+                          if (first) document.getElementById('year').value = first.startYear;
+                      },
+                  }"
                   @submit.prevent="if(section){ window.open('{{ url('reports/sf2') }}/' + section + '?year=' + document.getElementById('year').value + '&month=' + document.getElementById('month').value + '&head=' + encodeURIComponent(document.getElementById('head').value), '_blank') }">
                 <div class="space-y-5 p-6">
-                    <div>
-                        <label for="section" class="label">Class <span class="text-brand-500">*</span></label>
-                        <select id="section" x-model="section" required class="input">
-                            <option value="">— Select a class —</option>
-                            @forelse ($sections as $s)
-                                <option value="{{ $s->id }}">{{ $s->schoolYear->name }} · {{ $s->gradeLevel->name }} — {{ $s->name }}</option>
-                            @empty
-                                <option value="" disabled>No advisory classes — SF2 is for your advisory only</option>
-                            @endforelse
-                        </select>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="sy" class="label">School Year</label>
+                            <select id="sy" x-model.number="sy" @change="syncYear()" class="input">
+                                @foreach ($schoolYears as $sy)
+                                    <option value="{{ $sy->id }}">SY {{ $sy->name }}</option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-[11px] text-slate-400">Pick a past year to print its attendance.</p>
+                        </div>
+                        <div>
+                            <label for="section" class="label">Class <span class="text-brand-500">*</span></label>
+                            <select id="section" x-model.number="section" required class="input">
+                                <option value="">— Select a class —</option>
+                                <template x-for="s in filtered" :key="s.id">
+                                    <option :value="s.id" x-text="s.label"></option>
+                                </template>
+                            </select>
+                            @if ($sections->isEmpty())
+                                <p class="mt-1 text-[11px] text-amber-500">No advisory classes — SF2 is for your advisory only.</p>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
