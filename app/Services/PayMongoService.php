@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\SubscriptionPlans;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -63,6 +64,13 @@ class PayMongoService
 
         $response = Http::withBasicAuth(Setting::paymongoSecretKey(), '')
             ->acceptJson()
+            // A hung gateway must not hold a request open indefinitely, and a
+            // transient network blip should not read as "checkout failed".
+            // Only the create call is retried, and PayMongo treats a repeat
+            // create as a new session, so retries stay safe: nothing is charged
+            // until the teacher acts on the hosted page.
+            ->timeout(20)
+            ->retry(2, 400, throw: false)
             ->post(self::BASE_URL.'/checkout_sessions', [
                 'data' => [
                     'attributes' => [
@@ -97,6 +105,146 @@ class PayMongoService
     }
 
     /**
+     * Fetch a checkout session back from PayMongo.
+     *
+     * This is what lets the app confirm a payment without waiting for the
+     * webhook — essential locally (PayMongo cannot reach a localhost URL, so
+     * the webhook never arrives at all) and a safety net in production, where
+     * a webhook can be delayed, misconfigured or dropped. Returns null rather
+     * than throwing: a failed lookup must never break the return page.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function retrieveCheckoutSession(string $sessionId): ?array
+    {
+        if (! $this->isConfigured() || $sessionId === '') {
+            return null;
+        }
+
+        try {
+            $response = Http::withBasicAuth(Setting::paymongoSecretKey(), '')
+                ->acceptJson()
+                ->timeout(15)
+                ->get(self::BASE_URL.'/checkout_sessions/'.$sessionId);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        return $response->successful() ? $response->json() : null;
+    }
+
+    /**
+     * Whether a retrieved checkout session has actually been paid.
+     *
+     * PayMongo reports this in two places depending on the method used, so
+     * both are checked: a settled entry in `payments[]`, or a succeeded
+     * payment intent. Anything else (awaiting_payment_method, processing) is
+     * deliberately not treated as paid.
+     *
+     * @param  array<string, mixed>|null  $session
+     */
+    public function checkoutSessionIsPaid(?array $session): bool
+    {
+        if (! $session) {
+            return false;
+        }
+
+        foreach ((array) data_get($session, 'data.attributes.payments', []) as $payment) {
+            if (data_get($payment, 'attributes.status') === 'paid') {
+                return true;
+            }
+        }
+
+        return data_get($session, 'data.attributes.payment_intent.attributes.status') === 'succeeded';
+    }
+
+    /**
+     * Total actually settled on a checkout session, in centavos.
+     *
+     * Access is granted on the strength of this number rather than on what the
+     * app hoped would be charged, so a session that completed for less than
+     * the quoted amount cannot buy a full subscription. Null means the amount
+     * could not be determined and no amount check is possible.
+     *
+     * @param  array<string, mixed>|null  $session
+     */
+    public function paidAmount(?array $session): ?int
+    {
+        if (! $session) {
+            return null;
+        }
+
+        $total = 0;
+        $found = false;
+
+        foreach ((array) data_get($session, 'data.attributes.payments', []) as $payment) {
+            $amount = data_get($payment, 'attributes.amount');
+
+            // Only a present, numeric amount counts. Treating a missing field as
+            // zero would read a genuine payment as a zero-peso underpayment and
+            // lock out a customer who actually paid.
+            if (data_get($payment, 'attributes.status') === 'paid' && is_numeric($amount)) {
+                $total += (int) $amount;
+                $found = true;
+            }
+        }
+
+        if ($found) {
+            return $total;
+        }
+
+        $intent = data_get($session, 'data.attributes.payment_intent.attributes');
+        $amount = data_get($intent, 'amount');
+
+        return data_get($intent, 'status') === 'succeeded' && is_numeric($amount) ? (int) $amount : null;
+    }
+
+    /** Whether the configured secret key is a live (real money) key. */
+    public function isLiveMode(): bool
+    {
+        return str_starts_with((string) Setting::paymongoSecretKey(), 'sk_live');
+    }
+
+    /**
+     * Everything that must be true before real payments are taken, as
+     * [check => [ok, detail]] so the admin screen can show what is missing.
+     *
+     * @return array<string, array{ok: bool, detail: string}>
+     */
+    public function readiness(): array
+    {
+        $secret = Setting::paymongoSecretKey();
+        $webhook = Setting::paymongoWebhookSecret();
+        $url = (string) config('app.url');
+
+        return [
+            'Secret key' => [
+                'ok' => filled($secret),
+                'detail' => filled($secret)
+                    ? ($this->isLiveMode() ? 'Live key configured.' : 'Test key — payments are sandboxed, no real money moves.')
+                    : 'Not set. Checkout is disabled until a secret key is saved.',
+            ],
+            'Webhook secret' => [
+                'ok' => filled($webhook),
+                'detail' => filled($webhook)
+                    ? 'Set — webhook signatures are verified.'
+                    : 'Not set. In production every webhook is rejected, so payments rely solely on the return page.',
+            ],
+            'Public site URL' => [
+                'ok' => str_starts_with($url, 'https://'),
+                'detail' => str_starts_with($url, 'https://')
+                    ? $url
+                    : $url.' — PayMongo cannot deliver webhooks here. Set APP_URL to your public HTTPS domain.',
+            ],
+            'Webhook endpoint' => [
+                'ok' => str_starts_with($url, 'https://'),
+                'detail' => rtrim($url, '/').'/subscription/webhook — register this in the PayMongo dashboard '
+                    .'for checkout_session.payment.paid.',
+            ],
+        ];
+    }
+
+    /**
      * The payment methods actually activated on the merchant account. A
      * hardcoded list gets intersected with these by PayMongo, and any mismatch
      * renders a checkout with "No payment methods are available".
@@ -105,12 +253,23 @@ class PayMongoService
      */
     public function availablePaymentMethods(): array
     {
-        $methods = Http::withBasicAuth(Setting::paymongoSecretKey(), '')
-            ->acceptJson()
-            ->get(self::BASE_URL.'/merchants/capabilities/payment_methods')
-            ->json();
+        // Cached briefly: this sits in the checkout path, where it is an extra
+        // round trip and an extra thing that can fail between the teacher
+        // clicking Subscribe and reaching the payment page. Enabling a new
+        // method in PayMongo shows up within the minute.
+        $methods = Cache::remember('paymongo:payment_methods', now()->addMinutes(60), function () {
+            $response = Http::withBasicAuth(Setting::paymongoSecretKey(), '')
+                ->acceptJson()
+                ->timeout(15)
+                ->retry(2, 300, throw: false)
+                ->get(self::BASE_URL.'/merchants/capabilities/payment_methods');
+
+            return $response->successful() ? $response->json() : null;
+        });
 
         if (! is_array($methods) || $methods === []) {
+            Cache::forget('paymongo:payment_methods');
+
             throw new RuntimeException(
                 'Your PayMongo account has no activated payment methods. '
                 .'Enable them in the PayMongo dashboard under Settings → Payment methods.'

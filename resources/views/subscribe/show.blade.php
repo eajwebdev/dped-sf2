@@ -11,7 +11,18 @@
         <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-navy-800">
             <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Your account</h2>
             <div class="mt-3 flex flex-wrap items-center gap-3">
-                @if ($state === 'managed')
+                @if ($state === 'free')
+                    {{-- Owner-granted comp: overrides billing entirely, so this
+                         account must never be told to subscribe. --}}
+                    <span class="inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1.5 text-sm font-semibold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/></svg>
+                        Unlimited access
+                    </span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">
+                        Your administrator has granted you full access to {{ config('app.name') }} — every School Form
+                        is unlocked and there is nothing to pay.
+                    </span>
+                @elseif ($state === 'managed')
                     <span class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1.5 text-sm font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>Active</span>
                     <span class="text-sm text-gray-600 dark:text-gray-400">Your access is managed by your administrator.</span>
                 @elseif ($state === 'active')
@@ -62,6 +73,15 @@
                         </p>
                     </div>
                 </div>
+            </div>
+        @endif
+
+        {{-- A comped account can still see the tiers, but must not be nudged to
+             buy one — the plans below are informational until the comp ends. --}}
+        @if ($state === 'free')
+            <div class="rounded-2xl border border-brand-300/60 bg-brand-50/60 px-5 py-4 text-sm text-brand-800 dark:border-brand-400/25 dark:bg-brand-500/10 dark:text-brand-200">
+                You don't need to buy any of these. The plans below are shown for reference only — if your
+                unlimited access is ever removed, you can subscribe from this page then.
             </div>
         @endif
 

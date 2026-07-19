@@ -623,12 +623,24 @@
                 $plans = \App\Support\SubscriptionPlans::class;
                 $tiers = $plans::all();
                 $featured = $plans::STARTER;
+
+                /*
+                 * Centavos only when they exist: ₱269 stays clean, while ₱0.90
+                 * keeps its decimals. Rounding to whole pesos would render a
+                 * discounted ₱0.90 and its ₱1.00 list price both as "₱1",
+                 * hiding the discount entirely.
+                 */
+                $money = fn (float $v) => '₱'.number_format($v, round($v, 2) == round($v) ? 0 : 2);
             @endphp
 
             <div class="mt-14 grid items-start gap-6 lg:grid-cols-3">
                 @foreach ($tiers as $key => $tier)
                     @php
-                        $price = $plans::monthlyPrice($key) / 100;
+                        // List price vs. what the admin's promo actually charges.
+                        // Both come from the checkout's own source of truth.
+                        $listPrice = $plans::monthlyPrice($key) / 100;
+                        $promo = $plans::promoPercent($key);
+                        $price = $plans::effectiveMonthlyPrice($key) / 100;
                         $isFeatured = $key === $featured;
                     @endphp
 
@@ -640,10 +652,18 @@
                                 <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-glow-pink-sm">Most popular</span>
                                 <div class="text-center">
                                     <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ $tier['name'] }} Plan</h3>
+                                    {{-- The price actually charged is the hero number; the
+                                         list price sits beside it, struck through. --}}
                                     <div class="mt-5 flex items-end justify-center gap-1">
-                                        <span class="text-5xl font-extrabold tracking-tight text-white sm:text-6xl">₱{{ number_format($price, 0) }}</span>
+                                        <span class="text-5xl font-extrabold tracking-tight text-white sm:text-6xl">{{ $money($price) }}</span>
                                         <span class="mb-2 text-sm text-slate-400">/ month</span>
                                     </div>
+                                    @if ($promo > 0)
+                                        <p class="mt-2 flex items-center justify-center gap-2 text-sm">
+                                            <span class="text-slate-500 line-through">{{ $money($listPrice) }}</span>
+                                            <span class="rounded-full bg-emerald-400/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-emerald-300">{{ $promo }}% off</span>
+                                        </p>
+                                    @endif
                                     <p class="mt-3 text-sm leading-relaxed text-slate-400">{{ $tier['tagline'] }}</p>
                                 </div>
                                 <ul class="mt-8 flex-1 space-y-3.5 text-left text-sm text-slate-300">
@@ -669,9 +689,13 @@
                     @else
                         <div class="relative flex h-full flex-col overflow-hidden rounded-card border border-white/10 bg-white/[0.04] p-8 backdrop-blur-sm transition-all duration-300 hover:border-brand-500/40 hover:bg-white/[0.07] {{ $key === $plans::PROFESSIONAL ? 'lg:order-2' : 'lg:order-3' }}">
                             <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ $tier['name'] }} Plan</h3>
-                            <div class="mt-5 flex items-end gap-1">
-                                <span class="text-4xl font-extrabold tracking-tight text-white">₱{{ number_format($price, 0) }}</span>
+                            <div class="mt-5 flex flex-wrap items-end gap-x-2 gap-y-1">
+                                <span class="text-4xl font-extrabold tracking-tight text-white">{{ $money($price) }}</span>
                                 <span class="mb-1.5 text-sm text-slate-400">/ month</span>
+                                @if ($promo > 0)
+                                    <span class="mb-1.5 text-sm text-slate-500 line-through">{{ $money($listPrice) }}</span>
+                                    <span class="mb-1.5 rounded-full bg-emerald-400/15 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-300">{{ $promo }}% off</span>
+                                @endif
                             </div>
                             <p class="mt-3 text-sm leading-relaxed text-slate-400">{{ $tier['tagline'] }}</p>
                             <ul class="mt-8 flex-1 space-y-3.5 text-left text-sm">

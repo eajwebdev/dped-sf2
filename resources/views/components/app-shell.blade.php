@@ -21,6 +21,22 @@
         ['route' => 'insights.index', 'match' => 'insights.*', 'label' => 'Advanced Reports', 'desc' => 'Class insights & watchlists'],
     ];
     $reportsActive = collect($reports)->contains(fn ($r) => request()->routeIs($r['match']));
+
+    // Free-trial countdown, shown on every page so the deadline is never a
+    // surprise. Whole days left, floored at 0 on the final day ("ends today").
+    // Hidden on the subscribe screen itself, which states the same thing.
+    $trialUser = auth()->user();
+    $trialDaysLeft = $trialUser && ! request()->routeIs('subscribe.*') && $trialUser->subscriptionState() === 'trial'
+        ? max(0, (int) now()->startOfDay()->diffInDays($trialUser->trial_ends_at->copy()->startOfDay(), false))
+        : null;
+
+    // The bar warms from brand pink to amber to red as the deadline closes.
+    $trialTone = match (true) {
+        $trialDaysLeft === null => null,
+        $trialDaysLeft <= 2 => ['bar' => 'bg-red-50 dark:bg-red-500/10', 'edge' => 'border-red-200 dark:border-red-500/30', 'text' => 'text-red-700 dark:text-red-300', 'fill' => 'bg-red-500'],
+        $trialDaysLeft <= 5 => ['bar' => 'bg-amber-50 dark:bg-amber-500/10', 'edge' => 'border-amber-200 dark:border-amber-500/30', 'text' => 'text-amber-700 dark:text-amber-300', 'fill' => 'bg-amber-500'],
+        default => ['bar' => 'bg-brand-50 dark:bg-brand-500/10', 'edge' => 'border-brand-200 dark:border-brand-500/30', 'text' => 'text-brand-700 dark:text-brand-300', 'fill' => 'bg-brand-500'],
+    };
 @endphp
 
 <!DOCTYPE html>
@@ -230,6 +246,35 @@
                 </svg>
                 <span class="flex-1 text-sm font-medium">{{ session('success') ?? session('error') }}</span>
                 <button @click="show = false" class="cursor-pointer text-white/80 transition-colors hover:text-white" aria-label="Dismiss">&times;</button>
+            </div>
+        </div>
+    @endif
+
+    {{-- Free-trial countdown: sticks under the nav on every page, not dismissible. --}}
+    @if ($trialDaysLeft !== null)
+        <div class="border-b {{ $trialTone['edge'] }} {{ $trialTone['bar'] }}">
+            <div class="mx-auto flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6">
+                <svg class="h-4 w-4 shrink-0 {{ $trialTone['text'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+
+                <p class="text-xs font-semibold {{ $trialTone['text'] }}">
+                    @if ($trialDaysLeft === 0)
+                        Your free trial ends today — subscribe to keep your access.
+                    @else
+                        <span class="tabular-nums">{{ $trialDaysLeft }}</span> {{ Str::plural('day', $trialDaysLeft) }}
+                        left on your {{ \App\Models\User::TRIAL_DAYS }}-day free trial
+                        <span class="font-normal opacity-75">· every School Form is unlocked until {{ $trialUser->trial_ends_at->format('M j') }}</span>
+                    @endif
+                </p>
+
+                {{-- Elapsed share of the trial window --}}
+                <div class="hidden h-1.5 w-32 shrink-0 overflow-hidden rounded-full bg-white/60 dark:bg-white/10 sm:block">
+                    <div class="h-full rounded-full {{ $trialTone['fill'] }}"
+                         style="width: {{ (int) round(100 * (\App\Models\User::TRIAL_DAYS - $trialDaysLeft) / max(1, \App\Models\User::TRIAL_DAYS)) }}%"></div>
+                </div>
+
+                <a href="{{ route('subscribe.show') }}" class="btn-primary btn-sm ml-auto shrink-0">Subscribe now</a>
             </div>
         </div>
     @endif

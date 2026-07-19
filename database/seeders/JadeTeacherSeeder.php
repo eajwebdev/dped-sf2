@@ -35,6 +35,17 @@ class JadeTeacherSeeder extends Seeder
                 'is_active' => true,
                 'status' => User::STATUS_APPROVED,
                 'email_verified_at' => now(),
+
+                // Seeded mid-trial so the countdown banner and the full module
+                // set are both exercised out of the box. Without a
+                // trial_ends_at she reads as "managed" — unlimited access, no
+                // countdown — which is not what a real signup looks like.
+                // free_access / subscribed_until are pinned so a re-seed of an
+                // account that was comped or paid lands back on 'trial'.
+                'trial_ends_at' => now()->addDays(User::TRIAL_DAYS),
+                'free_access' => false,
+                'subscribed_until' => null,
+                'subscription_plan' => null,
             ]
         );
 

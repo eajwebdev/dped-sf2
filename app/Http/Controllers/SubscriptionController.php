@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -100,6 +101,20 @@ class SubscriptionController extends Controller
                 'Checkout attempted while the payment gateway is unconfigured');
 
             return back()->with('error', 'Online payment is not available yet. Please contact your administrator.');
+        }
+
+        /*
+         * Close out anything left open from a previous attempt first. If one of
+         * those was actually paid, charging again would take a teacher's money
+         * twice for the same period — so that case settles the old payment and
+         * stops here instead of opening a new checkout.
+         */
+        if ($settled = $this->reconcileOpenPayments($user)) {
+            return redirect()->route('dashboard')->with('success', sprintf(
+                'You had already paid — your %s plan is active until %s. You have not been charged again.',
+                SubscriptionPlans::find($settled->plan)['name'],
+                $user->fresh()->subscribed_until->format('F j, Y'),
+            ));
         }
 
         $validated = $request->validate([
@@ -197,9 +212,47 @@ class SubscriptionController extends Controller
         return redirect()->away($session['url']);
     }
 
-    public function success(): RedirectResponse
+    /**
+     * Return page from the gateway.
+     *
+     * This does NOT trust the redirect itself — anyone can visit this URL. It
+     * asks PayMongo whether the session was really paid, and only then grants
+     * access. Relying on the webhook alone left a paying teacher locked out
+     * whenever it did not arrive: it never can locally (PayMongo cannot reach
+     * a localhost URL) and in production it can be delayed or dropped.
+     */
+    public function success(Request $request): RedirectResponse
     {
-        // Access is granted by the webhook; this is just the friendly return page.
+        $payment = SubscriptionPayment::where('user_id', $request->user()->id)
+            ->where('status', SubscriptionPayment::STATUS_PENDING)
+            ->whereNotNull('provider_reference')
+            ->latest('id')
+            ->first();
+
+        if (! $payment) {
+            // Already settled by the webhook that beat us here — nothing to do.
+            return redirect()->route('dashboard')
+                ->with('success', 'Thank you! Your subscription is active.');
+        }
+
+        $session = $this->paymongo->retrieveCheckoutSession((string) $payment->provider_reference);
+
+        if ($this->paymongo->checkoutSessionIsPaid($session)) {
+            if (! $this->settle($payment, ['source' => 'return_url', 'session' => $session], $this->paymongo->paidAmount($session))) {
+                return redirect()->route('subscribe.show')->with('error',
+                    'We could not confirm the full amount for this payment. Nothing further has been charged — '
+                    .'please contact support and we will sort it out.');
+            }
+
+            return redirect()->route('dashboard')->with('success', sprintf(
+                'Payment confirmed — your %s plan is active until %s.',
+                SubscriptionPlans::find($payment->plan)['name'],
+                $payment->user->fresh()->subscribed_until->format('F j, Y'),
+            ));
+        }
+
+        // Genuinely still processing (e-wallets can lag). The webhook remains
+        // the backstop, so say so honestly rather than claiming success.
         return redirect()->route('dashboard')
             ->with('success', 'Thank you! Your payment is being confirmed — access unlocks within a minute.');
     }
@@ -268,60 +321,184 @@ class SubscriptionController extends Controller
             return response()->json(['ok' => true, 'recorded' => $type]);
         }
 
-        // Idempotent: ignore replays of an already-processed payment.
-        if ($payment->status === SubscriptionPayment::STATUS_PAID) {
-            return response()->json(['ok' => true, 'message' => 'Already processed']);
+        /*
+         * The event carries the amount either directly (payment.paid) or inside
+         * the checkout session's payments (checkout_session.payment.paid). Null
+         * when neither is present, which skips the amount check rather than
+         * failing a legitimate payment on a payload shape we did not expect.
+         */
+        $resource = data_get($event, 'data.attributes.data.attributes');
+        $amountPaid = data_get($resource, 'amount');
+
+        if ($amountPaid === null && is_array(data_get($resource, 'payments'))) {
+            $paid = collect(data_get($resource, 'payments'))
+                ->filter(fn ($p) => data_get($p, 'attributes.status') === 'paid');
+
+            $amountPaid = $paid->isNotEmpty() ? (int) $paid->sum(fn ($p) => (int) data_get($p, 'attributes.amount', 0)) : null;
         }
 
-        $user = $payment->user;
-        $months = max(1, (int) $payment->months);
-
-        /*
-         * An upgrade buys a better tier for time already paid for, so the end
-         * date stays put and only the plan moves. Extending it here would hand
-         * out free months every time someone upgraded.
-         */
-        $newUntil = $payment->isUpgrade()
-            ? $user->subscribed_until
-            : $user->extendSubscription($months);
-
-        // Record which tier the access came from so entitlements can key off it.
-        $user->forceFill(['subscription_plan' => $payment->plan])->save();
-
-        $payment->update([
-            'status' => SubscriptionPayment::STATUS_PAID,
-            'paid_at' => Carbon::now(),
-            'period_start' => Carbon::today(),
-            'period_end' => $newUntil,
-            'payload' => $event,
+        return response()->json([
+            'ok' => true,
+            'settled' => $this->settle($payment, $event, $amountPaid === null ? null : (int) $amountPaid),
         ]);
+    }
 
-        $this->audit->log('subscription_payment_paid', $payment,
-            $payment->isUpgrade()
+    /**
+     * Settle or close every checkout this teacher left open.
+     *
+     * A pending row means a checkout was opened but never confirmed here. It
+     * may still have been paid — the confirmation can be lost, and PayMongo's
+     * single-use sources mean the old link now errors with "Source has consumed
+     * status" rather than completing. Each one is therefore checked against
+     * PayMongo: paid ones are settled, the rest are marked cancelled so they
+     * stop shadowing future attempts.
+     *
+     * @return SubscriptionPayment|null  A payment that turned out to be paid.
+     */
+    private function reconcileOpenPayments(User $user): ?SubscriptionPayment
+    {
+        $open = SubscriptionPayment::where('user_id', $user->id)
+            ->where('status', SubscriptionPayment::STATUS_PENDING)
+            ->get();
+
+        foreach ($open as $payment) {
+            if (blank($payment->provider_reference)) {
+                // Never reached the gateway — nothing to check, nothing charged.
+                $payment->update(['status' => SubscriptionPayment::STATUS_CANCELLED]);
+
+                continue;
+            }
+
+            $session = $this->paymongo->retrieveCheckoutSession((string) $payment->provider_reference);
+
+            // A lookup that fails (network, API hiccup) must leave the row alone:
+            // guessing "unpaid" here is what would cause a double charge.
+            if ($session === null) {
+                continue;
+            }
+
+            if ($this->paymongo->checkoutSessionIsPaid($session)) {
+                if ($this->settle($payment, ['source' => 'checkout_reconcile', 'session' => $session], $this->paymongo->paidAmount($session))) {
+                    return $payment->fresh();
+                }
+
+                // Underpaid and flagged: do not open a fresh charge on top of it.
+                continue;
+            }
+
+            $payment->update(['status' => SubscriptionPayment::STATUS_CANCELLED]);
+            $this->audit->log('subscription_checkout_cancelled', $payment,
+                'Abandoned checkout closed when a new one was started');
+        }
+
+        return null;
+    }
+
+    /**
+     * Grant the access a confirmed payment bought, exactly once.
+     *
+     * Both the webhook and the return page can reach a paid session, and they
+     * can arrive at the same moment. The row is therefore locked and its
+     * status re-read inside the transaction: whichever path gets there first
+     * does the work, the other sees STATUS_PAID and stops. Without the lock a
+     * race would extend the subscription twice for a single payment.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return bool  True when this call is the one that granted access.
+     */
+    private function settle(SubscriptionPayment $payment, array $payload, ?int $amountPaid = null): bool
+    {
+        /*
+         * Grant on the strength of what was actually settled, never on what the
+         * app hoped would be charged. A session completed for less than the
+         * quote must not buy a subscription; it is flagged for an admin instead
+         * of being silently honoured or silently dropped.
+         */
+        if ($amountPaid !== null && $amountPaid < (int) $payment->amount) {
+            Log::warning('PayMongo underpayment ignored', [
+                'payment' => $payment->id,
+                'expected' => $payment->amount,
+                'paid' => $amountPaid,
+            ]);
+
+            $this->audit->log('subscription_payment_underpaid', $payment,
+                sprintf('Paid ₱%s against a quote of ₱%s — access not granted, needs review',
+                    number_format($amountPaid / 100, 2), number_format($payment->amount / 100, 2)),
+                null,
+                ['expected' => $payment->amount, 'paid' => $amountPaid],
+                $payment->user_id,
+            );
+
+            return false;
+        }
+
+        $granted = DB::transaction(function () use ($payment, $payload) {
+            $fresh = SubscriptionPayment::whereKey($payment->getKey())->lockForUpdate()->first();
+
+            if (! $fresh || $fresh->status === SubscriptionPayment::STATUS_PAID) {
+                return null;
+            }
+
+            $user = $fresh->user;
+            $months = max(1, (int) $fresh->months);
+
+            /*
+             * An upgrade buys a better tier for time already paid for, so the
+             * end date stays put and only the plan moves. Extending it here
+             * would hand out free months every time someone upgraded.
+             */
+            $newUntil = $fresh->isUpgrade()
+                ? $user->subscribed_until
+                : $user->extendSubscription($months);
+
+            // Record which tier the access came from so entitlements key off it.
+            $user->forceFill(['subscription_plan' => $fresh->plan])->save();
+
+            $fresh->update([
+                'status' => SubscriptionPayment::STATUS_PAID,
+                'paid_at' => Carbon::now(),
+                'period_start' => Carbon::today(),
+                'period_end' => $newUntil,
+                'payload' => $payload,
+            ]);
+
+            return [$fresh, $months, $newUntil];
+        });
+
+        if (! $granted) {
+            return false;
+        }
+
+        [$fresh, $months, $newUntil] = $granted;
+
+        $this->audit->log('subscription_payment_paid', $fresh,
+            $fresh->isUpgrade()
                 ? sprintf('Upgrade confirmed: %s → %s for %d month(s), ₱%s — access still until %s',
-                    $payment->previous_plan, $payment->plan, $months,
-                    number_format($payment->amount / 100, 2), $newUntil?->toDateString())
+                    $fresh->previous_plan, $fresh->plan, $months,
+                    number_format($fresh->amount / 100, 2), $newUntil?->toDateString())
                 : sprintf('Payment confirmed: %s × %d month(s), ₱%s — access until %s',
-                    $payment->plan, $months, number_format($payment->amount / 100, 2), $newUntil->toDateString()),
+                    $fresh->plan, $months, number_format($fresh->amount / 100, 2), $newUntil->toDateString()),
             null,
             [
-                'kind' => $payment->kind,
-                'previous_plan' => $payment->previous_plan,
-                'plan' => $payment->plan,
+                'kind' => $fresh->kind,
+                'previous_plan' => $fresh->previous_plan,
+                'plan' => $fresh->plan,
                 'months' => $months,
-                'amount' => $payment->amount,
+                'amount' => $fresh->amount,
                 'until' => $newUntil?->toDateString(),
+                'confirmed_via' => data_get($payload, 'source', 'webhook'),
             ],
-            $payment->user_id,
+            $fresh->user_id,
         );
 
         Log::info('Subscription extended via PayMongo', [
-            'user' => $user->id,
-            'plan' => $payment->plan,
+            'user' => $fresh->user_id,
+            'plan' => $fresh->plan,
             'months' => $months,
-            'until' => $newUntil->toDateString(),
+            'until' => $newUntil?->toDateString(),
+            'via' => data_get($payload, 'source', 'webhook'),
         ]);
 
-        return response()->json(['ok' => true]);
+        return true;
     }
 }

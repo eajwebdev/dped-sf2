@@ -134,7 +134,8 @@ class SubscriptionPlans
         $difference = max(0, self::monthlyPrice($target) - self::monthlyPrice($current));
         $subtotal = $difference * $months;
 
-        $promo = max(0, min(100, Setting::discountPercent()));
+        // The promo of the tier being moved to — that is what is being bought.
+        $promo = self::promoPercent($target);
         $total = (int) round($subtotal * (100 - $promo) / 100);
 
         return [
@@ -164,12 +165,39 @@ class SubscriptionPlans
         return "subscription_price_{$plan}_centavos";
     }
 
+    /** Settings key holding a plan's admin-set promo discount. */
+    public static function discountSettingKey(string $plan): string
+    {
+        return "subscription_discount_{$plan}_percent";
+    }
+
     /** A plan's monthly list price in centavos. */
     public static function monthlyPrice(string $plan): int
     {
         $meta = self::find($plan);
 
         return (int) Setting::get(self::settingKey($meta['key']), $meta['default']);
+    }
+
+    /**
+     * The promo discount on a plan, as a whole percent.
+     *
+     * Falls back to the site-wide discount when a plan has none of its own, so
+     * a previously configured global promo keeps working until it is replaced
+     * by per-plan values.
+     */
+    public static function promoPercent(string $plan): int
+    {
+        $meta = self::find($plan);
+        $value = Setting::get(self::discountSettingKey($meta['key']), Setting::discountPercent());
+
+        return max(0, min(100, (int) $value));
+    }
+
+    /** A plan's actual monthly price after its promo discount, in centavos. */
+    public static function effectiveMonthlyPrice(string $plan): int
+    {
+        return (int) round(self::monthlyPrice($plan) * (100 - self::promoPercent($plan)) / 100);
     }
 
     /**
@@ -202,7 +230,7 @@ class SubscriptionPlans
         $subtotal = $monthly * $months;
 
         $discount = self::discountFor($months);
-        $promo = max(0, min(100, Setting::discountPercent()));
+        $promo = self::promoPercent($plan);
 
         // Both reductions come off the subtotal; they stack multiplicatively so
         // a 30% advance discount plus a 10% promo never exceeds the subtotal.
