@@ -112,64 +112,11 @@
                 </span>
             @endif
 
-            {{-- Trial / subscription status (teachers only): blinking icon, details on hover --}}
-            @php
-                $subState = auth()->user()?->isTeacher() ? auth()->user()->subscriptionState() : null;
-                $isTrial = $subState === 'trial';
-                $trialEnds = auth()->user()?->trial_ends_at;
-            @endphp
-            @if ($subState === 'trial' || $subState === 'expired')
-                <div class="{{ ($activeSchoolYear ?? null) ? '' : 'ml-auto' }} relative shrink-0"
-                     x-data="{ hover: false }"
-                     @mouseenter="hover = true"
-                     @mouseleave="hover = false">
-                    <a href="{{ route('subscribe.show') }}"
-                       @focus="hover = true"
-                       @blur="hover = false"
-                       aria-label="{{ $isTrial ? 'Free trial'.($trialEnds ? ' ends '.$trialEnds->format('M d, Y') : '') : 'Trial ended — subscribe' }}"
-                       class="relative flex h-9 w-9 items-center justify-center rounded-full transition-colors {{ $isTrial
-                            ? 'bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-300'
-                            : 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-300' }}">
-                        {{-- blinking halo --}}
-                        <span class="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full opacity-75 {{ $isTrial ? 'bg-brand-500' : 'bg-red-500' }}"></span>
-                        <svg class="relative h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            @if ($isTrial)
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            @else
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M10.34 3.94L2.7 16.13c-.87 1.5.21 3.37 1.94 3.37h14.72c1.73 0 2.81-1.87 1.94-3.37L13.66 3.94c-.87-1.5-3.03-1.5-3.9 0z"/>
-                            @endif
-                        </svg>
-                    </a>
-
-                    <div x-show="hover" x-cloak role="tooltip"
-                         x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 -translate-y-1"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-start="opacity-100"
-                         x-transition:leave-end="opacity-0"
-                         class="absolute left-1/2 top-full z-30 mt-2 w-60 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-lift dark:border-white/10 dark:bg-navy-800">
-                        @if ($isTrial)
-                            <p class="text-sm font-bold text-slate-900 dark:text-white">Free trial</p>
-                            <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                                @if ($trialEnds)
-                                    Ends {{ $trialEnds->format('M d, Y') }} ({{ $trialEnds->diffForHumans(['parts' => 1]) }}).
-                                @endif
-                                Subscribe to keep your classes and SF2 reports after it ends.
-                            </p>
-                            <p class="mt-2 text-xs font-semibold text-brand-600 dark:text-brand-300">Click to subscribe →</p>
-                        @else
-                            <p class="text-sm font-bold text-slate-900 dark:text-white">Trial ended</p>
-                            <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                                Your free trial is over. Subscribe to restore access to your classes and SF2 reports.
-                            </p>
-                            <p class="mt-2 text-xs font-semibold text-red-600 dark:text-red-300">Click to subscribe →</p>
-                        @endif
-                    </div>
-                </div>
-            @endif
+            {{-- Trial and subscription expiry now live in the notification bell below,
+                 so there is one place to look rather than two competing indicators. --}}
 
             <div class="ml-auto flex items-center gap-1 lg:ml-2">
+                <x-notification-bell />
                 <x-theme-toggle />
 
                 {{-- User dropdown --}}
