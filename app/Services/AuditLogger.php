@@ -11,6 +11,10 @@ class AuditLogger
 {
     /**
      * Record an activity entry. Safe to call anywhere; never throws on logging failure.
+     *
+     * $userId attributes an entry to someone other than the current session —
+     * needed for server-to-server events like payment webhooks, where nobody is
+     * logged in but the action still belongs to a specific account.
      */
     public function log(
         string $action,
@@ -18,10 +22,11 @@ class AuditLogger
         ?string $description = null,
         ?array $oldValues = null,
         ?array $newValues = null,
+        ?int $userId = null,
     ): void {
         try {
             AuditLog::create([
-                'user_id' => Auth::id(),
+                'user_id' => $userId ?? Auth::id(),
                 'action' => $action,
                 'auditable_type' => $subject ? $subject->getMorphClass() : null,
                 'auditable_id' => $subject?->getKey(),

@@ -16,6 +16,17 @@ class SubscriptionPayment extends Model
 
     public const STATUS_FAILED = 'failed';
 
+    /** Abandoned at the gateway — started, but never completed or charged. */
+    public const STATUS_CANCELLED = 'cancelled';
+
+    /** Every outcome a started transaction can end in. */
+    public const STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_PAID,
+        self::STATUS_FAILED,
+        self::STATUS_CANCELLED,
+    ];
+
     protected $fillable = [
         'user_id',
         'provider',
