@@ -77,6 +77,53 @@ class SubscriptionPlans
         return array_keys(self::all());
     }
 
+    /**
+     * Tier order, cheapest first. Upgrades move up this ladder; nothing may
+     * move down mid-term, because the time has already been paid for.
+     */
+    public static function rank(string $plan): int
+    {
+        return array_search(self::find($plan)['key'], self::keys(), true) ?: 0;
+    }
+
+    public static function isUpgradeFrom(string $current, string $target): bool
+    {
+        return self::rank($target) > self::rank($current);
+    }
+
+    /**
+     * Cost of moving an active subscription up a tier for the time it has left.
+     *
+     * The subscriber has already paid for their remaining months at the old
+     * tier, so they top up only the difference: (new monthly − current monthly)
+     * × months remaining. Upgrading a ₱199 plan with 3 months left to a ₱449
+     * plan costs (449 − 199) × 3 = ₱750, and the end date does not move.
+     *
+     * No advance-payment discount applies — that was already granted on the
+     * original purchase and the months here are the same ones.
+     *
+     * @return array{months:int, from:string, to:string, monthly_difference:int, subtotal:int, promo:int, total:int}
+     */
+    public static function upgradeQuote(string $current, string $target, int $remainingMonths): array
+    {
+        $months = max(1, $remainingMonths);
+        $difference = max(0, self::monthlyPrice($target) - self::monthlyPrice($current));
+        $subtotal = $difference * $months;
+
+        $promo = max(0, min(100, Setting::discountPercent()));
+        $total = (int) round($subtotal * (100 - $promo) / 100);
+
+        return [
+            'months' => $months,
+            'from' => $current,
+            'to' => $target,
+            'monthly_difference' => $difference,
+            'subtotal' => $subtotal,
+            'promo' => $promo,
+            'total' => $total,
+        ];
+    }
+
     public static function exists(?string $key): bool
     {
         return $key !== null && array_key_exists($key, self::all());

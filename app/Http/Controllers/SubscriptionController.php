@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SubscriptionPayment;
+use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\PayMongoService;
 use App\Support\SubscriptionPlans;
@@ -52,14 +53,40 @@ class SubscriptionController extends Controller
             }
         }
 
+        /*
+         * While a subscription is running the page becomes an upgrade screen:
+         * the current tier is marked as owned, lower tiers are unavailable, and
+         * higher tiers are priced as the top-up for the months left.
+         */
+        $subscribed = $user->isSubscribed();
+        $remainingMonths = $user->remainingSubscriptionMonths();
+        $upgradeQuotes = [];
+
+        if ($subscribed) {
+            foreach (SubscriptionPlans::keys() as $plan) {
+                if (SubscriptionPlans::isUpgradeFrom($user->currentPlan(), $plan)) {
+                    $upgradeQuotes[$plan] = SubscriptionPlans::upgradeQuote(
+                        $user->currentPlan(), $plan, $remainingMonths
+                    );
+                }
+            }
+        }
+
         return view('subscribe.show', [
             'plans' => SubscriptionPlans::all(),
             'quotes' => $quotes,
             'maxMonths' => SubscriptionPlans::MAX_MONTHS,
             'perMonthDiscount' => SubscriptionPlans::DISCOUNT_PER_EXTRA_MONTH,
             'maxDiscount' => SubscriptionPlans::MAX_DISCOUNT_PERCENT,
-            'currentPlan' => $user->subscription_plan ?? SubscriptionPlans::STARTER,
+            'currentPlan' => $user->currentPlan(),
             'configured' => $this->paymongo->isConfigured(),
+
+            'subscribed' => $subscribed,
+            'subscribedUntil' => $user->subscribed_until,
+            'remainingMonths' => $remainingMonths,
+            'upgradeQuotes' => $upgradeQuotes,
+            'canRenew' => $user->canRenew(),
+            'renewalWindowDays' => User::RENEWAL_WINDOW_DAYS,
         ]);
     }
 
@@ -80,14 +107,50 @@ class SubscriptionController extends Controller
             'months' => ['required', 'integer', 'min:1', 'max:'.SubscriptionPlans::MAX_MONTHS],
         ]);
 
-        // The quote is recomputed here so a tampered form cannot set the price.
         $plan = $validated['plan'];
-        $quote = SubscriptionPlans::quote($plan, (int) $validated['months']);
+
+        /*
+         * An active subscriber has already paid for this period, so buying it
+         * again would stack a second term on top. Their only move is up a tier,
+         * priced as the difference for the months they have left — and even the
+         * decision of which case applies is made here, never from the form.
+         */
+        $upgrading = $user->isSubscribed() && $user->currentPlan() !== $plan;
+
+        if ($user->isSubscribed() && ! $upgrading && ! $user->canRenew()) {
+            return back()->with('error', sprintf(
+                'You are already on the %s plan until %s. You can renew from %s, or upgrade to a higher plan any time.',
+                SubscriptionPlans::find($plan)['name'],
+                $user->subscribed_until->format('M j, Y'),
+                $user->subscribed_until->copy()->subDays(User::RENEWAL_WINDOW_DAYS)->format('M j, Y'),
+            ));
+        }
+
+        if ($upgrading && ! $user->canUpgradeTo($plan)) {
+            return back()->with('error', sprintf(
+                'You cannot move from %s to %s mid-term — that time is already paid for. You can switch when your subscription renews on %s.',
+                SubscriptionPlans::find($user->currentPlan())['name'],
+                SubscriptionPlans::find($plan)['name'],
+                $user->subscribed_until->format('M j, Y'),
+            ));
+        }
+
+        // The quote is recomputed here so a tampered form cannot set the price.
+        if ($upgrading) {
+            $upgrade = SubscriptionPlans::upgradeQuote(
+                $user->currentPlan(), $plan, $user->remainingSubscriptionMonths()
+            );
+            $quote = ['months' => $upgrade['months'], 'total' => $upgrade['total'], 'discount' => $upgrade['promo']];
+        } else {
+            $quote = SubscriptionPlans::quote($plan, (int) $validated['months']);
+        }
 
         $payment = SubscriptionPayment::create([
             'user_id' => $user->id,
             'provider' => 'paymongo',
             'plan' => $plan,
+            'kind' => $upgrading ? SubscriptionPayment::KIND_UPGRADE : SubscriptionPayment::KIND_PURCHASE,
+            'previous_plan' => $upgrading ? $user->currentPlan() : null,
             'months' => $quote['months'],
             'amount' => $quote['total'],
             'discount_percent' => $quote['discount'],
@@ -96,9 +159,20 @@ class SubscriptionController extends Controller
         ]);
 
         $this->audit->log('subscription_checkout_started', $payment,
-            sprintf('Checkout started: %s × %d month(s), ₱%s', $plan, $quote['months'], number_format($quote['total'] / 100, 2)),
+            $upgrading
+                ? sprintf('Upgrade started: %s → %s for %d month(s) remaining, ₱%s',
+                    $user->currentPlan(), $plan, $quote['months'], number_format($quote['total'] / 100, 2))
+                : sprintf('Checkout started: %s × %d month(s), ₱%s',
+                    $plan, $quote['months'], number_format($quote['total'] / 100, 2)),
             null,
-            ['plan' => $plan, 'months' => $quote['months'], 'amount' => $quote['total'], 'discount_percent' => $quote['discount']],
+            [
+                'kind' => $payment->kind,
+                'previous_plan' => $payment->previous_plan,
+                'plan' => $plan,
+                'months' => $quote['months'],
+                'amount' => $quote['total'],
+                'discount_percent' => $quote['discount'],
+            ],
         );
 
         try {
@@ -201,7 +275,15 @@ class SubscriptionController extends Controller
 
         $user = $payment->user;
         $months = max(1, (int) $payment->months);
-        $newUntil = $user->extendSubscription($months);
+
+        /*
+         * An upgrade buys a better tier for time already paid for, so the end
+         * date stays put and only the plan moves. Extending it here would hand
+         * out free months every time someone upgraded.
+         */
+        $newUntil = $payment->isUpgrade()
+            ? $user->subscribed_until
+            : $user->extendSubscription($months);
 
         // Record which tier the access came from so entitlements can key off it.
         $user->forceFill(['subscription_plan' => $payment->plan])->save();
@@ -215,10 +297,21 @@ class SubscriptionController extends Controller
         ]);
 
         $this->audit->log('subscription_payment_paid', $payment,
-            sprintf('Payment confirmed: %s × %d month(s), ₱%s — access until %s',
-                $payment->plan, $months, number_format($payment->amount / 100, 2), $newUntil->toDateString()),
+            $payment->isUpgrade()
+                ? sprintf('Upgrade confirmed: %s → %s for %d month(s), ₱%s — access still until %s',
+                    $payment->previous_plan, $payment->plan, $months,
+                    number_format($payment->amount / 100, 2), $newUntil?->toDateString())
+                : sprintf('Payment confirmed: %s × %d month(s), ₱%s — access until %s',
+                    $payment->plan, $months, number_format($payment->amount / 100, 2), $newUntil->toDateString()),
             null,
-            ['plan' => $payment->plan, 'months' => $months, 'amount' => $payment->amount, 'until' => $newUntil->toDateString()],
+            [
+                'kind' => $payment->kind,
+                'previous_plan' => $payment->previous_plan,
+                'plan' => $payment->plan,
+                'months' => $months,
+                'amount' => $payment->amount,
+                'until' => $newUntil?->toDateString(),
+            ],
             $payment->user_id,
         );
 

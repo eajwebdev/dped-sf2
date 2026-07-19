@@ -27,11 +27,19 @@ class SubscriptionPayment extends Model
         self::STATUS_CANCELLED,
     ];
 
+    /** A fresh term: extends the end date by the months bought. */
+    public const KIND_PURCHASE = 'purchase';
+
+    /** A tier change for months already paid for: moves the plan, not the date. */
+    public const KIND_UPGRADE = 'upgrade';
+
     protected $fillable = [
         'user_id',
         'provider',
         'provider_reference',
         'plan',
+        'kind',
+        'previous_plan',
         'months',
         'amount',
         'discount_percent',
@@ -63,5 +71,10 @@ class SubscriptionPayment extends Model
     public function pesoAmount(): float
     {
         return $this->amount / 100;
+    }
+
+    public function isUpgrade(): bool
+    {
+        return $this->kind === self::KIND_UPGRADE;
     }
 }

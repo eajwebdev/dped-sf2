@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\SubscriptionPlans;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,6 +34,9 @@ class User extends Authenticatable
 
     /** Length of the free trial granted when an account is approved. */
     public const TRIAL_DAYS = 14;
+
+    /** How close to expiry a subscriber may renew for another term. */
+    public const RENEWAL_WINDOW_DAYS = 14;
 
     /**
      * Default attribute values. Accounts are approved by default (admins and
@@ -217,6 +221,55 @@ class User extends Authenticatable
      * Extend the paid period by the given number of months, stacking onto any
      * remaining time (or starting from today when lapsed).
      */
+    /**
+     * Whole months left on a paid subscription, rounded up so a part-month is
+     * never billed as nothing. Zero when not currently subscribed.
+     */
+    public function remainingSubscriptionMonths(): int
+    {
+        if (! $this->isSubscribed()) {
+            return 0;
+        }
+
+        $today = Carbon::today();
+        $months = (int) $today->diffInMonths($this->subscribed_until);
+
+        // Round a partial month up: 3 months and 4 days bills as 4.
+        if ($today->copy()->addMonthsNoOverflow($months)->lt($this->subscribed_until)) {
+            $months++;
+        }
+
+        return max(1, $months);
+    }
+
+    /** The plan currently in force, defaulting to the entry tier. */
+    public function currentPlan(): string
+    {
+        return SubscriptionPlans::exists($this->subscription_plan)
+            ? $this->subscription_plan
+            : SubscriptionPlans::STARTER;
+    }
+
+    /**
+     * Renewing is only opened up near the end of the term, so a subscriber
+     * cannot stack a second period on top of one they are barely into. Outside
+     * that window an active subscriber's only move is an upgrade.
+     */
+    public function canRenew(): bool
+    {
+        if (! $this->isSubscribed()) {
+            return true;
+        }
+
+        return Carbon::today()->diffInDays($this->subscribed_until, false) <= self::RENEWAL_WINDOW_DAYS;
+    }
+
+    /** Whether this account may move up to $plan right now. */
+    public function canUpgradeTo(string $plan): bool
+    {
+        return $this->isSubscribed() && SubscriptionPlans::isUpgradeFrom($this->currentPlan(), $plan);
+    }
+
     public function extendSubscription(int $months = 1): Carbon
     {
         $base = $this->isSubscribed() ? $this->subscribed_until->copy() : Carbon::today();
