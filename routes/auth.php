@@ -16,7 +16,10 @@ Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    // Registration is the only unauthenticated write path and it accepts a file
+    // upload, so it is throttled hard against scripted signup floods.
+    Route::post('register', [RegisteredUserController::class, 'store'])
+        ->middleware('throttle:5,1');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

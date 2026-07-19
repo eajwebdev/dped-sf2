@@ -57,6 +57,8 @@ class User extends Authenticatable
         'role',
         'is_active',
         'school_id',
+        'school_id_number',
+        'school_id_document_path',
         'status',
         'contact_number',
         'trial_ends_at',
@@ -75,6 +77,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        // Never let the storage path of an identity document leak into JSON.
+        'school_id_document_path',
     ];
 
     /**
@@ -92,7 +96,14 @@ class User extends Authenticatable
             'subscribed_until' => 'date',
             'free_access' => 'boolean',
             'approved_at' => 'datetime',
+            'school_id_verified_at' => 'datetime',
         ];
+    }
+
+    /** Whether an admin has confirmed this teacher's school ID document. */
+    public function hasVerifiedSchoolId(): bool
+    {
+        return $this->school_id_verified_at !== null;
     }
 
     public function teacher(): HasOne

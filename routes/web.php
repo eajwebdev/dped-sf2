@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\GradeLevelController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\RegistrationController;
 use App\Http\Controllers\Admin\SchoolController;
+use App\Http\Controllers\Admin\SchoolIdDocumentController;
 use App\Http\Controllers\Admin\SchoolYearController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SectionController;
@@ -168,6 +169,9 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::get('registrations', [RegistrationController::class, 'index'])->name('registrations.index');
         Route::post('registrations/{user}/approve', [RegistrationController::class, 'approve'])->name('registrations.approve');
         Route::post('registrations/{user}/reject', [RegistrationController::class, 'reject'])->name('registrations.reject');
+        // The applicant's school ID photo — private, authorised, audited on read.
+        Route::get('registrations/{user}/school-id', [SchoolIdDocumentController::class, 'show'])
+            ->middleware('throttle:60,1')->name('registrations.school-id');
 
         // School years + lifecycle actions.
         Route::post('school-years/{school_year}/activate', [SchoolYearController::class, 'activate'])->name('school-years.activate');

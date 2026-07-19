@@ -18,9 +18,14 @@ class RegistrationController extends Controller
     /** Pending teacher self-registrations awaiting approval. */
     public function index()
     {
+        $admin = auth()->user();
+
         $pending = User::with('school')
             ->where('role', User::ROLE_TEACHER)
             ->where('status', User::STATUS_PENDING)
+            // A school's own admin reviews only their applicants; a platform
+            // admin (no school of their own) sees every school's queue.
+            ->when($admin->school_id, fn ($q) => $q->where('school_id', $admin->school_id))
             ->latest()
             ->paginate(20);
 
@@ -34,6 +39,7 @@ class RegistrationController extends Controller
     public function approve(User $user): RedirectResponse
     {
         abort_unless($user->isTeacher(), 404);
+        $this->authorizeSameSchool($user);
 
         DB::transaction(function () use ($user) {
             $user->forceFill([
@@ -41,6 +47,9 @@ class RegistrationController extends Controller
                 'trial_ends_at' => Carbon::now()->addDays(User::TRIAL_DAYS),
                 'approved_at' => Carbon::now(),
                 'approved_by' => auth()->id(),
+                // Approving is the act of confirming the ID belongs to this school.
+                'school_id_verified_at' => Carbon::now(),
+                'school_id_verified_by' => auth()->id(),
             ])->save();
 
             if (! $user->teacher()->exists()) {
@@ -57,19 +66,36 @@ class RegistrationController extends Controller
             }
         });
 
-        $this->audit->log('approved', $user, "Approved teacher registration for {$user->email}");
+        $this->audit->log('approved', $user,
+            "Approved teacher registration for {$user->email}; school ID {$user->school_id_number} verified");
 
-        return back()->with('success', "{$user->name} approved — 14-day trial started.");
+        return back()->with('success', "{$user->name} approved — ".User::TRIAL_DAYS."-day trial started.");
     }
 
     public function reject(User $user): RedirectResponse
     {
         abort_unless($user->isTeacher(), 404);
+        $this->authorizeSameSchool($user);
 
         $user->forceFill(['status' => User::STATUS_REJECTED])->save();
         $this->audit->log('rejected', $user, "Rejected teacher registration for {$user->email}");
 
         return back()->with('success', "{$user->name}'s registration was rejected.");
+    }
+
+    /**
+     * A school's admin may only act on applicants to their own school, so one
+     * school cannot approve (and thereby grant record access to) another's.
+     */
+    private function authorizeSameSchool(User $applicant): void
+    {
+        $admin = auth()->user();
+
+        abort_if(
+            $admin->school_id !== null && $admin->school_id !== $applicant->school_id,
+            403,
+            'This applicant belongs to another school.'
+        );
     }
 
     /** Split a display name into [first names, last name]. */

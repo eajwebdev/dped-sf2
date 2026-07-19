@@ -14,7 +14,7 @@
                 </div>
 
                 <div class="stagger-1 animate-slide-up rounded-card border border-white/15 bg-white/[0.06] p-6 shadow-2xl shadow-navy-950/50 backdrop-blur-2xl sm:p-8">
-                    <form method="POST" action="{{ route('register') }}" class="space-y-5"
+                    <form method="POST" action="{{ route('register') }}" class="space-y-5" enctype="multipart/form-data"
                           x-data="{ submitting: false }" @submit="submitting = true">
                         @csrf
 
@@ -52,6 +52,68 @@
                             @endif
                         </div>
 
+                        {{-- School ID verification: proves the applicant works at the school they picked --}}
+                        <div class="rounded-xl border border-brand-400/25 bg-brand-500/[0.07] p-4">
+                            <div class="flex items-start gap-2.5">
+                                <svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.746 3.746 0 0 1 21 12Z"/>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-semibold text-white">School ID verification</p>
+                                    <p class="mt-0.5 text-xs leading-relaxed text-slate-400">
+                                        To protect learner records, we confirm every applicant really works at the school
+                                        they selected. Your ID is visible only to your school's administrator and is never
+                                        shown publicly.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <label for="school_id_number" class="mb-1.5 block text-sm font-medium text-slate-200">ID / Employee Number <span class="text-brand-400">*</span></label>
+                                <input id="school_id_number" type="text" name="school_id_number" value="{{ old('school_id_number') }}" required maxlength="60"
+                                       class="{{ $darkInput }} {{ $errors->has('school_id_number') ? '!border-red-400/60' : '' }}" placeholder="e.g. 2019-04821">
+                                @error('school_id_number')<p class="mt-1.5 animate-slide-up text-xs font-medium text-red-400">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div class="mt-4" x-data="idUpload()">
+                                <label class="mb-1.5 block text-sm font-medium text-slate-200">Photo of your School ID <span class="text-brand-400">*</span></label>
+
+                                <label for="school_id_document"
+                                       @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false"
+                                       @drop.prevent="pick($event.dataTransfer.files[0])"
+                                       class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors"
+                                       :class="dragging ? 'border-brand-400 bg-brand-500/10' : 'border-white/15 bg-white/[0.03] hover:border-white/25'">
+                                    <template x-if="!preview">
+                                        <div>
+                                            <svg class="mx-auto h-8 w-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z"/>
+                                            </svg>
+                                            <p class="mt-2 text-sm font-medium text-slate-300">Tap to take a photo or upload</p>
+                                            <p class="mt-0.5 text-xs text-slate-500">JPG, PNG or WEBP · up to 8&nbsp;MB</p>
+                                        </div>
+                                    </template>
+                                    <template x-if="preview">
+                                        <div class="w-full">
+                                            <img :src="preview" alt="School ID preview" class="mx-auto max-h-44 rounded-lg object-contain shadow-lg">
+                                            <p class="mt-2 truncate text-xs text-slate-400" x-text="filename"></p>
+                                            <p class="mt-1 text-xs font-semibold text-brand-400">Tap to choose a different photo</p>
+                                        </div>
+                                    </template>
+                                </label>
+
+                                {{-- capture lets a phone open the camera directly --}}
+                                <input id="school_id_document" type="file" name="school_id_document" required class="sr-only"
+                                       accept="image/jpeg,image/png,image/webp" capture="environment"
+                                       @change="pick($event.target.files[0])">
+
+                                <p x-show="tooBig" x-cloak class="mt-1.5 text-xs font-medium text-red-400">
+                                    That image is over 8&nbsp;MB. Please choose a smaller photo.
+                                </p>
+                                @error('school_id_document')<p class="mt-1.5 animate-slide-up text-xs font-medium text-red-400">{{ $message }}</p>@enderror
+                            </div>
+                        </div>
+
                         <div x-data="{ reveal: false }">
                             <label for="password" class="mb-1.5 block text-sm font-medium text-slate-200">Password <span class="text-brand-400">*</span></label>
                             <div class="relative">
@@ -85,4 +147,37 @@
             </div>
         </div>
     </section>
+
+    @push('scripts')
+    <script>
+        // Client-side preview only — the server re-validates type, size and
+        // dimensions, so nothing here is trusted.
+        function idUpload() {
+            return {
+                preview: null,
+                filename: '',
+                dragging: false,
+                tooBig: false,
+                pick(file) {
+                    this.dragging = false;
+                    if (!file) return;
+
+                    this.tooBig = file.size > 8 * 1024 * 1024;
+                    if (this.tooBig) { this.preview = null; return; }
+
+                    this.filename = file.name;
+                    const input = document.getElementById('school_id_document');
+                    if (input.files[0] !== file) {
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        input.files = dt.files;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = e => this.preview = e.target.result;
+                    reader.readAsDataURL(file);
+                },
+            };
+        }
+    </script>
+    @endpush
 </x-public-layout>

@@ -5,6 +5,8 @@ namespace Tests\Feature\Auth;
 use App\Models\School;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -20,6 +22,7 @@ class RegistrationTest extends TestCase
 
     public function test_a_teacher_can_self_register_into_a_school_as_pending(): void
     {
+        Storage::fake('local');
         $school = School::factory()->create();
 
         $response = $this->post('/register', [
@@ -27,8 +30,11 @@ class RegistrationTest extends TestCase
             'email' => 'maria@example.com',
             'contact_number' => '09171234567',
             'school_id' => $school->id,
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            // Registration now requires proof the applicant works at this school.
+            'school_id_number' => '2019-04821',
+            'school_id_document' => UploadedFile::fake()->image('id.jpg', 800, 600)->size(500),
+            'password' => 'Str0ng-Passw0rd!',
+            'password_confirmation' => 'Str0ng-Passw0rd!',
         ]);
 
         $this->assertAuthenticated();
