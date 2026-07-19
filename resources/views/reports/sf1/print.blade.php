@@ -21,11 +21,13 @@
         body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #fff; color: #000; }
         .sheet { background: #fff; padding: 0; }
 
-        .head-row { width: 80%; margin: 0 auto; }
+        /* Narrow centered band so both seals sit right beside the title rather
+           than out at the page corners. Matches SF2 exactly. */
+        .head-row { width: 48%; margin: 0 auto; }
         .head-row td { vertical-align: middle; }
-        .logo { width: 90px; }
-        .logo img.seal { height: 54px; }
-        .logo img.deped { height: 46px; }
+        .logo { width: 56px; }
+        .logo img.seal { height: 58px; }
+        .logo img.deped { height: 48px; }
         .title { text-align: center; }
         .title h1 { font-size: 14px; font-weight: bold; margin: 0; }
         .title .sub { font-size: 8.5px; font-style: italic; margin: 1px 0 0; }

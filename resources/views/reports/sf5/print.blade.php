@@ -42,11 +42,13 @@
         .sheet { page-break-after: always; }
         .sheet:last-child { page-break-after: auto; }
 
-        .head-row { width: 80%; margin: 0 auto; }
+        /* Narrow centered band so both seals sit right beside the title rather
+           than out at the page corners. Matches SF2 exactly. */
+        .head-row { width: 48%; margin: 0 auto; }
         .head-row td { vertical-align: middle; }
-        .logo { width: 90px; }
-        .logo img.seal { height: 50px; }
-        .logo img.deped { height: 44px; }
+        .logo { width: 56px; }
+        .logo img.seal { height: 58px; }
+        .logo img.deped { height: 48px; }
         .title { text-align: center; }
         .title h1 { font-size: 13.5px; font-weight: bold; margin: 0; }
         .title .sub { font-size: 8px; font-style: italic; margin: 1px 0 0; }
