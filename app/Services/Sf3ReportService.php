@@ -39,7 +39,7 @@ class Sf3ReportService
         return [
             'section' => $section,
             'schoolYear' => $section->schoolYear,
-            'school' => $section->school,
+            'school' => \App\Support\ReportSchool::for($section),
             'adviser' => $section->adviser?->full_name,
             'books' => $books,
             'bookPages' => $books->isEmpty() ? collect([collect()]) : $books->chunk(self::BOOKS_PER_PAGE),

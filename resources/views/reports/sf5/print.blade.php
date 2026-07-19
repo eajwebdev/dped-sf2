@@ -1,7 +1,7 @@
 @php
     // The section's school, falling back to the logged-in teacher's school so
     // the form always carries the branding of the school they belong to.
-    $school = $school ?? $section->school ?? auth()->user()?->school;
+    $school = $school ?? \App\Support\ReportSchool::for($section);
 
     /*
      * DomPDF cannot split a tall nested two-pane table across pages without
@@ -90,9 +90,7 @@
 </head>
 <body>
 @php
-    $schoolLogo = $school?->logo_path && file_exists(public_path($school->logo_path))
-        ? public_path($school->logo_path)
-        : public_path('logo.png');
+    $schoolLogo = \App\Support\ReportSchool::logoPath($school);
     $depedLogo = public_path('DepED-Logo.png');
 @endphp
 

@@ -49,7 +49,7 @@ class Sf1ReportService
         return [
             'section' => $section,
             'schoolYear' => $schoolYear,
-            'school' => $section->school,
+            'school' => \App\Support\ReportSchool::for($section),
             'adviser' => $section->adviser?->full_name,
             'cutOff' => $cutOff,
             'males' => $males,

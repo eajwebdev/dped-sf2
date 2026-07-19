@@ -1,7 +1,7 @@
 @php
     // The section's school, falling back to the logged-in teacher's school so
     // the form always carries the branding of the school they belong to.
-    $school = $school ?? $section->school ?? auth()->user()?->school;
+    $school = $school ?? \App\Support\ReportSchool::for($section);
 
     // Every grid column, so header bands and full-width rows stay in step.
     $totalCols = 20;
@@ -75,9 +75,7 @@
         @php
             // DomPDF needs local filesystem paths, not URLs. School's uploaded
             // logo (stored directly in public/) first, the bundled seal as fallback.
-            $schoolLogo = $school?->logo_path && file_exists(public_path($school->logo_path))
-                ? public_path($school->logo_path)
-                : public_path('logo.png');
+            $schoolLogo = \App\Support\ReportSchool::logoPath($school);
             $depedLogo = public_path('DepED-Logo.png');
         @endphp
         <table class="head-row">

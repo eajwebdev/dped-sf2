@@ -4,7 +4,7 @@
     $section = $data['section'];
     $sy = $data['schoolYear'];
     $sum = $data['summary'];
-    $school = $section->school ?? auth()->user()?->school;
+    $school = \App\Support\ReportSchool::for($section);
 @endphp
 <table>
     <tr><td colspan="{{ 4 + max($nDays, 1) }}"><b>School Form 2 (SF2) — Daily Attendance Report of Learners</b></td></tr>
@@ -14,7 +14,12 @@
         <td colspan="2">School Days: {{ $sum['classDays'] }}</td>
     </tr>
     <tr>
-        <td colspan="2">School: {{ $school?->name ?? config('app.name') }}</td>
+        <td colspan="2">School ID: {{ $school?->school_id ?? '' }}</td>
+        <td colspan="{{ max($nDays, 1) }}">School: {{ $school?->name ?? config('app.name') }}</td>
+        <td colspan="2">Division: {{ $school?->division ?? '' }}</td>
+    </tr>
+    <tr>
+        <td colspan="2">Region: {{ $school?->region ?? '' }}</td>
         <td colspan="{{ max($nDays, 1) }}">Grade Level: {{ $section->gradeLevel->name }}</td>
         <td colspan="2">Section: {{ $section->name }}</td>
     </tr>

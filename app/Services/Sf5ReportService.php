@@ -43,7 +43,7 @@ class Sf5ReportService
         return [
             'section' => $section,
             'schoolYear' => $section->schoolYear,
-            'school' => $section->school,
+            'school' => \App\Support\ReportSchool::for($section),
             'adviser' => $section->adviser?->full_name,
             'males' => $males,
             'females' => $females,
