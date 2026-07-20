@@ -389,4 +389,29 @@ class User extends Authenticatable
 
         return $teacherId ? $query->where('adviser_id', $teacherId) : $query->whereRaw('1 = 0');
     }
+
+    /**
+     * Sections this user teaches but does not advise — the complement of
+     * advisorySections() within accessibleSections(). A section qualifies when
+     * the teacher has it on their own schedule (or an admin assigned them a
+     * subject in it) and is not its class adviser. This is the set a subject
+     * teacher may print a non-advisory SF2 for.
+     */
+    public function nonAdvisorySections(): Builder
+    {
+        $query = Section::query();
+
+        if ($this->isAdmin()) {
+            return $query;
+        }
+
+        $teacherId = $this->teacher?->id;
+
+        if (! $teacherId) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->forTeacher($teacherId)
+            ->where(fn (Builder $q) => $q->whereNull('adviser_id')->orWhere('adviser_id', '!=', $teacherId));
+    }
 }

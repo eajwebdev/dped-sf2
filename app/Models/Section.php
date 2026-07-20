@@ -63,21 +63,30 @@ class Section extends Model
         return $this->hasMany(SubjectAssignment::class);
     }
 
+    public function teacherSchedules(): HasMany
+    {
+        return $this->hasMany(TeacherSchedule::class);
+    }
+
     public function attendance(): HasMany
     {
         return $this->hasMany(Attendance::class);
     }
 
     /**
-     * Sections a teacher may take attendance for: those they advise, or those
-     * offering a subject they are assigned to teach.
+     * Sections a teacher may take attendance for: those they advise, those
+     * offering a subject they are assigned to teach, or any section they have
+     * added to their own weekly schedule (a subject teacher declaring a class
+     * they teach but do not advise).
      */
     public function scopeForTeacher(Builder $query, int $teacherId): Builder
     {
         return $query->where(function (Builder $q) use ($teacherId) {
             $q->where('adviser_id', $teacherId)
                 ->orWhereHas('subjectAssignments.teacherAssignments',
-                    fn (Builder $t) => $t->where('teacher_id', $teacherId));
+                    fn (Builder $t) => $t->where('teacher_id', $teacherId))
+                ->orWhereHas('teacherSchedules',
+                    fn (Builder $s) => $s->where('teacher_id', $teacherId));
         });
     }
 }

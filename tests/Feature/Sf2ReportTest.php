@@ -9,6 +9,11 @@ use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentEnrollment;
+use App\Models\Subject;
+use App\Models\SubjectAssignment;
+use App\Models\Teacher;
+use App\Models\TeacherSchedule;
+use App\Models\TeacherSubjectAssignment;
 use App\Models\User;
 use App\Services\SchoolCalendarService;
 use App\Services\Sf2ReportService;
@@ -119,5 +124,118 @@ class Sf2ReportTest extends TestCase
         $this->actingAs($teacher)
             ->get(route('reports.sf2.show', ['section' => $this->section, 'year' => 2025, 'month' => 6]))
             ->assertForbidden();
+    }
+
+    public function test_subject_teacher_can_open_sf2_for_a_class_they_teach_but_do_not_advise(): void
+    {
+        $this->enroll('Male');
+        [$user, $teacher] = $this->makeTeacher();
+        $this->assignSubject($teacher, $this->section); // section has no adviser
+
+        $response = $this->actingAs($user)
+            ->get(route('reports.sf2.show', ['section' => $this->section, 'year' => 2025, 'month' => 6]));
+
+        $response->assertOk();
+        $this->assertSame('application/pdf', $response->headers->get('content-type'));
+    }
+
+    public function test_non_advisory_picker_lists_taught_sections_and_excludes_advisory(): void
+    {
+        [$user, $teacher] = $this->makeTeacher();
+
+        $advisory = Section::factory()->create([
+            'school_id' => $this->section->school_id,
+            'school_year_id' => $this->year->id,
+            'grade_level_id' => $this->section->grade_level_id,
+            'adviser_id' => $teacher->id,
+        ]);
+
+        $this->assignSubject($teacher, $this->section); // taught, not advised
+
+        $nonAdvisory = $user->nonAdvisorySections()->pluck('id');
+        $this->assertTrue($nonAdvisory->contains($this->section->id));
+        $this->assertFalse($nonAdvisory->contains($advisory->id));
+
+        $advisorySections = $user->advisorySections()->pluck('id');
+        $this->assertTrue($advisorySections->contains($advisory->id));
+        $this->assertFalse($advisorySections->contains($this->section->id));
+    }
+
+    public function test_teacher_with_only_a_schedule_entry_can_open_non_advisory_sf2(): void
+    {
+        $this->enroll('Male');
+        [$user, $teacher] = $this->makeTeacher();
+
+        // No subject assignment and not the adviser — just a class the teacher
+        // put on their own schedule.
+        TeacherSchedule::create([
+            'school_id' => $this->section->school_id,
+            'teacher_id' => $teacher->id,
+            'school_year_id' => $this->year->id,
+            'section_id' => $this->section->id,
+            'day_of_week' => 1,
+            'start_time' => '07:00',
+            'end_time' => '08:00',
+        ]);
+
+        $this->assertTrue($user->nonAdvisorySections()->pluck('id')->contains($this->section->id));
+
+        $response = $this->actingAs($user)
+            ->get(route('reports.sf2.show', ['section' => $this->section, 'year' => 2025, 'month' => 6]));
+
+        $response->assertOk();
+        $this->assertSame('application/pdf', $response->headers->get('content-type'));
+    }
+
+    public function test_index_lists_advisory_and_non_advisory_classes_with_flags(): void
+    {
+        [$user, $teacher] = $this->makeTeacher();
+
+        $advisory = Section::factory()->create([
+            'school_id' => $this->section->school_id,
+            'school_year_id' => $this->year->id,
+            'grade_level_id' => $this->section->grade_level_id,
+            'adviser_id' => $teacher->id,
+        ]);
+
+        $this->assignSubject($teacher, $this->section); // taught, not advised
+
+        $response = $this->actingAs($user)->get(route('reports.sf2.index'));
+
+        $response->assertOk();
+        // The single form offers both report types...
+        $response->assertSee('Advisory');
+        $response->assertSee('Non-Advisory');
+        // ...and both classes reach the client-side picker data.
+        $response->assertSee($advisory->name);
+        $response->assertSee($this->section->name);
+    }
+
+    /** @return array{0: User, 1: Teacher} */
+    private function makeTeacher(): array
+    {
+        $user = User::factory()->create(['role' => User::ROLE_TEACHER, 'is_active' => true]);
+        $teacher = Teacher::factory()->create(['user_id' => $user->id, 'school_id' => $user->school_id]);
+
+        return [$user, $teacher];
+    }
+
+    private function assignSubject(Teacher $teacher, Section $section): void
+    {
+        $subject = Subject::factory()->create(['school_id' => $section->school_id]);
+
+        $assignment = SubjectAssignment::create([
+            'school_id' => $section->school_id,
+            'school_year_id' => $section->school_year_id,
+            'grade_level_id' => $section->grade_level_id,
+            'section_id' => $section->id,
+            'subject_id' => $subject->id,
+        ]);
+
+        TeacherSubjectAssignment::create([
+            'school_id' => $section->school_id,
+            'subject_assignment_id' => $assignment->id,
+            'teacher_id' => $teacher->id,
+        ]);
     }
 }

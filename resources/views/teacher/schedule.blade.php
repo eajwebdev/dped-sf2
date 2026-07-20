@@ -206,10 +206,10 @@
                                 class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
                             <option value="">Choose a section…</option>
                             <template x-for="s in sections" :key="s.id">
-                                <option :value="s.id" x-text="s.label + (s.is_advisory ? ' (Advisory)' : ' (Subject)')" :selected="String(form.section_id) === String(s.id)"></option>
+                                <option :value="s.id" x-text="s.label + (s.is_advisory ? ' (Advisory)' : '')" :selected="String(form.section_id) === String(s.id)"></option>
                             </template>
                         </select>
-                        <p class="mt-1 text-[11px] text-gray-400">You can schedule any class you advise or teach a subject in.</p>
+                        <p class="mt-1 text-[11px] text-gray-400">Schedule any class in your school — advisory or not. Non-advisory classes you add here become available for their own SF2.</p>
                     </div>
 
                     <div x-show="subjectOptions.length > 0">

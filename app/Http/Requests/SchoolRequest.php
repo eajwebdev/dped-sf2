@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\School;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,6 +23,7 @@ class SchoolRequest extends FormRequest
                 Rule::unique('schools', 'school_id')->ignore($id),
             ],
             'name' => ['required', 'string', 'max:150'],
+            'education_level' => ['required', Rule::in(array_keys(School::LEVELS))],
             'division' => ['nullable', 'string', 'max:100'],
             'region' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:255'],

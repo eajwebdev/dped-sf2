@@ -16,14 +16,32 @@ class Sf2Controller extends Controller
         private readonly AuditLogger $audit,
     ) {}
 
-    /** Picker: choose an advisory section + month. */
+    /**
+     * Picker: choose a class + month. The form offers both the teacher's
+     * advisory classes and the classes they merely teach a subject in; each
+     * section carries an `is_advisory` flag so the form can switch between them.
+     */
     public function index(Request $request)
     {
-        // SF2 is the class adviser's form: sections merely taught are excluded.
-        $sections = $request->user()->advisorySections()
-            ->with(['gradeLevel', 'schoolYear'])
-            ->orderByDesc('school_year_id')->orderBy('grade_level_id')->orderBy('name')
-            ->get();
+        $user = $request->user();
+
+        // Merge advisory + non-advisory, de-duped by id (an admin sees every
+        // section through both scopes — keep the first, advisory-tagged copy).
+        $sections = collect();
+        foreach ($user->advisorySections()->with(['gradeLevel', 'schoolYear'])->get() as $section) {
+            $section->setAttribute('is_advisory', true);
+            $sections[$section->id] = $section;
+        }
+        foreach ($user->nonAdvisorySections()->with(['gradeLevel', 'schoolYear'])->get() as $section) {
+            if (! $sections->has($section->id)) {
+                $section->setAttribute('is_advisory', false);
+                $sections[$section->id] = $section;
+            }
+        }
+
+        $sections = $sections->values()
+            ->sortByDesc('school_year_id')
+            ->values();
 
         return view('reports.sf2.index', [
             'sections' => $sections,
@@ -76,10 +94,12 @@ class Sf2Controller extends Controller
     private function authorizeSection(Request $request, Section $section): void
     {
         $user = $request->user();
+        // Advisers print the SF2 for classes they advise; subject teachers for
+        // classes they teach — both cover the same per-section daily attendance.
         abort_unless(
-            $user->isAdmin() || $user->advisorySections()->whereKey($section->id)->exists(),
+            $user->isAdmin() || $user->accessibleSections()->whereKey($section->id)->exists(),
             403,
-            'SF2 covers advisory classes only — you are not the class adviser for this section.'
+            'You do not advise or teach this section.'
         );
     }
 }

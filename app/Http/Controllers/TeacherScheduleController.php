@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SchoolYear;
+use App\Models\Section;
 use App\Models\TeacherSchedule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,9 +22,11 @@ class TeacherScheduleController extends Controller
             ->orderBy('day_of_week')->orderBy('start_time')
             ->get();
 
-        // Sections this teacher may schedule classes in (advisory + subject teaching),
-        // each with the subjects offered so the modal can filter its subject picker.
-        $sections = $request->user()->accessibleSections()
+        // Every section in the teacher's school for the active year — a teacher
+        // may schedule any class, including ones they do not advise, which is
+        // what lets them generate a non-advisory SF2 for it later. The school
+        // tenant scope keeps this to their own school.
+        $sections = Section::query()
             ->with(['gradeLevel', 'subjectAssignments.subject'])
             ->when($activeYear, fn ($q) => $q->where('school_year_id', $activeYear->id))
             ->orderBy('grade_level_id')->orderBy('name')
@@ -87,7 +90,12 @@ class TeacherScheduleController extends Controller
     /** @return array<string, mixed> */
     private function validated(Request $request): array
     {
-        $sectionIds = $request->user()->accessibleSections()->pluck('id');
+        // A teacher may schedule any section in their own school (the tenant
+        // scope on Section enforces that); cross-school ids are rejected.
+        $activeYear = SchoolYear::activeFor($request->user());
+        $sectionIds = Section::query()
+            ->when($activeYear, fn ($q) => $q->where('school_year_id', $activeYear->id))
+            ->pluck('id');
 
         return $request->validate([
             'section_id' => ['required', 'integer', 'in:'.$sectionIds->implode(',')],

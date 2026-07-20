@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\GradeLevel;
+use App\Models\School;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Student;
@@ -106,9 +107,33 @@ class TeacherScheduleTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_teacher_cannot_schedule_in_an_inaccessible_section(): void
+    public function test_teacher_can_schedule_a_non_advisory_section_in_their_school(): void
     {
+        // A section in the same school that this teacher does not advise.
+        $other = Section::factory()->create([
+            'school_id' => $this->section->school_id,
+            'school_year_id' => $this->year->id,
+            'grade_level_id' => $this->section->grade_level_id,
+        ]);
+
+        $this->actingAs($this->teacherUser)->post(route('schedule.store'), [
+            'section_id' => $other->id,
+            'day_of_week' => 3,
+            'start_time' => '07:00',
+            'end_time' => '08:00',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('teacher_schedules', [
+            'teacher_id' => $this->teacher->id,
+            'section_id' => $other->id,
+        ]);
+    }
+
+    public function test_teacher_cannot_schedule_in_another_schools_section(): void
+    {
+        $otherSchool = School::factory()->create();
         $foreign = Section::factory()->create([
+            'school_id' => $otherSchool->id,
             'school_year_id' => $this->year->id,
             'grade_level_id' => GradeLevel::factory()->create()->id,
         ]);

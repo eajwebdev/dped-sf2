@@ -35,10 +35,15 @@ class SubscriptionTest extends TestCase
             ->post(route('admin.schools.store'), [
                 'school_id' => '123456',
                 'name' => 'Dela Paz Central School',
+                'education_level' => 'jhs_shs',
                 'is_active' => 1,
             ])->assertRedirect(route('admin.schools.index'));
 
-        $this->assertDatabaseHas('schools', ['school_id' => '123456', 'name' => 'Dela Paz Central School']);
+        $this->assertDatabaseHas('schools', [
+            'school_id' => '123456',
+            'name' => 'Dela Paz Central School',
+            'education_level' => 'jhs_shs',
+        ]);
     }
 
     public function test_approving_a_registration_starts_the_trial_and_creates_a_teacher(): void

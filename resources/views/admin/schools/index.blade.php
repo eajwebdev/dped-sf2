@@ -3,7 +3,7 @@
 
     <div x-data="resourceModal({
             base: '{{ url('admin/schools') }}',
-            defaults: { school_id: '', name: '', division: '', region: '', address: '', is_active: true },
+            defaults: { school_id: '', name: '', education_level: '', division: '', region: '', address: '', is_active: true },
             autoOpen: @js($openModal ?? null),
             editRow: @js($editModel ?? null),
             reopen: @js($errors->any() ? ['id' => old('_edit_id') ?: null, 'old' => old()] : null),
@@ -25,6 +25,7 @@
                             <th class="px-6 py-4">School ID</th>
                             <th class="px-6 py-4">Logo</th>
                             <th class="px-6 py-4">Name</th>
+                            <th class="px-6 py-4">Level</th>
                             <th class="px-6 py-4">Division / Region</th>
                             <th class="px-6 py-4">Status</th>
                             <th class="px-6 py-4 text-center">Teachers</th>
@@ -46,6 +47,13 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">{{ $school->name }}</td>
+                                <td class="px-6 py-4">
+                                    @if ($school->educationLevelLabel())
+                                        <span class="inline-flex items-center rounded-full bg-brand-50 dark:bg-brand-500/10 px-3 py-1.5 text-xs font-semibold text-brand-700 dark:text-brand-300">{{ strtoupper(str_replace('_', '+', $school->education_level)) }}</span>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ collect([$school->division, $school->region])->filter()->join(' · ') ?: '—' }}</td>
                                 <td class="px-6 py-4">
                                     @if ($school->is_active)
@@ -68,7 +76,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="px-6 py-12 text-center">
+                            <tr><td colspan="8" class="px-6 py-12 text-center">
                                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">No schools yet</p>
                                 <p class="mt-1 text-xs text-gray-500">Add a school so teachers can register into it.</p>
                             </td></tr>
@@ -97,6 +105,18 @@
                     <input type="text" name="name" x-model="form.name" required placeholder="e.g. Dela Paz Central School"
                            class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
                     @error('name')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Education Level</label>
+                    <select name="education_level" x-model="form.education_level" required
+                            class="w-full rounded-lg border border-gray-300 dark:border-white/15 dark:bg-navy-900 text-sm px-4 py-2.5 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all">
+                        <option value="">— Select level —</option>
+                        @foreach (\App\Models\School::LEVELS as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-gray-400">Elementary is its own school; JHS and SHS may share one campus.</p>
+                    @error('education_level')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Division</label>

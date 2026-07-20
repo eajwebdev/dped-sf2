@@ -97,6 +97,16 @@ class StudentEnrollment extends Model
         return $this->hasMany(Attendance::class);
     }
 
+    public function grades(): HasMany
+    {
+        return $this->hasMany(LearnerGrade::class);
+    }
+
+    public function values(): HasMany
+    {
+        return $this->hasMany(LearnerValue::class);
+    }
+
     public function isActive(): bool
     {
         return in_array($this->status, [self::STATUS_ENROLLED, self::STATUS_TRANSFERRED_IN], true);

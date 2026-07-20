@@ -13,6 +13,27 @@ class School extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Education levels a school may offer. Elementary is a separate school from
+     * high school; Junior and Senior High can share one campus, hence the
+     * combined value. These four cover every valid combination.
+     */
+    public const LEVEL_ES = 'es';
+
+    public const LEVEL_JHS = 'jhs';
+
+    public const LEVEL_SHS = 'shs';
+
+    public const LEVEL_JHS_SHS = 'jhs_shs';
+
+    /** value => human label, in display order. */
+    public const LEVELS = [
+        self::LEVEL_ES => 'Elementary (ES)',
+        self::LEVEL_JHS => 'Junior High School (JHS)',
+        self::LEVEL_SHS => 'Senior High School (SHS)',
+        self::LEVEL_JHS_SHS => 'Junior & Senior High School (JHS + SHS)',
+    ];
+
     /** Memoised result of soleId(); false means "not looked up yet". */
     private static bool|int|null $soleId = false;
 
@@ -42,6 +63,7 @@ class School extends Model
     protected $fillable = [
         'school_id',
         'name',
+        'education_level',
         'division',
         'region',
         'address',
@@ -73,6 +95,12 @@ class School extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    /** Human-readable education level (e.g. "Junior High School (JHS)"), or null. */
+    public function educationLevelLabel(): ?string
+    {
+        return self::LEVELS[$this->education_level] ?? null;
     }
 
     /** Public URL of the uploaded school logo, or null (usable on reports/forms). */

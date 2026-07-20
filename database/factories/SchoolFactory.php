@@ -17,6 +17,7 @@ class SchoolFactory extends Factory
         return [
             'school_id' => (string) fake()->unique()->numberBetween(100000, 999999),
             'name' => fake()->company().' School',
+            'education_level' => fake()->randomElement(array_keys(School::LEVELS)),
             'division' => fake()->city(),
             'region' => 'Region '.fake()->randomElement(['IV-A', 'III', 'NCR']),
             'address' => fake()->address(),

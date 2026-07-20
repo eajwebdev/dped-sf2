@@ -30,11 +30,13 @@ use App\Http\Controllers\Sf2Controller;
 use App\Http\Controllers\Sf3Controller;
 use App\Http\Controllers\Sf5Controller;
 use App\Http\Controllers\Sf8Controller;
+use App\Http\Controllers\Sf9Controller;
 use App\Http\Controllers\TeacherTextbookController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Teacher\CuttingClassController as TeacherCuttingClassController;
 use App\Http\Controllers\Teacher\PromotionController as TeacherPromotionController;
 use App\Http\Controllers\Teacher\SectionController as TeacherSectionController;
+use App\Http\Controllers\Teacher\Sf9GradeController;
 use App\Http\Controllers\Teacher\StudentController as TeacherStudentController;
 use App\Http\Controllers\Teacher\SubjectController as TeacherSubjectController;
 use App\Http\Controllers\TeacherDashboardController;
@@ -159,6 +161,17 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     Route::get('/reports/sf8', [Sf8Controller::class, 'index'])->name('reports.sf8.index');
     Route::get('/reports/sf8/{section}', [Sf8Controller::class, 'show'])->name('reports.sf8.show');
 
+    // SF9 Learner's Progress Report Card — locked PDF built from entered grades.
+    Route::get('/reports/sf9', [Sf9Controller::class, 'index'])->name('reports.sf9.index');
+    // Adviser grade/values entry (more specific paths precede the {section} PDF route).
+    Route::get('/reports/sf9/{section}/grades', [Sf9GradeController::class, 'edit'])->name('teacher.sf9.grades');
+    Route::post('/reports/sf9/{section}/grades', [Sf9GradeController::class, 'save'])
+        ->middleware('throttle:60,1')->name('teacher.sf9.grades.save');
+    Route::post('/reports/sf9/{section}/subjects', [Sf9GradeController::class, 'addSubject'])->name('teacher.sf9.subjects.store');
+    Route::post('/reports/sf9/{section}/subjects/standard', [Sf9GradeController::class, 'addStandardAreas'])->name('teacher.sf9.subjects.standard');
+    Route::delete('/reports/sf9/subject-assignments/{subjectAssignment}', [Sf9GradeController::class, 'removeSubject'])->name('teacher.sf9.subjects.destroy');
+    Route::get('/reports/sf9/{section}', [Sf9Controller::class, 'show'])->name('reports.sf9.show');
+
     // SF3 Books Issued and Returned, plus the adviser's issuance screen behind it.
     // Professional-plan module: Starter subscribers get an upgrade prompt.
     Route::middleware('module:sf3')->group(function () {
@@ -188,7 +201,8 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
         Route::get('/insights/{section}', [InsightsController::class, 'show'])->name('insights.show');
     });
 
-    // SF2 Daily Attendance Report of Learners.
+    // SF2 Daily Attendance Report of Learners. The picker covers both the
+    // teacher's advisory classes and classes they merely teach a subject in.
     Route::get('/reports/sf2', [Sf2Controller::class, 'index'])->name('reports.sf2.index');
     // Renders the SF2 as an inline PDF (DomPDF) — no HTML view, no Excel.
     Route::get('/reports/sf2/{section}', [Sf2Controller::class, 'show'])->name('reports.sf2.show');

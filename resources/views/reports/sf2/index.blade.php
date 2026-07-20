@@ -3,7 +3,7 @@
         <div class="rounded-card border border-slate-200/80 bg-white shadow-soft dark:border-white/10 dark:bg-navy-800">
             <div class="border-b border-slate-200/80 px-6 py-4 dark:border-white/10">
                 <h2 class="text-base font-bold text-slate-900 dark:text-white">Generate SF2</h2>
-                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Pick one of your advisory classes and a month — the PDF opens in a new tab.</p>
+                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Pick a class and a month — the PDF opens in a new tab.</p>
             </div>
 
             @php
@@ -12,16 +12,18 @@
                     'id' => $s->id,
                     'sy' => $s->school_year_id,
                     'startYear' => $s->schoolYear->start_date->year,
+                    'advisory' => (bool) $s->is_advisory,
                     'label' => $s->gradeLevel->name.' — '.$s->name,
                 ])->values();
             @endphp
             <form method="GET" action=""
                   x-data="{
                       sy: @js($schoolYears->first()?->id),
+                      mode: 'advisory',
                       section: '',
                       sections: @js($sectionData),
-                      get filtered() { return this.sections.filter(s => s.sy === this.sy) },
-                      /* Jumping to a past year points the report year at that SY's opening year. */
+                      get filtered() { return this.sections.filter(s => s.sy === this.sy && s.advisory === (this.mode === 'advisory')) },
+                      /* Switching year or report type invalidates the picked class. */
                       syncYear() {
                           this.section = '';
                           const first = this.filtered[0];
@@ -30,6 +32,24 @@
                   }"
                   @submit.prevent="if(section){ window.open('{{ url('reports/sf2') }}/' + section + '?year=' + document.getElementById('year').value + '&month=' + document.getElementById('month').value + '&head=' + encodeURIComponent(document.getElementById('head').value), '_blank') }">
                 <div class="space-y-5 p-6">
+                    <div>
+                        <span class="label">Report Type</span>
+                        <div class="grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/5">
+                            <button type="button" @click="mode = 'advisory'; section = ''"
+                                    :class="mode === 'advisory' ? 'bg-white text-brand-600 shadow-sm dark:bg-navy-700 dark:text-brand-300' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
+                                    class="cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors">
+                                Advisory
+                            </button>
+                            <button type="button" @click="mode = 'nonadvisory'; section = ''"
+                                    :class="mode === 'nonadvisory' ? 'bg-white text-brand-600 shadow-sm dark:bg-navy-700 dark:text-brand-300' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
+                                    class="cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors">
+                                Non-Advisory
+                            </button>
+                        </div>
+                        <p class="mt-1 text-[11px] text-slate-400"
+                           x-text="mode === 'advisory' ? 'Classes you advise.' : 'Classes you teach a subject in but do not advise.'"></p>
+                    </div>
+
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label for="sy" class="label">School Year</label>
@@ -48,9 +68,8 @@
                                     <option :value="s.id" x-text="s.label"></option>
                                 </template>
                             </select>
-                            @if ($sections->isEmpty())
-                                <p class="mt-1 text-[11px] text-amber-500">No advisory classes — SF2 is for your advisory only.</p>
-                            @endif
+                            <p class="mt-1 text-[11px] text-amber-500" x-show="filtered.length === 0" x-cloak
+                               x-text="mode === 'advisory' ? 'No advisory classes for this school year.' : 'No non-advisory classes — no subject assignments outside your advisory.'"></p>
                         </div>
                     </div>
 
