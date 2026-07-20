@@ -55,10 +55,11 @@ class Sf9GradeController extends Controller
             ->groupBy('student_enrollment_id')
             ->map(fn ($g) => $g->groupBy('subject_id')->map(fn ($s) => $s->keyBy('period')->map->grade));
 
-        // existingValues[enrollment][core_value][period] = mark
+        // existingValues[enrollment][core_value][behavior][period] = mark
         $existingValues = LearnerValue::whereIn('student_enrollment_id', $enrollmentIds)->get()
             ->groupBy('student_enrollment_id')
-            ->map(fn ($v) => $v->groupBy('core_value')->map(fn ($c) => $c->keyBy('period')->map->mark));
+            ->map(fn ($v) => $v->groupBy('core_value')
+                ->map(fn ($c) => $c->groupBy('behavior')->map(fn ($b) => $b->keyBy('period')->map->mark)));
 
         return view('teacher.sf9.grades', [
             'section' => $section,
@@ -67,7 +68,9 @@ class Sf9GradeController extends Controller
             'periodLabels' => $this->report->periodLabels($section),
             'isShs' => $this->report->isSeniorHigh($section),
             'coreValues' => LearnerValue::CORE_VALUES,
+            'behaviors' => LearnerValue::BEHAVIORS,
             'marks' => LearnerValue::MARKS,
+            'passingGrade' => Sf9ReportService::PASSING_GRADE,
             'existingGrades' => $existingGrades,
             'existingValues' => $existingValues,
         ]);
@@ -81,7 +84,7 @@ class Sf9GradeController extends Controller
             'grades' => ['array'],
             'grades.*.*.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'values' => ['array'],
-            'values.*.*.*' => ['nullable', Rule::in(array_keys(LearnerValue::MARKS))],
+            'values.*.*.*.*' => ['nullable', Rule::in(array_keys(LearnerValue::MARKS))],
         ]);
 
         $enrollmentIds = $this->report->roster($section)->pluck('id')->all();
@@ -106,12 +109,18 @@ class Sf9GradeController extends Controller
                 if (! in_array((int) $enrollmentId, $enrollmentIds, true)) {
                     continue;
                 }
-                foreach ((array) $byCore as $coreValue => $byPeriod) {
+                foreach ((array) $byCore as $coreValue => $byBehavior) {
                     if (! array_key_exists($coreValue, LearnerValue::CORE_VALUES)) {
                         continue;
                     }
-                    foreach ((array) $byPeriod as $period => $mark) {
-                        $this->upsertValue($section, (int) $enrollmentId, $coreValue, (int) $period, $mark);
+                    $behaviorCount = LearnerValue::behaviorCount($coreValue);
+                    foreach ((array) $byBehavior as $behavior => $byPeriod) {
+                        if ((int) $behavior < 1 || (int) $behavior > $behaviorCount) {
+                            continue;
+                        }
+                        foreach ((array) $byPeriod as $period => $mark) {
+                            $this->upsertValue($section, (int) $enrollmentId, $coreValue, (int) $behavior, (int) $period, $mark);
+                        }
                     }
                 }
             }
@@ -197,13 +206,13 @@ class Sf9GradeController extends Controller
         LearnerGrade::updateOrCreate($key, ['school_id' => $section->school_id, 'grade' => $grade]);
     }
 
-    private function upsertValue(Section $section, int $enrollmentId, string $coreValue, int $period, $mark): void
+    private function upsertValue(Section $section, int $enrollmentId, string $coreValue, int $behavior, int $period, $mark): void
     {
         if (! in_array($period, LearnerGrade::PERIODS, true)) {
             return;
         }
 
-        $key = ['student_enrollment_id' => $enrollmentId, 'core_value' => $coreValue, 'period' => $period];
+        $key = ['student_enrollment_id' => $enrollmentId, 'core_value' => $coreValue, 'behavior' => $behavior, 'period' => $period];
 
         if ($mark === null || $mark === '') {
             LearnerValue::where($key)->delete();

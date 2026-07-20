@@ -38,6 +38,11 @@ class TrialCountdownTest extends TestCase
 
     public function test_the_day_count_counts_down_and_reads_naturally_at_the_end(): void
     {
+        // Freeze at midday so relative offsets never straddle a day boundary:
+        // addHours(3) must still read as "today" no matter when (or in which
+        // timezone) the suite runs.
+        $this->travelTo(now()->startOfDay()->addHours(12));
+
         $this->actingAs($this->teacher(['trial_ends_at' => now()->addDays(14)]))
             ->get(route('teacher.dashboard'))->assertSee('14 days');
 

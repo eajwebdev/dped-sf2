@@ -34,6 +34,12 @@ class RegisteredUserController extends Controller
     {
         $data = $request->validated();
 
+        // Never trust the posted role beyond the two self-service roles. Admin
+        // can only be granted from inside the app, never through registration.
+        $role = ($data['role'] ?? null) === User::ROLE_SUPERVISOR
+            ? User::ROLE_SUPERVISOR
+            : User::ROLE_TEACHER;
+
         /*
          * Stored on the private disk under a random name. Laravel's store()
          * derives the extension from the verified MIME type rather than the
@@ -50,12 +56,12 @@ class RegisteredUserController extends Controller
             'school_id_number' => $data['school_id_number'],
             'school_id_document_path' => $documentPath,
             'password' => Hash::make($data['password']),
-            'role' => User::ROLE_TEACHER,
+            'role' => $role,
             'status' => User::STATUS_PENDING,
         ]);
 
         $audit->log('registration_submitted', $user,
-            "Teacher registration submitted for {$user->email} with a school ID for review",
+            "{$role} registration submitted for {$user->email} with a school ID for review",
             null,
             ['school_id' => $user->school_id, 'school_id_number' => $user->school_id_number],
             $user->id,

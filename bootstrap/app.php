@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureActiveSubscription;
 use App\Http\Middleware\EnsureModuleAccess;
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\EnsureUserIsSupervisor;
 use App\Http\Middleware\EnsureUserIsTeacher;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'supervisor' => EnsureUserIsSupervisor::class,
             'teacher' => EnsureUserIsTeacher::class,
             'subscription' => EnsureActiveSubscription::class,
             'module' => EnsureModuleAccess::class,

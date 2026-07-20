@@ -21,7 +21,7 @@ class RegistrationController extends Controller
         $admin = auth()->user();
 
         $pending = User::with('school')
-            ->where('role', User::ROLE_TEACHER)
+            ->whereIn('role', [User::ROLE_TEACHER, User::ROLE_SUPERVISOR])
             ->where('status', User::STATUS_PENDING)
             // A school's own admin reviews only their applicants; a platform
             // admin (no school of their own) sees every school's queue.
@@ -38,13 +38,15 @@ class RegistrationController extends Controller
      */
     public function approve(User $user): RedirectResponse
     {
-        abort_unless($user->isTeacher(), 404);
+        abort_unless($user->isTeacher() || $user->isSupervisor(), 404);
         $this->authorizeSameSchool($user);
 
         DB::transaction(function () use ($user) {
             $user->forceFill([
                 'status' => User::STATUS_APPROVED,
-                'trial_ends_at' => Carbon::now()->addDays(User::TRIAL_DAYS),
+                // Only teachers enter the billing funnel. A supervisor is an
+                // oversight account — no trial, no subscription, no Teacher row.
+                'trial_ends_at' => $user->isTeacher() ? Carbon::now()->addDays(User::TRIAL_DAYS) : null,
                 'approved_at' => Carbon::now(),
                 'approved_by' => auth()->id(),
                 // Approving is the act of confirming the ID belongs to this school.
@@ -52,7 +54,7 @@ class RegistrationController extends Controller
                 'school_id_verified_by' => auth()->id(),
             ])->save();
 
-            if (! $user->teacher()->exists()) {
+            if ($user->isTeacher() && ! $user->teacher()->exists()) {
                 [$first, $last] = $this->splitName($user->name);
                 Teacher::create([
                     'school_id' => $user->school_id,
@@ -67,18 +69,22 @@ class RegistrationController extends Controller
         });
 
         $this->audit->log('approved', $user,
-            "Approved teacher registration for {$user->email}; school ID {$user->school_id_number} verified");
+            "Approved {$user->role} registration for {$user->email}; school ID {$user->school_id_number} verified");
 
-        return back()->with('success', "{$user->name} approved — ".User::TRIAL_DAYS."-day trial started.");
+        $note = $user->isTeacher()
+            ? User::TRIAL_DAYS.'-day trial started.'
+            : 'read-only school oversight granted.';
+
+        return back()->with('success', "{$user->name} approved — {$note}");
     }
 
     public function reject(User $user): RedirectResponse
     {
-        abort_unless($user->isTeacher(), 404);
+        abort_unless($user->isTeacher() || $user->isSupervisor(), 404);
         $this->authorizeSameSchool($user);
 
         $user->forceFill(['status' => User::STATUS_REJECTED])->save();
-        $this->audit->log('rejected', $user, "Rejected teacher registration for {$user->email}");
+        $this->audit->log('rejected', $user, "Rejected {$user->role} registration for {$user->email}");
 
         return back()->with('success', "{$user->name}'s registration was rejected.");
     }

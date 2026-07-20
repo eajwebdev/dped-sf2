@@ -72,10 +72,10 @@ class JadeTeacherSeeder extends Seeder
          * one school is pinned; the global active year is left alone so the
          * other 13 tenants are unaffected.
          */
-        $school->forceFill(['active_school_year_id' => $sy->id])->save();
+        $school->forceFill(['active_school_year_id' => 2])->save();
 
         $user = User::updateOrCreate(
-            ['email' => 'jade@dpch.edu.ph'],
+            ['email' => 'jade@gmail.com'],
             [
                 'name' => 'Jade D. Samillano',
                 'password' => Hash::make('password'),
@@ -94,7 +94,7 @@ class JadeTeacherSeeder extends Seeder
                 'free_access' => false,
                 'subscribed_until' => null,
                 'subscription_plan' => null,
-                'school_id' => $school->id,
+                'school_id' => 5,
             ]
         );
 
@@ -108,7 +108,7 @@ class JadeTeacherSeeder extends Seeder
                 'gender' => 'Female',
                 'email' => $user->email,
                 'is_active' => true,
-                'school_id' => $school->id,
+                'school_id' => 5,
             ]
         );
 
@@ -120,8 +120,8 @@ class JadeTeacherSeeder extends Seeder
          * her teacher id moves the one section she owns.
          */
         $section = Section::withoutGlobalScopes()->updateOrCreate(
-            ['adviser_id' => $teacher->id, 'school_year_id' => $sy->id, 'grade_level_id' => $g8->id, 'name' => 'JADEITE'],
-            ['school_id' => $school->id]
+            ['adviser_id' => $teacher->id, 'school_year_id' => 2, 'grade_level_id' => $g8->id, 'name' => 'JADEITE'],
+            ['school_id' => 5]
         );
 
         // Roster: [last, first, middle initial, suffix] — SF2 order, males then females.
@@ -191,20 +191,19 @@ class JadeTeacherSeeder extends Seeder
                         'last_name' => $last,
                         'suffix' => $suffix,
                         'gender' => $gender,
-                        'status' => 'active',
-                        'school_id' => $school->id,
+                        'school_id' => 5,
                     ]
                 );
 
                 StudentEnrollment::firstOrCreate(
-                    ['student_id' => $student->id, 'school_year_id' => $sy->id],
+                    ['student_id' => $student->id, 'school_year_id' => 2],
                     [
                         'grade_level_id' => $g8->id,
                         'section_id' => $section->id,
                         'status' => StudentEnrollment::STATUS_ENROLLED,
                         'promotion_status' => 'pending',
                         'enrollment_date' => $sy->start_date,
-                        'school_id' => $school->id,
+                        'school_id' => 5,
                     ]
                 );
             }
@@ -221,14 +220,14 @@ class JadeTeacherSeeder extends Seeder
          */
         Student::withoutGlobalScopes()
             ->where('lrn', 'like', '8260%')
-            ->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', '!=', $school->id))
-            ->update(['school_id' => $school->id]);
+            ->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', '!=', 5))
+            ->update(['school_id' => 5]);
 
         foreach ([StudentEnrollment::class, Attendance::class, ClassSession::class] as $model) {
             $model::withoutGlobalScopes()
                 ->where('section_id', $section->id)
-                ->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', '!=', $school->id))
-                ->update(['school_id' => $school->id]);
+                ->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', '!=', 5))
+                ->update(['school_id' => 5]);
         }
     }
 }

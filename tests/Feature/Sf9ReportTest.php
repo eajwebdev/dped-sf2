@@ -95,15 +95,52 @@ class Sf9ReportTest extends TestCase
         $this->actingAs($this->adviserUser)
             ->post(route('teacher.sf9.grades.save', $this->section), [
                 'grades' => [$enrollment->id => [$subject->id => [1 => 90, 2 => 85, 3 => 88, 4 => 87]]],
-                'values' => [$enrollment->id => ['maka_diyos' => [1 => 'AO', 2 => 'SO']]],
+                // values[enrollment][core_value][behavior][period] = mark
+                'values' => [$enrollment->id => ['maka_diyos' => [1 => [1 => 'AO', 2 => 'SO'], 2 => [1 => 'RO']]]],
             ])->assertRedirect();
 
         $this->assertDatabaseHas('learner_grades', [
             'student_enrollment_id' => $enrollment->id, 'subject_id' => $subject->id, 'period' => 1, 'grade' => 90,
         ]);
         $this->assertDatabaseHas('learner_values', [
-            'student_enrollment_id' => $enrollment->id, 'core_value' => 'maka_diyos', 'period' => 1, 'mark' => 'AO',
+            'student_enrollment_id' => $enrollment->id, 'core_value' => 'maka_diyos', 'behavior' => 1, 'period' => 1, 'mark' => 'AO',
         ]);
+        $this->assertDatabaseHas('learner_values', [
+            'student_enrollment_id' => $enrollment->id, 'core_value' => 'maka_diyos', 'behavior' => 2, 'period' => 1, 'mark' => 'RO',
+        ]);
+    }
+
+    public function test_save_ignores_a_behavior_index_the_core_value_does_not_have(): void
+    {
+        $enrollment = $this->enroll();
+
+        // Maka-kalikasan has only one behaviour statement; behaviour 2 is invalid.
+        $this->actingAs($this->adviserUser)
+            ->post(route('teacher.sf9.grades.save', $this->section), [
+                'values' => [$enrollment->id => ['maka_kalikasan' => [2 => [1 => 'AO']]]],
+            ])->assertRedirect();
+
+        $this->assertDatabaseMissing('learner_values', [
+            'student_enrollment_id' => $enrollment->id, 'core_value' => 'maka_kalikasan', 'behavior' => 2,
+        ]);
+    }
+
+    public function test_report_service_lists_official_behavior_statements(): void
+    {
+        $enrollment = $this->enroll();
+        LearnerValue::create([
+            'school_id' => $this->section->school_id,
+            'student_enrollment_id' => $enrollment->id,
+            'core_value' => 'maka_diyos', 'behavior' => 2, 'period' => 3, 'mark' => 'SO',
+        ]);
+
+        $data = app(Sf9ReportService::class)->build($this->section);
+        $values = $data['learners'][0]['values'];
+
+        // Maka-Diyos carries its two official behaviour statements as sub-rows.
+        $this->assertCount(2, $values['maka_diyos']['statements']);
+        $this->assertSame(1, $values['maka_kalikasan']['statements'][0]['behavior']);
+        $this->assertSame('SO', $values['maka_diyos']['statements'][1]['marks'][3]);
     }
 
     public function test_report_service_computes_jhs_final_and_general_average(): void
@@ -126,6 +163,37 @@ class Sf9ReportTest extends TestCase
         $this->assertSame(85, $learner['subjects'][0]['final']); // (90+80+90+80)/4
         $this->assertSame('Passed', $learner['subjects'][0]['remark']);
         $this->assertSame(85, $learner['generalAverage']['final']);
+    }
+
+    public function test_final_rating_is_blank_until_all_four_quarters_are_entered(): void
+    {
+        $enrollment = $this->enroll();
+        $subject = $this->assignSubject();
+
+        // Only three of the four quarters are in.
+        foreach ([1 => 90, 2 => 85, 3 => 88] as $period => $grade) {
+            LearnerGrade::create([
+                'school_id' => $this->section->school_id,
+                'student_enrollment_id' => $enrollment->id,
+                'subject_id' => $subject->id, 'period' => $period, 'grade' => $grade,
+            ]);
+        }
+
+        $learner = app(Sf9ReportService::class)->build($this->section)['learners'][0];
+
+        $this->assertNull($learner['subjects'][0]['final'], 'Final must stay blank until all four quarters are entered.');
+        $this->assertSame('', $learner['subjects'][0]['remark']);
+        $this->assertNull($learner['generalAverage']['final']);
+
+        // Adding the fourth quarter completes it.
+        LearnerGrade::create([
+            'school_id' => $this->section->school_id,
+            'student_enrollment_id' => $enrollment->id,
+            'subject_id' => $subject->id, 'period' => 4, 'grade' => 81,
+        ]);
+
+        $learner = app(Sf9ReportService::class)->build($this->section)['learners'][0];
+        $this->assertSame(86, $learner['subjects'][0]['final']); // (90+85+88+81)/4 = 86
     }
 
     public function test_senior_high_section_is_semestral(): void

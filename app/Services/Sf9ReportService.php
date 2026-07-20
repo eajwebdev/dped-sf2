@@ -19,7 +19,40 @@ use Illuminate\Support\Collection;
  */
 class Sf9ReportService
 {
+    /** DepEd passing grade for a learning area and the general average. */
+    public const PASSING_GRADE = 75;
+
+    /**
+     * The official DepEd descriptors for the K to 12 grading scale, printed as
+     * the report card's legend. Ordered high-to-low; each is [floor, label].
+     *
+     * @var array<int, array{0:int,1:string}>
+     */
+    public const DESCRIPTORS = [
+        [90, 'Outstanding'],
+        [85, 'Very Satisfactory'],
+        [80, 'Satisfactory'],
+        [75, 'Fairly Satisfactory'],
+        [0, 'Did Not Meet Expectations'],
+    ];
+
     public function __construct(private readonly SchoolCalendarService $calendar) {}
+
+    /** The descriptor for a final grade, or '' when there is no grade. */
+    public function descriptor(?int $grade): string
+    {
+        if ($grade === null) {
+            return '';
+        }
+
+        foreach (self::DESCRIPTORS as [$floor, $label]) {
+            if ($grade >= $floor) {
+                return $label;
+            }
+        }
+
+        return '';
+    }
 
     /** Grade 11+ is Senior High, which is semestral rather than four straight quarters. */
     public function isSeniorHigh(Section $section): bool
@@ -95,6 +128,9 @@ class Sf9ReportService
             'periodLabels' => $this->periodLabels($section),
             'subjects' => $subjects,
             'coreValues' => LearnerValue::CORE_VALUES,
+            'marks' => LearnerValue::MARKS,
+            'descriptors' => self::DESCRIPTORS,
+            'passingGrade' => self::PASSING_GRADE,
             'months' => $months,
             'schoolDays' => $schoolDays,
             'totalSchoolDays' => array_sum($schoolDays),
@@ -121,19 +157,21 @@ class Sf9ReportService
             }
 
             if ($isShs) {
-                $sem1 = $this->avg([$q[1], $q[2]]);
-                $sem2 = $this->avg([$q[3], $q[4]]);
+                // A semester's final needs both of its quarters.
+                $sem1 = $this->completeAvg([$q[1], $q[2]]);
+                $sem2 = $this->completeAvg([$q[3], $q[4]]);
 
                 return ['subject' => $subject->name, 'q' => $q, 'sem1' => $sem1, 'sem2' => $sem2];
             }
 
-            $final = $this->avg($q);
+            // The final rating is only meaningful once all four quarters exist.
+            $final = $this->completeAvg($q);
 
             return [
                 'subject' => $subject->name,
                 'q' => $q,
                 'final' => $final,
-                'remark' => $final === null ? '' : ($final >= 75 ? 'Passed' : 'Failed'),
+                'remark' => $final === null ? '' : ($final >= self::PASSING_GRADE ? 'Passed' : 'Failed'),
             ];
         })->all();
 
@@ -144,18 +182,26 @@ class Sf9ReportService
             $generalAverage = ['sem1' => $gaSem1, 'sem2' => $gaSem2];
         } else {
             $ga = $this->avg(array_map(fn ($r) => $r['final'], $subjectRows));
-            $generalAverage = ['final' => $ga, 'remark' => $ga === null ? '' : ($ga >= 75 ? 'Passed' : 'Failed')];
+            $generalAverage = ['final' => $ga, 'remark' => $ga === null ? '' : ($ga >= self::PASSING_GRADE ? 'Passed' : 'Failed')];
         }
 
-        // Core values: mark per value per period.
+        // Core values: one mark per behaviour statement, per period. Each core
+        // value carries its official DepEd behaviour statements as sub-rows.
         $valuesByCore = $enrollment->values->groupBy('core_value');
         $valueRows = [];
         foreach (LearnerValue::CORE_VALUES as $key => $label) {
-            $byPeriod = ($valuesByCore->get($key) ?? collect())->keyBy('period');
-            $valueRows[$key] = [
-                'label' => $label,
-                'marks' => collect(range(1, 4))->mapWithKeys(fn ($p) => [$p => $byPeriod->get($p)?->mark])->all(),
-            ];
+            $byBehavior = ($valuesByCore->get($key) ?? collect())->groupBy('behavior');
+            $statements = [];
+            foreach (LearnerValue::BEHAVIORS[$key] ?? [] as $i => $text) {
+                $behavior = $i + 1; // 1-based to match stored index
+                $byPeriod = ($byBehavior->get($behavior) ?? collect())->keyBy('period');
+                $statements[] = [
+                    'behavior' => $behavior,
+                    'text' => $text,
+                    'marks' => collect(range(1, 4))->mapWithKeys(fn ($p) => [$p => $byPeriod->get($p)?->mark])->all(),
+                ];
+            }
+            $valueRows[$key] = ['label' => $label, 'statements' => $statements];
         }
 
         return [
@@ -246,5 +292,19 @@ class Sf9ReportService
         $nums = array_values(array_filter($values, fn ($v) => $v !== null));
 
         return $nums === [] ? null : (int) round(array_sum($nums) / count($nums));
+    }
+
+    /**
+     * Rounded mean, but only when EVERY value is present — a period-based rating
+     * (a subject's final, a semester's grade) is undefined until all its periods
+     * are in. Returns null if any value is missing.
+     */
+    private function completeAvg(array $values): ?int
+    {
+        if ($values === [] || in_array(null, $values, true)) {
+            return null;
+        }
+
+        return (int) round(array_sum($values) / count($values));
     }
 }

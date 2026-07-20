@@ -459,6 +459,40 @@
         </div>
     </section>
 
+    {{-- ══════════════ FOR SCHOOL HEADS ══════════════ --}}
+    <section id="school-heads" class="relative border-t border-white/5 py-16">
+        <div class="mx-auto max-w-5xl px-4 sm:px-6">
+            <div class="relative overflow-hidden rounded-card border border-indigo-400/30 bg-gradient-to-br from-indigo-500/[0.12] via-white/[0.04] to-brand-500/[0.10] p-8 shadow-2xl shadow-navy-950/40 sm:p-10">
+                <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl" aria-hidden="true"></div>
+                <div class="relative flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="max-w-2xl">
+                        <span class="inline-flex items-center gap-2 rounded-full border border-indigo-400/40 bg-indigo-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-200">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                            For Principals &amp; School Heads
+                        </span>
+                        <h2 class="mt-4 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                            Oversee every teacher's records — in one place
+                        </h2>
+                        <p class="mt-3 text-base leading-relaxed text-slate-300">
+                            Are you a principal or school head? Apply for a <span class="font-semibold text-white">School Head account</span>
+                            and get <span class="font-semibold text-white">read-only oversight</span> of every class in your school —
+                            view and print any teacher's SF2 and records, without changing a thing. Your teachers stay fully in
+                            control of their own classes; you simply get a window into all of them.
+                        </p>
+                        <p class="mt-2 text-xs text-slate-400">
+                            Sign up, choose <span class="font-semibold text-slate-300">Principal / School Head</span>, and your school's
+                            administrator approves you — no trial, no billing.
+                        </p>
+                    </div>
+                    <a href="{{ route('register') }}" class="btn-primary btn-lg w-full shrink-0 lg:w-auto">
+                        Apply as a School Head
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {{-- ══════════════ FEATURES ══════════════ --}}
     <section id="features" class="relative py-24">
         <div class="mx-auto max-w-7xl px-4 sm:px-6">

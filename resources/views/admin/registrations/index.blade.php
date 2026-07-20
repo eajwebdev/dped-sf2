@@ -3,8 +3,10 @@
 
     <div class="space-y-6">
         <p class="text-sm text-gray-600 dark:text-gray-400">
-            Teachers who signed up through the public site. Approving one starts their {{ \App\Models\User::TRIAL_DAYS }}-day free trial
-            and creates their teacher profile.
+            Teachers and school heads who signed up through the public site. Approving a teacher starts their
+            {{ \App\Models\User::TRIAL_DAYS }}-day free trial and creates their teacher profile; approving a
+            <span class="font-semibold">Principal</span> grants read-only oversight of their school (no trial, no billing).
+            Confirm the school ID belongs to your school before approving either.
         </p>
 
         <div class="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 shadow-sm">
@@ -24,7 +26,14 @@
                     <tbody class="divide-y divide-gray-200 dark:divide-white/5">
                         @forelse ($pending as $user)
                             <tr class="hover:bg-gray-50 dark:hover:bg-navy-700/30 transition-colors">
-                                <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">{{ $user->name }}</td>
+                                <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">
+                                    {{ $user->name }}
+                                    @if ($user->isSupervisor())
+                                        <span class="ml-1.5 inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">Principal</span>
+                                    @else
+                                        <span class="ml-1.5 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:bg-white/10 dark:text-slate-300">Teacher</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $user->email }}</td>
                                 <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $user->contact_number ?: '—' }}</td>
                                 <td class="px-6 py-4 text-gray-600 dark:text-gray-400">

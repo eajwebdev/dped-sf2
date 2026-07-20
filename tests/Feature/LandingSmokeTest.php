@@ -20,7 +20,7 @@ class LandingSmokeTest extends TestCase
             // The strongest marketing line must survive the rebrand.
             ->assertSee('Attendance in seconds.')
             ->assertSee('in one click.', false)
-            ->assertSee('Start with SF1, SF2, SF3, and SF5 today and seamlessly expand');
+            ->assertSee('Start with SF1, SF2, SF3, SF5, and SF8 today and seamlessly expand');
     }
 
     public function test_every_adviser_module_is_listed_with_a_status(): void
@@ -35,8 +35,8 @@ class LandingSmokeTest extends TestCase
             ->assertSee('Available')
             ->assertSee('Coming soon')
             ->assertSee('In development — not yet included', false)
-            // SF1, SF2, SF3 and SF5 ship today; SF8/SF9/SF10 must still read as upcoming.
-            ->assertSee('School Forms 1, 2, 3, and 5 are included today');
+            // SF1, SF2, SF3, SF5 and SF8 ship today; SF9/SF10 must still read as upcoming.
+            ->assertSee('School Forms 1, 2, 3, 5, and 8 are included today');
     }
 
     public function test_pricing_shows_three_priced_tiers_and_the_advance_discount(): void

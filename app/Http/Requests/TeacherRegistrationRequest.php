@@ -22,6 +22,11 @@ class TeacherRegistrationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Applicants pick who they are; anything else is coerced to teacher
+            // in the controller. Only these two roles may ever self-register —
+            // an admin is never provisioned through the public front door.
+            'role' => ['nullable', 'in:'.User::ROLE_TEACHER.','.User::ROLE_SUPERVISOR],
+
             'name' => ['required', 'string', 'max:255'],
             // RFC validation only. A `dns` check would do a live MX lookup on
             // every signup: it rejects legitimate school domains that publish

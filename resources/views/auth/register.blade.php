@@ -7,16 +7,48 @@
 
         <div class="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-lg items-center px-4 py-12 sm:px-6">
             <div class="w-full">
-                <div class="mb-8 animate-slide-up text-center">
+                <div class="mb-8 animate-slide-up text-center" x-data="{ role: '{{ old('role', 'teacher') }}' }">
                     <img src="{{ asset('eaj-appicon.png') }}" alt="" class="mx-auto h-14 w-14 rounded-2xl object-contain">
-                    <h1 class="mt-4 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Create your teacher account</h1>
-                    <p class="mt-2 text-sm text-slate-400">Register, then an administrator approves you to start your 2-week free trial.</p>
+                    <h1 class="mt-4 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                        <span x-text="role === 'supervisor' ? 'Create your school head account' : 'Create your teacher account'">Create your teacher account</span>
+                    </h1>
+                    <p class="mt-2 text-sm text-slate-400"
+                       x-text="role === 'supervisor'
+                            ? 'Register, then an administrator approves you to oversee all your teachers\' records.'
+                            : 'Register, then an administrator approves you to start your 2-week free trial.'">
+                        Register, then an administrator approves you to start your 2-week free trial.
+                    </p>
                 </div>
 
                 <div class="stagger-1 animate-slide-up rounded-card border border-white/15 bg-white/[0.06] p-6 shadow-2xl shadow-navy-950/50 backdrop-blur-2xl sm:p-8">
                     <form method="POST" action="{{ route('register') }}" class="space-y-5" enctype="multipart/form-data"
-                          x-data="{ submitting: false }" @submit="submitting = true">
+                          x-data="{ submitting: false, role: '{{ old('role', 'teacher') }}' }" @submit="submitting = true">
                         @csrf
+
+                        {{-- Who is registering. Teachers get a trial and own their classes;
+                             school heads get read-only oversight of every teacher in their school. --}}
+                        <div>
+                            <span class="mb-1.5 block text-sm font-medium text-slate-200">I am registering as <span class="text-brand-400">*</span></span>
+                            <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                <label :class="role === 'teacher' ? 'border-brand-400 bg-brand-500/10' : 'border-white/10 bg-white/5 hover:border-white/25'"
+                                       class="flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors">
+                                    <input type="radio" name="role" value="teacher" x-model="role" class="mt-0.5 accent-brand-500">
+                                    <span>
+                                        <span class="block text-sm font-semibold text-white">Teacher / Adviser</span>
+                                        <span class="mt-0.5 block text-xs text-slate-400">Manage my own classes, attendance, and School Forms.</span>
+                                    </span>
+                                </label>
+                                <label :class="role === 'supervisor' ? 'border-brand-400 bg-brand-500/10' : 'border-white/10 bg-white/5 hover:border-white/25'"
+                                       class="flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors">
+                                    <input type="radio" name="role" value="supervisor" x-model="role" class="mt-0.5 accent-brand-500">
+                                    <span>
+                                        <span class="block text-sm font-semibold text-white">Principal / School Head</span>
+                                        <span class="mt-0.5 block text-xs text-slate-400">View &amp; print every teacher's records in my school (read-only).</span>
+                                    </span>
+                                </label>
+                            </div>
+                            @error('role')<p class="mt-1.5 animate-slide-up text-xs font-medium text-red-400">{{ $message }}</p>@enderror
+                        </div>
 
                         @php
                             $darkInput = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 transition-all duration-200 focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/15';

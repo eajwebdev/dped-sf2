@@ -2,26 +2,51 @@
 
 @php
     $isTeacher = auth()->user()?->isTeacher();
-    $home = auth()->user()?->isAdmin() ? 'admin.dashboard' : 'teacher.dashboard';
-    $nav = array_values(array_filter([
-        ['route' => $home, 'match' => $home, 'label' => 'Dashboard'],
-        ['route' => 'schedule.index', 'match' => 'schedule.*', 'label' => 'My Schedule'],
-        $isTeacher ? ['route' => 'teacher.students.index', 'match' => 'teacher.students.*', 'label' => 'Students'] : null,
-        $isTeacher ? ['route' => 'teacher.subjects.index', 'match' => 'teacher.subjects.*', 'label' => 'Subjects'] : null,
-        ['route' => 'attendance.index', 'match' => 'attendance.*', 'label' => 'Attendance'],
-    ]));
+    $isSupervisor = auth()->user()?->isSupervisor();
+    $home = match (true) {
+        (bool) auth()->user()?->isAdmin() => 'admin.dashboard',
+        (bool) $isSupervisor => 'supervisor.dashboard',
+        default => 'teacher.dashboard',
+    };
 
-    // Reports live in their own dropdown so new School Forms can be added
-    // without pushing the rest of the nav off the bar.
-    $reports = [
-        ['route' => 'reports.sf1.index', 'match' => 'reports.sf1.*', 'label' => 'SF1 — School Register', 'desc' => 'Class master list'],
-        ['route' => 'reports.sf2.index', 'match' => 'reports.sf2.*', 'label' => 'SF2 — Daily Attendance', 'desc' => 'Monthly attendance report'],
-        ['route' => 'reports.sf3.index', 'match' => ['reports.sf3.*', 'books.*'], 'label' => 'SF3 — Books Issued', 'desc' => 'Textbook issuance & returns'],
-        ['route' => 'reports.sf5.index', 'match' => 'reports.sf5.*', 'label' => 'SF5 — Promotion', 'desc' => 'Promotion & proficiency report'],
-        ['route' => 'reports.sf8.index', 'match' => 'reports.sf8.*', 'label' => 'SF8 — Health & Nutrition', 'desc' => 'Learner health & nutrition report'],
-        ['route' => 'reports.sf9.index', 'match' => ['reports.sf9.*', 'teacher.sf9.*'], 'label' => 'SF9 — Report Card', 'desc' => 'Learner progress report card'],
-        ['route' => 'insights.index', 'match' => 'insights.*', 'label' => 'Advanced Reports', 'desc' => 'Class insights & watchlists'],
-    ];
+    if ($isSupervisor) {
+        // School heads get a lean, read-only nav: an overview plus a School
+        // Forms dropdown that points at the oversight (read-only) routes. None
+        // of the teacher write screens (schedule, students, subjects,
+        // attendance marking) apply.
+        $nav = [
+            ['route' => 'supervisor.dashboard', 'match' => 'supervisor.dashboard', 'label' => 'Dashboard'],
+        ];
+        $reports = [
+            ['route' => 'supervisor.sf1.index', 'match' => 'supervisor.sf1.*', 'label' => 'SF1 — School Register', 'desc' => 'Class master list'],
+            ['route' => 'supervisor.sf2.index', 'match' => 'supervisor.sf2.*', 'label' => 'SF2 — Daily Attendance', 'desc' => 'Monthly attendance report'],
+            ['route' => 'supervisor.sf3.index', 'match' => 'supervisor.sf3.*', 'label' => 'SF3 — Books Issued', 'desc' => 'Textbook issuance & returns'],
+            ['route' => 'supervisor.sf5.index', 'match' => 'supervisor.sf5.*', 'label' => 'SF5 — Promotion', 'desc' => 'Promotion & proficiency report'],
+            ['route' => 'supervisor.sf8.index', 'match' => 'supervisor.sf8.*', 'label' => 'SF8 — Health & Nutrition', 'desc' => 'Learner health & nutrition report'],
+            ['route' => 'supervisor.sf9.index', 'match' => 'supervisor.sf9.*', 'label' => 'SF9 — Report Card', 'desc' => 'Learner progress report card'],
+            ['route' => 'supervisor.insights.index', 'match' => 'supervisor.insights.*', 'label' => 'Advanced Reports', 'desc' => 'Class insights & watchlists'],
+        ];
+    } else {
+        $nav = array_values(array_filter([
+            ['route' => $home, 'match' => $home, 'label' => 'Dashboard'],
+            ['route' => 'schedule.index', 'match' => 'schedule.*', 'label' => 'My Schedule'],
+            $isTeacher ? ['route' => 'teacher.students.index', 'match' => 'teacher.students.*', 'label' => 'Students'] : null,
+            $isTeacher ? ['route' => 'teacher.subjects.index', 'match' => 'teacher.subjects.*', 'label' => 'Subjects'] : null,
+            ['route' => 'attendance.index', 'match' => 'attendance.*', 'label' => 'Attendance'],
+        ]));
+
+        // Reports live in their own dropdown so new School Forms can be added
+        // without pushing the rest of the nav off the bar.
+        $reports = [
+            ['route' => 'reports.sf1.index', 'match' => 'reports.sf1.*', 'label' => 'SF1 — School Register', 'desc' => 'Class master list'],
+            ['route' => 'reports.sf2.index', 'match' => 'reports.sf2.*', 'label' => 'SF2 — Daily Attendance', 'desc' => 'Monthly attendance report'],
+            ['route' => 'reports.sf3.index', 'match' => ['reports.sf3.*', 'books.*'], 'label' => 'SF3 — Books Issued', 'desc' => 'Textbook issuance & returns'],
+            ['route' => 'reports.sf5.index', 'match' => 'reports.sf5.*', 'label' => 'SF5 — Promotion', 'desc' => 'Promotion & proficiency report'],
+            ['route' => 'reports.sf8.index', 'match' => 'reports.sf8.*', 'label' => 'SF8 — Health & Nutrition', 'desc' => 'Learner health & nutrition report'],
+            ['route' => 'reports.sf9.index', 'match' => ['reports.sf9.*', 'teacher.sf9.*'], 'label' => 'SF9 — Report Card', 'desc' => 'Learner progress report card'],
+            ['route' => 'insights.index', 'match' => 'insights.*', 'label' => 'Advanced Reports', 'desc' => 'Class insights & watchlists'],
+        ];
+    }
     $reportsActive = collect($reports)->contains(fn ($r) => request()->routeIs($r['match']));
 
     // Free-trial countdown, shown on every page so the deadline is never a
@@ -77,6 +102,7 @@
                 @endforeach
 
                 {{-- Reports dropdown: opens on hover, and on click for keyboard/touch --}}
+                @if (! empty($reports))
                 <div class="relative" x-data="{ open: false }"
                      @mouseenter="open = true" @mouseleave="open = false"
                      @keydown.escape.window="open = false">
@@ -121,6 +147,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </nav>
 
             @if ($activeSchoolYear ?? null)
@@ -203,6 +230,7 @@
                 @endforeach
 
                 {{-- Reports group: collapsed by default, open when you are inside one --}}
+                @if (! empty($reports))
                 <div x-data="{ reportsOpen: {{ $reportsActive ? 'true' : 'false' }} }" class="mt-1">
                     <button type="button" @click="reportsOpen = !reportsOpen"
                             :aria-expanded="reportsOpen"
@@ -228,6 +256,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
         </nav>
     </header>

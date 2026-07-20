@@ -22,6 +22,14 @@ class EnsureActiveSubscription
             return $next($request);
         }
 
+        // Supervisors have no business in the teacher app. Every teacher route
+        // sits behind this middleware, so bouncing them here confines school
+        // heads to their read-only oversight area — they can never reach a
+        // teacher write endpoint, regardless of section access.
+        if ($user->isSupervisor()) {
+            return redirect()->route('supervisor.dashboard');
+        }
+
         if (! $user->isApproved()) {
             return redirect()->route('account.pending');
         }

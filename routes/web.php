@@ -49,11 +49,16 @@ Route::get('/', function () {
     return Auth::check() ? redirect()->route('dashboard') : view('public.landing');
 })->name('landing');
 
-// Role-aware landing: send admins to the admin dashboard, teachers to theirs.
+// Role-aware landing: admins to the admin dashboard, supervisors to oversight,
+// teachers to theirs.
 Route::get('/dashboard', function () {
-    return Auth::user()->isAdmin()
-        ? redirect()->route('admin.dashboard')
-        : redirect()->route('teacher.dashboard');
+    $user = Auth::user();
+
+    return match (true) {
+        $user->isAdmin() => redirect()->route('admin.dashboard'),
+        $user->isSupervisor() => redirect()->route('supervisor.dashboard'),
+        default => redirect()->route('teacher.dashboard'),
+    };
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -207,6 +212,37 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     // Renders the SF2 as an inline PDF (DomPDF) — no HTML view, no Excel.
     Route::get('/reports/sf2/{section}', [Sf2Controller::class, 'show'])->name('reports.sf2.show');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Supervisor / School Head — read-only oversight of their own school
+|--------------------------------------------------------------------------
+| Every route here is a GET. The `supervisor` middleware admits school heads
+| (and admins previewing). Section access flows through overseeableSections(),
+| which the tenant scope confines to the supervisor's school, so nothing here
+| can read or write another school's data.
+*/
+Route::middleware(['auth', 'verified', 'supervisor'])
+    ->prefix('oversight')
+    ->name('supervisor.')
+    ->group(function () {
+        Route::get('/', [\App\Http\Controllers\Supervisor\DashboardController::class, 'index'])->name('dashboard');
+
+        // SF2 oversight: pick any class in the school, view/print its report.
+        Route::get('/sf2', [\App\Http\Controllers\Supervisor\Sf2Controller::class, 'index'])->name('sf2.index');
+        Route::get('/sf2/{section}', [\App\Http\Controllers\Supervisor\Sf2Controller::class, 'show'])->name('sf2.show');
+
+        // The adviser School Forms — read-only, one controller, same PDFs.
+        $reports = \App\Http\Controllers\Supervisor\ReportController::class;
+        foreach (['sf1', 'sf3', 'sf5', 'sf8', 'sf9'] as $sf) {
+            Route::get("/{$sf}", [$reports, "{$sf}Index"])->name("{$sf}.index");
+            Route::get("/{$sf}/{section}", [$reports, "{$sf}Show"])->name("{$sf}.show");
+        }
+
+        // Advanced Reports oversight: the per-class insight dashboard, read-only.
+        Route::get('/insights', [\App\Http\Controllers\Supervisor\InsightsController::class, 'index'])->name('insights.index');
+        Route::get('/insights/{section}', [\App\Http\Controllers\Supervisor\InsightsController::class, 'show'])->name('insights.show');
+    });
 
 /*
 |--------------------------------------------------------------------------

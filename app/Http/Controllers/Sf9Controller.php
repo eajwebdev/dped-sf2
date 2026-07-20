@@ -26,6 +26,10 @@ class Sf9Controller extends Controller
     {
         $sections = $request->user()->advisorySections()
             ->with(['gradeLevel', 'schoolYear'])
+            ->withCount([
+                'subjectAssignments as learning_areas_count',
+                'activeEnrollments as learners_count',
+            ])
             ->orderByDesc('school_year_id')->orderBy('grade_level_id')->orderBy('name')
             ->get();
 
@@ -44,7 +48,7 @@ class Sf9Controller extends Controller
         $this->audit->log('report_generated', $section, "SF9 generated for {$section->name}");
 
         return Pdf::loadView('reports.sf9.print', ['schoolHead' => $schoolHead] + $data)
-            ->setPaper('a4', 'portrait')
+            ->setPaper('a4', 'landscape')
             ->stream($this->filename($section));
     }
 

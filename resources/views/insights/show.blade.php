@@ -1,5 +1,11 @@
 {{-- The hero below is the page heading, so the shell's own <h1> stays off. --}}
 <x-app-shell :title="null" wide>
+    @php
+        // A school head views this same dashboard read-only: the edit actions
+        // below are swapped for their read-only oversight equivalents (or hidden)
+        // so a supervisor is never offered a teacher-only write screen.
+        $isSupervisor = auth()->user()?->isSupervisor();
+    @endphp
     <div class="space-y-6">
         {{-- Hero header --}}
         <div class="animate-slide-up relative overflow-hidden rounded-card border border-slate-200/80 bg-white px-6 py-6 shadow-soft
@@ -10,7 +16,7 @@
 
             <div class="relative flex flex-wrap items-end justify-between gap-4">
                 <div class="min-w-0">
-                    <a href="{{ route('insights.index') }}"
+                    <a href="{{ route($isSupervisor ? 'supervisor.insights.index' : 'insights.index') }}"
                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-brand-500 dark:text-slate-400 dark:hover:text-white">
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
                         All classes
@@ -31,14 +37,18 @@
                 </div>
 
                 <div class="flex shrink-0 items-center gap-2">
-                    <a href="{{ route('attendance.sheet', $section) }}"
-                       class="btn-outline btn-sm dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Attendance sheet
-                    </a>
-                    <a href="{{ route('reports.sf2.index') }}" class="btn-primary btn-sm">
+                    {{-- Attendance sheet is an editing screen — omitted for read-only oversight. --}}
+                    @unless ($isSupervisor)
+                        <a href="{{ route('attendance.sheet', $section) }}"
+                           class="btn-outline btn-sm dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Attendance sheet
+                        </a>
+                    @endunless
+                    <a href="{{ $isSupervisor ? route('supervisor.sf2.show', $section) : route('reports.sf2.index') }}"
+                       @if ($isSupervisor) target="_blank" @endif class="btn-primary btn-sm">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
-                        Generate SF2
+                        {{ $isSupervisor ? 'View SF2' : 'Generate SF2' }}
                     </a>
                 </div>
             </div>
@@ -217,8 +227,9 @@
                 <x-card hover>
                     <x-slot:title>Textbooks (SF3)</x-slot:title>
                     <x-slot:actions>
-                        <a href="{{ route('books.index', $section) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-brand-500 transition-colors hover:text-brand-600 dark:text-brand-400">
-                            Manage
+                        <a href="{{ $isSupervisor ? route('supervisor.sf3.show', $section) : route('books.index', $section) }}"
+                           @if ($isSupervisor) target="_blank" @endif class="inline-flex items-center gap-1 text-xs font-semibold text-brand-500 transition-colors hover:text-brand-600 dark:text-brand-400">
+                            {{ $isSupervisor ? 'View SF3' : 'Manage' }}
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                         </a>
                     </x-slot:actions>
@@ -261,8 +272,9 @@
                 <x-card hover>
                     <x-slot:title>Proficiency spread (SF5)</x-slot:title>
                     <x-slot:actions>
-                        <a href="{{ route('reports.sf5.grades', $section) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-brand-500 transition-colors hover:text-brand-600 dark:text-brand-400">
-                            Enter averages
+                        <a href="{{ $isSupervisor ? route('supervisor.sf5.show', $section) : route('reports.sf5.grades', $section) }}"
+                           @if ($isSupervisor) target="_blank" @endif class="inline-flex items-center gap-1 text-xs font-semibold text-brand-500 transition-colors hover:text-brand-600 dark:text-brand-400">
+                            {{ $isSupervisor ? 'View SF5' : 'Enter averages' }}
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                         </a>
                     </x-slot:actions>

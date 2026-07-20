@@ -24,6 +24,15 @@ class User extends Authenticatable
 
     public const ROLE_TEACHER = 'teacher';
 
+    /**
+     * A school head / principal: read-only oversight of every teacher's records
+     * within their own school. Deliberately NOT an admin — the admin role
+     * bypasses the tenant scope (see BelongsToSchool) and would expose every
+     * school. A supervisor stays inside the school scope, and every write
+     * policy gates on isAdmin(), so this role can look but never edit.
+     */
+    public const ROLE_SUPERVISOR = 'supervisor';
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_APPROVED = 'approved';
@@ -140,6 +149,12 @@ class User extends Authenticatable
         return $this->role === self::ROLE_TEACHER;
     }
 
+    /** School head / principal with read-only oversight of their own school. */
+    public function isSupervisor(): bool
+    {
+        return $this->role === self::ROLE_SUPERVISOR;
+    }
+
     public function isApproved(): bool
     {
         return $this->status === self::STATUS_APPROVED;
@@ -181,6 +196,12 @@ class User extends Authenticatable
 
         if (! $this->isApproved()) {
             return false;
+        }
+
+        // Supervisors are oversight accounts, never billed: approval alone
+        // grants them the read-only school view.
+        if ($this->isSupervisor()) {
+            return true;
         }
 
         if ($this->free_access || ! $this->isBillingEnrolled()) {
@@ -413,5 +434,24 @@ class User extends Authenticatable
 
         return $query->forTeacher($teacherId)
             ->where(fn (Builder $q) => $q->whereNull('adviser_id')->orWhere('adviser_id', '!=', $teacherId));
+    }
+
+    /**
+     * Every section a supervisor may oversee — read only. A supervisor is a
+     * non-admin, so Section's tenant scope has already narrowed the query to
+     * their own school; returning the bare query therefore yields exactly that
+     * school's sections and no other. An admin (scope-exempt) sees all; anyone
+     * else oversees nothing. This never widens accessibleSections(), so it can
+     * grant no write path — the oversight routes are read-only by construction.
+     */
+    public function overseeableSections(): Builder
+    {
+        $query = Section::query();
+
+        if ($this->isSupervisor() || $this->isAdmin()) {
+            return $query;
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 }
