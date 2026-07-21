@@ -60,6 +60,22 @@ class Sf9ReportService
         return (int) ($section->gradeLevel->level_order ?? 0) >= 11;
     }
 
+    /**
+     * The education-level tag a section's SF9 carries: ES (elementary, grades
+     * 1-6), JHS (grades 7-10), or SHS (grades 11-12). Drives both the printed
+     * header label and the semestral-vs-quarterly layout.
+     */
+    public function levelTag(Section $section): string
+    {
+        $order = (int) ($section->gradeLevel->level_order ?? 0);
+
+        return match (true) {
+            $order >= 11 => 'SHS',
+            $order >= 7 => 'JHS',
+            default => 'ES',
+        };
+    }
+
     /** @return array<int,string> period (1..4) => label */
     public function periodLabels(Section $section): array
     {
@@ -125,6 +141,7 @@ class Sf9ReportService
             'section' => $section,
             'schoolYear' => $schoolYear,
             'isShs' => $isShs,
+            'levelTag' => $this->levelTag($section),
             'periodLabels' => $this->periodLabels($section),
             'subjects' => $subjects,
             'coreValues' => LearnerValue::CORE_VALUES,

@@ -196,6 +196,30 @@ class Sf9ReportTest extends TestCase
         $this->assertSame(86, $learner['subjects'][0]['final']); // (90+85+88+81)/4 = 86
     }
 
+    public function test_level_tag_reflects_the_grade_level(): void
+    {
+        $service = app(Sf9ReportService::class);
+
+        // The setUp section is Grade 8 → JHS.
+        $this->assertSame('JHS', $service->levelTag($this->section));
+
+        $es = Section::factory()->create([
+            'school_id' => $this->section->school_id, 'school_year_id' => $this->year->id,
+            'grade_level_id' => GradeLevel::factory()->create(['level_order' => 5, 'code' => 'G5'])->id,
+            'adviser_id' => $this->adviser->id,
+        ]);
+        $this->assertSame('ES', $service->levelTag($es));
+
+        $shs = Section::factory()->create([
+            'school_id' => $this->section->school_id, 'school_year_id' => $this->year->id,
+            'grade_level_id' => GradeLevel::factory()->create(['level_order' => 11, 'code' => 'G11X'])->id,
+            'adviser_id' => $this->adviser->id,
+        ]);
+        $this->assertSame('SHS', $service->levelTag($shs));
+        $this->assertTrue($service->build($shs)['isShs']);
+        $this->assertSame('SHS', $service->build($shs)['levelTag']);
+    }
+
     public function test_senior_high_section_is_semestral(): void
     {
         $shsGrade = GradeLevel::factory()->create(['level_order' => 11, 'code' => 'G11']);

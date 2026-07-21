@@ -21,7 +21,8 @@
         <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
             {{-- Logo only: the mark carries the brand, so the name is on the label instead. --}}
             <a href="{{ url('/') }}" class="flex shrink-0 items-center" aria-label="{{ config('app.name') }} — Home">
-                <img src="{{ asset('eaj-appicon.png') }}" alt="" class="h-9 w-9 rounded-xl object-contain">
+                {{-- Enlarged within the fixed h-16 header, so the bar height is unchanged. --}}
+                <img src="{{ asset('eaj-appicon.png') }}" alt="" class="h-12 w-12 rounded-xl object-contain">
             </a>
             {{-- Absolute so the sections stay reachable from pages other than the landing page --}}
             <nav class="hidden items-center gap-7 text-sm font-medium text-slate-300 md:flex">

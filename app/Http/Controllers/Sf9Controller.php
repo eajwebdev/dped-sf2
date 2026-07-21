@@ -33,7 +33,10 @@ class Sf9Controller extends Controller
             ->orderByDesc('school_year_id')->orderBy('grade_level_id')->orderBy('name')
             ->get();
 
-        return view('reports.sf9.index', ['sections' => $sections]);
+        return view('reports.sf9.index', [
+            'sections' => $sections,
+            'school' => $request->user()->school,
+        ]);
     }
 
     /** Stream the SF9 (one card per learner) as an inline PDF. */

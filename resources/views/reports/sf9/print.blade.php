@@ -60,7 +60,7 @@
     $schoolLogo = ($school?->logo_path && is_file(public_path($school->logo_path)))
         ? public_path($school->logo_path)
         : null;
-    $sfTag = 'SF 9 - '.($isShs ? 'SHS' : 'JHS');
+    $sfTag = 'SF 9 - '.($levelTag ?? ($isShs ? 'SHS' : 'JHS'));
 @endphp
 
 @foreach ($learners as $L)

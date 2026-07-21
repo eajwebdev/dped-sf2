@@ -69,8 +69,12 @@
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
                         SF8 — Health
                     </span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-200 shadow-glow-emerald-sm">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        SF9 — Report Card
+                    </span>
                     <span class="text-xs font-medium text-slate-500">then</span>
-                    @foreach (['SF9', 'SF10'] as $code)
+                    @foreach (['SF10'] as $code)
                         <span class="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-bold text-slate-400">{{ $code }}</span>
                     @endforeach
                     <a href="#features" class="text-xs font-semibold text-slate-400 underline decoration-brand-500/50 underline-offset-2 transition-colors hover:text-white">coming soon</a>
@@ -86,7 +90,7 @@
                     </a>
                 </div>
                 <p class="stagger-4 mx-auto mt-4 max-w-xl animate-slide-up text-xs leading-relaxed text-slate-400 lg:mx-0">
-                    Start with SF1, SF2, SF3, SF5, and SF8 today and seamlessly expand with additional DepEd School Form modules as they become available.
+                    Start with SF1, SF2, SF3, SF5, SF8, and SF9 today and seamlessly expand with additional DepEd School Form modules as they become available.
                 </p>
             </div>
 
@@ -102,7 +106,7 @@
                     ['emoji' => '📚', 'code' => 'SF3',  'label' => 'Books Issued',     'title' => 'Books Issued & Returned',    'blurb' => 'Every textbook handed out, and what is still outstanding at year-end.',            'available' => true],
                     ['emoji' => '🎓', 'code' => 'SF5',  'label' => 'Promotion',        'title' => 'Promotion & Progress',       'blurb' => 'End-of-year promotion, retention, and level of proficiency per learner.',          'available' => true],
                     ['emoji' => '❤️', 'code' => 'SF8',  'label' => 'Health',           'title' => 'Health & Nutrition',         'blurb' => 'The official Basic Health and Nutrition Report, roster prefilled and ready for the weighing session.', 'available' => true],
-                    ['emoji' => '📝', 'code' => 'SF9',  'label' => 'Report Card',      'title' => 'Learner Progress Card',      'blurb' => 'The report card parents receive each grading period — formerly Form 138.',         'available' => false],
+                    ['emoji' => '📝', 'code' => 'SF9',  'label' => 'Report Card',      'title' => 'Learner Progress Card',      'blurb' => 'The report card parents receive each grading period — formerly Form 138.',         'available' => true],
                     ['emoji' => '📖', 'code' => 'SF10', 'label' => 'Permanent Rec.',   'title' => 'Permanent Academic Record',  'blurb' => 'The transcript that follows a learner between schools — formerly Form 137.',       'available' => false],
                 ];
             @endphp
@@ -361,6 +365,41 @@
                                 </div>
                             </div>
 
+                            {{-- ── Live module: SF9 report card ── --}}
+                            <div x-show="current.code === 'SF9'" x-cloak
+                                 x-transition:enter="transition duration-500 ease-out"
+                                 x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="h-2.5 w-28 rounded-full bg-white/25"></div>
+                                        <div class="mt-2 h-2 w-20 rounded-full bg-white/10"></div>
+                                    </div>
+                                    <div class="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-xs font-bold text-white">Generate SF9</div>
+                                </div>
+                                {{-- Report-card rows: learning area × quarter grades + final rating --}}
+                                <div class="overflow-hidden rounded-xl border border-white/10">
+                                    <div class="flex items-center gap-2 border-b border-white/10 bg-white/[0.06] px-3 py-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                                        <span class="flex-1">Learning Area</span><span class="w-6 text-center">Q1</span><span class="w-6 text-center">Q2</span><span class="w-6 text-center">Q3</span><span class="w-6 text-center">Q4</span><span class="w-8 text-center">Final</span>
+                                    </div>
+                                    @foreach ([['w-20', '88', '90', '87', '91', '89'], ['w-24', '90', '86', '88', '92', '89'], ['w-16', '85', '84', '87', '86', '86'], ['w-24', '93', '91', '90', '94', '92']] as [$w, $q1, $q2, $q3, $q4, $f])
+                                        <div class="flex items-center gap-2 border-b border-white/5 px-3 py-1.5 last:border-0">
+                                            <span class="flex-1"><span class="block h-1.5 {{ $w }} rounded-full bg-white/20"></span></span>
+                                            <span class="w-6 text-center text-[8px] text-slate-400">{{ $q1 }}</span>
+                                            <span class="w-6 text-center text-[8px] text-slate-400">{{ $q2 }}</span>
+                                            <span class="w-6 text-center text-[8px] text-slate-400">{{ $q3 }}</span>
+                                            <span class="w-6 text-center text-[8px] text-slate-400">{{ $q4 }}</span>
+                                            <span class="w-8 text-center text-[8px] font-bold text-emerald-300">{{ $f }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="flex items-center gap-2 text-[9px] font-bold">
+                                    <span class="rounded-md bg-emerald-400/15 px-2 py-1 text-emerald-300">General Ave. 89</span>
+                                    <span class="rounded-md bg-white/[0.06] px-2 py-1 text-slate-400">Core Values <span class="text-white">AO</span></span>
+                                    <span class="rounded-md bg-white/[0.06] px-2 py-1 text-slate-400">One page per learner</span>
+                                </div>
+                            </div>
+
                             {{-- ── Unreleased module: an explicit preview, never a fake working screen ── --}}
                             <div x-show="! current.available" x-cloak
                                  x-transition:enter="transition duration-500 ease-out"
@@ -514,7 +553,7 @@
                     ['SF3', 'Books Issued &amp; Returned', 'Issue textbooks to the whole class in one click, record returns and lost-book codes, and print the official SF3 at year-end.', true, 'M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25'],
                     ['SF5', 'Promotion &amp; Learning Progress', 'Enter general averages once — the action taken, honor formatting, and level-of-proficiency summary are derived and printed in the official layout.', true, 'M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5'],
                     ['SF8', 'Health &amp; Nutrition Report', 'The official Basic Health and Nutrition Report — your roster, birthdates, and ages prefilled, with the Weight, Height, BMI, and HFA columns ready for the weighing session.', true, 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z'],
-                    ['SF9', 'Learner Progress Report Card', 'The report card parents receive each grading period — formerly Form 138 — generated from your class records.', false, 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'],
+                    ['SF9', 'Learner Progress Report Card', 'The report card parents receive each grading period — formerly Form 138 — generated from your class records.', true, 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'],
                     ['SF10', 'Learner Permanent Record', 'The transcript that follows a learner between schools — formerly Form 137 — kept complete and always current.', false, 'M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z'],
                 ];
             @endphp
@@ -571,7 +610,7 @@
             </div>
 
             <p class="mx-auto mt-10 max-w-2xl text-center text-xs leading-relaxed text-slate-500">
-                School Forms 1, 2, 3, 5, and 8 are included today. Every other module is in development and clearly marked
+                School Forms 1, 2, 3, 5, 8, and 9 are included today. Every other module is in development and clearly marked
                 <span class="font-semibold text-slate-400">Coming soon</span> — it is not part of your subscription until released.
             </p>
         </div>
@@ -643,16 +682,16 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6">
             <div class="mx-auto max-w-2xl text-center">
                 <span class="eyebrow">How it works</span>
-                <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Four steps to a finished SF2</h2>
-                <p class="mt-4 text-lg text-slate-400">The same setup carries over to every module released after it.</p>
+                <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Four steps to finished School Forms</h2>
+                <p class="mt-4 text-lg text-slate-400">One setup feeds every DepEd form — attendance, grades, health, books, and report cards.</p>
             </div>
 
             @php
                 $steps = [
                     ['Register & get approved', 'Create your teacher account under your school. Your 2-week free trial starts on approval.', 'M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z'],
-                    ['Set up classes & QR cards', 'Add your students and subjects, then print their QR ID cards in one batch.', 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z'],
-                    ['Start class, students scan', 'Launch the session from your schedule, unlock the scanner device, and students tap in as they arrive.', 'M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5ZM6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z'],
-                    ['Print your SF2', 'At month-end, your School Form 2 is already filled in. Generate the PDF and submit.', 'M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z'],
+                    ['Set up your classes', 'Add your students and subjects, then print their QR ID cards in one batch.', 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z'],
+                    ['Record as you go', 'Take daily attendance by QR scan, and enter grades, health, and textbook records through the year.', 'M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5ZM6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z'],
+                    ['Generate any School Form', 'At period-end, SF1, SF2, SF3, SF5, SF8, and SF9 are already filled in from your records. Generate the official PDF and submit.', 'M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z'],
                 ];
             @endphp
 

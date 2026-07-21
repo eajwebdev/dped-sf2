@@ -34,6 +34,33 @@ class School extends Model
         self::LEVEL_JHS_SHS => 'Junior & Senior High School (JHS + SHS)',
     ];
 
+    /** Whether this school offers elementary grades. */
+    public function offersEs(): bool
+    {
+        return $this->education_level === self::LEVEL_ES;
+    }
+
+    /** Whether this school offers Junior High (standalone or combined). */
+    public function offersJhs(): bool
+    {
+        return in_array($this->education_level, [self::LEVEL_JHS, self::LEVEL_JHS_SHS], true);
+    }
+
+    /** Whether this school offers Senior High (standalone or combined). */
+    public function offersShs(): bool
+    {
+        return in_array($this->education_level, [self::LEVEL_SHS, self::LEVEL_JHS_SHS], true);
+    }
+
+    /**
+     * A single campus that runs both Junior AND Senior High — the case where a
+     * form like SF9 must offer a JHS-or-SHS choice when generating.
+     */
+    public function offersBothHighSchool(): bool
+    {
+        return $this->education_level === self::LEVEL_JHS_SHS;
+    }
+
     /** Memoised result of soleId(); false means "not looked up yet". */
     private static bool|int|null $soleId = false;
 
