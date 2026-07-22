@@ -56,7 +56,7 @@ class Sf10Controller extends Controller
         return Pdf::loadView('reports.sf10.print', $data + [
             'schoolHead' => trim((string) ($validated['head'] ?? '')),
             'district' => trim((string) ($validated['district'] ?? '')),
-        ])->setPaper('a4', 'portrait')
+        ])->setPaper('letter', 'portrait')
             ->stream($this->filename($section));
     }
 

@@ -14,11 +14,44 @@ use Illuminate\Support\Collection;
  * once all are in), a Passed/Failed remark, and a general average. Nothing is
  * stored — the finals and averages are derived here — so the printed permanent
  * record cannot be tampered with. See [[roles-and-tenancy]].
+ *
+ * The printed layout mirrors the official SF10-ES scholastic-record page exactly
+ * (public/SF10 REPORT FINAL FORM.pdf): the current year's grades fill the first
+ * scholastic block, mapped onto the standard elementary learning-area rows.
  */
 class Sf10ReportService
 {
     /** DepEd passing grade for a learning area and the general average. */
     public const PASSING_GRADE = Sf9ReportService::PASSING_GRADE;
+
+    /**
+     * The standard elementary (SF10-ES) learning areas, in the exact order the
+     * official form pre-prints them, each with the name variants an adviser's
+     * subject might carry so a learner's grades map onto the right row.
+     *
+     * @var array<int, array{label:string, indent?:bool, aliases:array<int,string>}>
+     */
+    private const STANDARD_AREAS = [
+        ['label' => 'Filipino', 'aliases' => ['filipino']],
+        ['label' => 'English', 'aliases' => ['english']],
+        ['label' => 'Mathematics', 'aliases' => ['mathematics', 'math', 'mathematic', 'matematika']],
+        ['label' => 'Science', 'aliases' => ['science', 'agham']],
+        ['label' => 'GMRC (Good Manners and Right Conduct)', 'aliases' => ['gmrc', 'goodmannersandrightconduct', 'esp', 'edukasyonsapagpapakatao', 'valueseducation']],
+        ['label' => 'Araling Panlipunan', 'aliases' => ['aralingpanlipunan', 'ap', 'araling']],
+        ['label' => 'EPP', 'aliases' => ['epp', 'edukasyongpantahananatpangkabuhayan', 'tle', 'technologyandlivelihoodeducation']],
+        ['label' => 'MAPEH', 'aliases' => ['mapeh']],
+        ['label' => 'Music & Arts', 'indent' => true, 'aliases' => ['musicandarts', 'musicarts', 'music', 'arts']],
+        ['label' => 'Physical Education & Health', 'indent' => true, 'aliases' => ['physicaleducationandhealth', 'physicaleducationhealth', 'pehealth', 'peandhealth', 'physicaleducation', 'peh', 'pe', 'health']],
+    ];
+
+    /** The two optional (asterisked) learning areas printed below the blanks. */
+    private const ASTERISK_AREAS = [
+        ['label' => '*Arabic Language', 'aliases' => ['arabic', 'arabiclanguage', 'arabiclang']],
+        ['label' => '*Islamic Values Education', 'aliases' => ['islamic', 'islamicvalueseducation', 'islamicvalues']],
+    ];
+
+    /** Blank learning-area rows between the standard areas and the asterisk pair. */
+    private const BLANK_ROWS = 3;
 
     public function __construct(private readonly Sf9ReportService $sf9) {}
 
@@ -43,6 +76,7 @@ class Sf10ReportService
             'school' => $section->school,
             'subjects' => $subjects,
             'passingGrade' => self::PASSING_GRADE,
+            'blankRows' => self::BLANK_ROWS,
             'learners' => $learners,
         ];
     }
@@ -51,28 +85,31 @@ class Sf10ReportService
     {
         $gradesBySubject = $enrollment->grades->groupBy('subject_id');
 
-        $subjectRows = $subjects->map(function ($subject) use ($gradesBySubject) {
+        // The learner's rating per subject, keyed by the subject's normalised name.
+        $bySubject = [];
+        $rawRows = [];
+        foreach ($subjects as $subject) {
             $byPeriod = ($gradesBySubject->get($subject->id) ?? collect())->keyBy('period');
             $q = [];
             foreach (range(1, 4) as $p) {
                 $g = $byPeriod->get($p)?->grade;
                 $q[$p] = $g !== null ? (int) round((float) $g) : null;
             }
-
-            // The final rating is only meaningful once all four quarters exist.
             $final = $this->completeAvg($q);
-
-            return [
-                'subject' => $subject->name,
+            $row = [
                 'q' => $q,
                 'final' => $final,
                 'remark' => $final === null ? '' : ($final >= self::PASSING_GRADE ? 'PASSED' : 'FAILED'),
             ];
-        })->all();
+            $rawRows[] = $row + ['name' => $subject->name];
+            $bySubject[$this->normalize($subject->name)] = $row;
+        }
 
-        // General average: mean of subject finals, ignoring subjects with no
-        // final yet. Blank until at least one learning area is complete.
-        $ga = $this->avg(array_map(fn ($r) => $r['final'], $subjectRows));
+        [$areas, $usedKeys] = $this->mapStandardAreas($bySubject);
+
+        // General average across the section's subject finals (all of them, not
+        // just those that mapped onto a standard row).
+        $ga = $this->avg(array_map(fn ($r) => $r['final'], $rawRows));
 
         $student = $enrollment->student;
 
@@ -86,10 +123,68 @@ class Sf10ReportService
             'lrn' => $student->lrn,
             'sex' => $student->gender,
             'birthdate' => $student->birthdate,
-            'subjects' => $subjectRows,
+            'areas' => $areas,
             'generalAverage' => $ga,
             'generalRemark' => $ga === null ? '' : ($ga >= self::PASSING_GRADE ? 'PASSED' : 'FAILED'),
         ];
+    }
+
+    /**
+     * Resolve the ordered learning-area rows for the first scholastic block:
+     * the standard areas (filled where a subject maps), then blank rows filled
+     * with any leftover subjects, then the asterisk pair.
+     *
+     * @param  array<string, array{q:array,final:?int,remark:string}>  $bySubject
+     * @return array{0: array<int, array{label:string, indent:bool, q:array, final:?int, remark:string}>, 1: array<string,bool>}
+     */
+    private function mapStandardAreas(array $bySubject): array
+    {
+        $used = [];
+        $rows = [];
+        $empty = ['q' => [1 => null, 2 => null, 3 => null, 4 => null], 'final' => null, 'remark' => ''];
+
+        $match = function (array $aliases) use ($bySubject, &$used) {
+            foreach ($bySubject as $key => $row) {
+                if (isset($used[$key])) {
+                    continue;
+                }
+                foreach ($aliases as $alias) {
+                    if ($key === $alias) {
+                        $used[$key] = true;
+
+                        return $row;
+                    }
+                }
+            }
+
+            return null;
+        };
+
+        foreach (self::STANDARD_AREAS as $area) {
+            $row = $match($area['aliases']) ?? $empty;
+            $rows[] = ['label' => $area['label'], 'indent' => $area['indent'] ?? false] + $row;
+        }
+
+        // Any subject that did not map onto a standard row drops into the blank
+        // rows so nothing entered is silently lost. The rows stay unlabeled —
+        // the ratings still print, matching the template's fillable blank rows.
+        $leftover = array_values(array_diff_key($bySubject, $used));
+        for ($i = 0; $i < self::BLANK_ROWS; $i++) {
+            $row = $leftover[$i] ?? $empty;
+            $rows[] = ['label' => '', 'indent' => false] + $row;
+        }
+
+        foreach (self::ASTERISK_AREAS as $area) {
+            $row = $match($area['aliases']) ?? $empty;
+            $rows[] = ['label' => $area['label'], 'indent' => false] + $row;
+        }
+
+        return [$rows, $used];
+    }
+
+    private function normalize(string $name): string
+    {
+        return preg_replace('/[^a-z0-9]/', '', strtolower($name)) ?? '';
     }
 
     /** Rounded mean of the non-null values, or null when there are none. */

@@ -97,16 +97,29 @@ class Sf10ReportTest extends TestCase
         $this->assertSame('Female', $learner['sex']);
     }
 
-    public function test_service_computes_final_rating_and_general_average(): void
+    /** The learning-area row on the SF10-ES scholastic block for a given label. */
+    private function area(array $learner, string $label): array
+    {
+        foreach ($learner['areas'] as $row) {
+            if ($row['label'] === $label) {
+                return $row;
+            }
+        }
+
+        $this->fail("No learning-area row labelled {$label}.");
+    }
+
+    public function test_grades_map_onto_the_standard_learning_area_row(): void
     {
         $enrollment = $this->enroll();
-        $subject = $this->assignSubject();
+        $subject = $this->assignSubject('Mathematics');
         $this->grade($enrollment, $subject, [1 => 90, 2 => 80, 3 => 90, 4 => 80]);
 
         $learner = app(Sf10ReportService::class)->build($this->section)['learners'][0];
+        $math = $this->area($learner, 'Mathematics');
 
-        $this->assertSame(85, $learner['subjects'][0]['final']); // (90+80+90+80)/4
-        $this->assertSame('PASSED', $learner['subjects'][0]['remark']);
+        $this->assertSame(85, $math['final']); // (90+80+90+80)/4
+        $this->assertSame('PASSED', $math['remark']);
         $this->assertSame(85, $learner['generalAverage']);
         $this->assertSame('PASSED', $learner['generalRemark']);
     }
@@ -114,14 +127,29 @@ class Sf10ReportTest extends TestCase
     public function test_final_rating_is_blank_until_all_four_quarters_are_entered(): void
     {
         $enrollment = $this->enroll();
-        $subject = $this->assignSubject();
+        $subject = $this->assignSubject('Mathematics');
         $this->grade($enrollment, $subject, [1 => 90, 2 => 85, 3 => 88]); // only three
 
         $learner = app(Sf10ReportService::class)->build($this->section)['learners'][0];
+        $math = $this->area($learner, 'Mathematics');
 
-        $this->assertNull($learner['subjects'][0]['final']);
-        $this->assertSame('', $learner['subjects'][0]['remark']);
+        $this->assertNull($math['final']);
+        $this->assertSame('', $math['remark']);
         $this->assertNull($learner['generalAverage']);
+    }
+
+    public function test_an_unmatched_subject_falls_into_a_blank_row(): void
+    {
+        $enrollment = $this->enroll();
+        $subject = $this->assignSubject('Robotics'); // not a standard learning area
+        $this->grade($enrollment, $subject, [1 => 88, 2 => 88, 3 => 88, 4 => 88]);
+
+        $learner = app(Sf10ReportService::class)->build($this->section)['learners'][0];
+
+        // No standard row named Robotics — its rating must still print in a blank row.
+        $blankWithGrade = collect($learner['areas'])
+            ->first(fn ($r) => $r['label'] === '' && $r['final'] === 88);
+        $this->assertNotNull($blankWithGrade, 'Unmatched subject grade should land in a blank row.');
     }
 
     public function test_adviser_can_open_sf10_pdf(): void

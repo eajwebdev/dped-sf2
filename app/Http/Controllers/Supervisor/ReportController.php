@@ -166,7 +166,7 @@ class ReportController extends Controller
         return Pdf::loadView('reports.sf10.print', $data + [
             'schoolHead' => $v['head'],
             'district' => $v['district'],
-        ])->setPaper('a4', 'portrait')
+        ])->setPaper('letter', 'portrait')
             ->stream($this->filename('SF10', $section));
     }
 

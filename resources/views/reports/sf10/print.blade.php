@@ -4,57 +4,62 @@
     <meta charset="utf-8">
     <title>SF10 — {{ $section->gradeLevel->name }} {{ $section->name }}</title>
     <style>
-        @page { margin: 7mm; }
+        @page { size: letter portrait; margin: 6mm 8mm; }
         * { box-sizing: border-box; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 8px; color: #111; margin: 0; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 6.4px; color: #000; margin: 0; }
 
-        /* One SF10-ES per learner. */
         .rec { page-break-after: always; }
         .rec.tail { page-break-after: auto; }
 
         table { border-collapse: collapse; width: 100%; }
         td, th { vertical-align: top; }
 
-        .hdr td { vertical-align: middle; }
-        .hdr .agency { text-align: center; line-height: 1.25; }
-        .hdr .agency .r { font-size: 8px; }
-        .hdr .agency .d { font-weight: bold; font-size: 9px; }
-        .hdr .agency .t { font-weight: bold; font-size: 9px; margin-top: 2px; }
-        .hdr .agency .f { font-style: italic; font-size: 7.5px; }
-        .hdr .logo { width: 46px; text-align: center; }
-        .hdr .logo img { width: 40px; height: 40px; }
-        .sf-tag { font-weight: bold; font-size: 8.5px; }
+        /* Top strip: SF10-ES tag + "Page 2 of ___" */
+        .toprow td { padding: 0 0 2px; font-size: 7px; }
+        .tag { font-weight: bold; }
+        .pageno { text-align: right; }
 
         .band {
-            background: #e5e7eb; border: 0.6px solid #333; font-weight: bold;
-            text-transform: uppercase; text-align: center; padding: 2px; font-size: 8px;
-            letter-spacing: .3px; margin-top: 5px;
+            background: #d9d9d9; border: 0.7px solid #000; font-weight: bold;
+            text-transform: uppercase; text-align: center; padding: 1.5px; font-size: 7px;
         }
 
-        .info th, .info td { border: 0.5px solid #333; padding: 2px 3px; }
-        .info .lbl { font-size: 7px; color: #333; }
-        .info .val { font-weight: bold; min-height: 10px; }
+        /* The two half-columns of the scholastic grid. */
+        .grid { border: 0.7px solid #000; border-top: 0; }
+        .grid > tbody > tr > td { width: 50%; vertical-align: top; padding: 0; }
+        .grid .gut { border-left: 0.7px solid #000; }
 
-        .box th, .box td { border: 0.5px solid #333; padding: 1px 2px; }
-        .box th { font-weight: bold; text-align: center; font-size: 7px; text-transform: uppercase; background: #f3f4f6; }
-        .box td.area { text-align: left; padding-left: 3px; }
-        .num { text-align: center; }
-        .b { font-weight: bold; }
-        .center { text-align: center; }
-        .muted { color: #555; }
+        .meta td { padding: 1.5px 3px; white-space: nowrap; }
+        .u { display: inline-block; border-bottom: 0.5px solid #000; min-width: 40px; height: 7px; vertical-align: bottom; }
+        .u.fill { font-weight: bold; padding: 0 2px; }
 
-        .meta td { padding: 1px 3px; font-size: 7.5px; }
-        .fill { border-bottom: 0.5px solid #333; }
-        .chip { display: inline-block; width: 8px; height: 8px; border: 0.6px solid #333; vertical-align: middle; margin-right: 2px; }
-        .foot { margin-top: 4px; font-size: 7px; font-style: italic; text-align: right; }
+        .la th, .la td { border: 0.5px solid #000; padding: 0.8px 2px; height: 10px; }
+        .la th { font-weight: bold; text-align: center; font-size: 6px; }
+        .la td.area { text-align: left; }
+        .la td.area.ind { padding-left: 10px; font-style: italic; }
+        .la td.n { text-align: center; }
+        .la td.b { font-weight: bold; }
+        .rowh { border-top: 0.7px solid #000; }
+
+        .rem td, .rem th { border: 0.5px solid #000; padding: 0.8px 2px; height: 10px; font-size: 6px; }
+        .rem th { font-weight: bold; text-align: center; }
+        .rem .hd { text-align: left; font-weight: bold; border-bottom: 0; }
+
+        /* Certification */
+        .transfer { font-weight: bold; margin: 3px 0 1px; font-size: 6.6px; }
+        .cert { border: 0.7px solid #000; margin-bottom: 3px; }
+        .cert .cband { background: #d9d9d9; text-align: center; font-weight: bold; padding: 1.5px; font-size: 7px; border-bottom: 0.5px solid #000; }
+        .cert .line td { padding: 2px 4px; }
+        .cert .b { font-weight: bold; }
+        .sig td { padding: 10px 4px 1px; text-align: center; font-size: 6px; }
+        .sig .sl { border-top: 0.5px solid #000; padding-top: 1px; }
+        .foot td { padding-top: 2px; font-size: 6px; }
+        .foot .r { text-align: right; font-style: italic; }
     </style>
 </head>
 <body>
 @php
-    $depedLogo = public_path('DepED-Logo.png');
     $sy = $schoolYear;
-    // DepEd School ID + region/division live on the school record; district is a
-    // print-time field the adviser/oversight passes in.
     $schoolName = $school?->name ?? '';
     $depedId = $school?->school_id ?? '';
     $region = $school?->region ?? '';
@@ -62,152 +67,118 @@
     $grade = $section->gradeLevel->name;
     $secName = $section->name;
     $adviser = optional($section->adviser)->full_name ?? '';
+    $district = $district ?? '';
+
+    // Static learning-area labels for the un-filled template blocks. The first
+    // (top-left) block is filled per learner; the rest print blank, exactly as
+    // the official form pre-prints them (EPP on the left, TLE on the right).
+    $stdLabels = fn ($tle = false) => [
+        ['Filipino', false], ['English', false], ['Mathematics', false], ['Science', false],
+        ['GMRC (Good Manners and Right Conduct)', false], ['Araling Panlipunan', false],
+        [$tle ? 'TLE' : 'EPP', false], ['MAPEH', false],
+        ['Music & Arts', true], ['Physical Education & Health', true],
+        ['', false], ['', false], ['', false],
+        ['*Arabic Language', false], ['*Islamic Values Education', false],
+    ];
 @endphp
 
 @foreach ($learners as $L)
     <div class="rec @if ($loop->last) tail @endif">
-        {{-- ===== Header ===== --}}
-        <div class="sf-tag">SF10-ES</div>
-        <table class="hdr">
+        {{-- ===== Top strip ===== --}}
+        <table class="toprow">
             <tr>
-                <td class="logo">
-                    @if (is_file($depedLogo))<img src="{{ $depedLogo }}" alt="DepEd">@endif
-                </td>
-                <td class="agency">
-                    <div class="r">Republic of the Philippines</div>
-                    <div class="d">Department of Education</div>
-                    <div class="t">Learner Permanent Academic Record for Elementary School (SF10-ES)</div>
-                    <div class="f">(Formerly Form 137)</div>
-                </td>
-                <td class="logo">&nbsp;</td>
+                <td class="tag">SF10-ES</td>
+                <td class="pageno">Page 2 of _______</td>
             </tr>
         </table>
 
-        {{-- ===== Learner's Personal Information ===== --}}
-        <div class="band">Learner's Personal Information</div>
-        <table class="info">
-            <tr>
-                <td style="width:34%"><div class="lbl">LAST NAME</div><div class="val">{{ $L['lastName'] }}</div></td>
-                <td style="width:30%"><div class="lbl">FIRST NAME</div><div class="val">{{ $L['firstName'] }}</div></td>
-                <td style="width:12%"><div class="lbl">NAME EXTN. (Jr, I, II)</div><div class="val">{{ $L['suffix'] }}</div></td>
-                <td style="width:24%"><div class="lbl">MIDDLE NAME</div><div class="val">{{ $L['middleName'] }}</div></td>
-            </tr>
-            <tr>
-                <td colspan="2"><div class="lbl">Learner Reference Number (LRN)</div><div class="val">{{ $L['lrn'] }}</div></td>
-                <td><div class="lbl">Birthdate (mm/dd/yyyy)</div><div class="val">{{ optional($L['birthdate'])->format('m/d/Y') }}</div></td>
-                <td><div class="lbl">Sex</div><div class="val">{{ $L['sex'] }}</div></td>
-            </tr>
-        </table>
-
-        {{-- ===== Eligibility for Elementary School Enrollment (fillable) ===== --}}
-        <div class="band">Eligibility for Elementary School Enrollment</div>
-        <table class="meta" style="border:0.5px solid #333;">
-            <tr>
-                <td style="width:100%">
-                    <span class="b">Credential Presented for Grade 1:</span>
-                    <span class="chip"></span>Kinder Progress Report
-                    <span class="chip" style="margin-left:8px"></span>ECCD Checklist
-                    <span class="chip" style="margin-left:8px"></span>Kindergarten Certificate of Completion
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Name of School: <span class="fill" style="display:inline-block; min-width:150px">&nbsp;</span>
-                    &nbsp;&nbsp;School ID: <span class="fill" style="display:inline-block; min-width:70px">&nbsp;</span>
-                    &nbsp;&nbsp;Address: <span class="fill" style="display:inline-block; min-width:120px">&nbsp;</span>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <span class="b">Other Credential Presented:</span>
-                    PEPT Passer Rating: <span class="fill" style="display:inline-block; min-width:45px">&nbsp;</span>
-                    &nbsp;Date of Examination/Assessment: <span class="fill" style="display:inline-block; min-width:70px">&nbsp;</span>
-                    &nbsp;Others: <span class="fill" style="display:inline-block; min-width:70px">&nbsp;</span>
-                </td>
-            </tr>
-        </table>
-
-        {{-- ===== Scholastic Record ===== --}}
         <div class="band">Scholastic Record</div>
-        <table class="meta" style="border:0.5px solid #333; border-bottom:0;">
+
+        {{-- ===== 2x2 grid of scholastic blocks ===== --}}
+        <table class="grid">
+            {{-- --- Top row: filled (left) + blank template (right) --- --}}
             <tr>
-                <td style="width:52%">School: <span class="b">{{ $schoolName }}</span></td>
-                <td style="width:24%">School ID: <span class="b">{{ $depedId }}</span></td>
-                <td style="width:24%">Region: <span class="b">{{ $region }}</span></td>
+                <td>
+                    @include('reports.sf10.partials.block', [
+                        'caps' => true, 'tle' => false, 'rows' => $L['areas'],
+                        'ga' => $L['generalAverage'], 'gaRemark' => $L['generalRemark'],
+                        'school' => $schoolName, 'schoolId' => $depedId, 'district' => $district,
+                        'division' => $division, 'region' => $region, 'grade' => $grade,
+                        'section' => $secName, 'sy' => $sy?->name, 'adviser' => $adviser,
+                    ])
+                </td>
+                <td class="gut">
+                    @include('reports.sf10.partials.block', [
+                        'caps' => false, 'tle' => true, 'rows' => null, 'labels' => $stdLabels(true),
+                        'ga' => null, 'gaRemark' => '',
+                        'school' => '', 'schoolId' => '', 'district' => '', 'division' => '',
+                        'region' => '', 'grade' => '', 'section' => '', 'sy' => '', 'adviser' => '',
+                    ])
+                </td>
             </tr>
+            {{-- --- Bottom row: two blank, tall generic blocks --- --}}
             <tr>
-                <td>District: <span class="b">{{ $district ?? '' }}</span></td>
-                <td>Division: <span class="b">{{ $division }}</span></td>
-                <td>School Year: <span class="b">{{ $sy?->name }}</span></td>
-            </tr>
-            <tr>
-                <td>Classified as Grade: <span class="b">{{ $grade }}</span></td>
-                <td>Section: <span class="b">{{ $secName }}</span></td>
-                <td>Adviser/Teacher: <span class="b">{{ $adviser }}</span></td>
+                <td>
+                    @include('reports.sf10.partials.block', [
+                        'caps' => false, 'tle' => false, 'rows' => null, 'labels' => null, 'blankTall' => true,
+                        'ga' => null, 'gaRemark' => '',
+                        'school' => '', 'schoolId' => '', 'district' => '', 'division' => '',
+                        'region' => '', 'grade' => '', 'section' => '', 'sy' => '', 'adviser' => '',
+                    ])
+                </td>
+                <td class="gut">
+                    @include('reports.sf10.partials.block', [
+                        'caps' => false, 'tle' => false, 'rows' => null, 'labels' => null, 'blankTall' => true,
+                        'ga' => null, 'gaRemark' => '',
+                        'school' => '', 'schoolId' => '', 'district' => '', 'division' => '',
+                        'region' => '', 'grade' => '', 'section' => '', 'sy' => '', 'adviser' => '',
+                    ])
+                </td>
             </tr>
         </table>
 
-        <table class="box">
-            <thead>
-                <tr>
-                    <th rowspan="2" style="width:40%">Learning Areas</th>
-                    <th colspan="4">Quarterly Rating</th>
-                    <th rowspan="2" style="width:11%">Final Rating</th>
-                    <th rowspan="2" style="width:17%">Remarks</th>
+        {{-- ===== Certification ===== --}}
+        <div class="transfer">For Transfer Out /Elementary School Completer Only</div>
+        @php
+            $nextGrade = (int) preg_replace('/\D/', '', $grade);
+            $nextGrade = $nextGrade > 0 ? (string) ($nextGrade + 1) : '';
+            $certName = trim($L['lastName'].', '.$L['firstName'].' '.($L['middleName'] ?? ''));
+        @endphp
+        @foreach (range(1, 3) as $c)
+            <table class="cert">
+                <tr><td colspan="3" class="cband">Certification</td></tr>
+                <tr class="line">
+                    <td colspan="3">
+                        <span class="b">I CERTIFY that this is a true record of</span>
+                        <span class="u fill" style="min-width:150px">{{ $loop->first ? $certName : '' }}</span>
+                        <span class="b">with LRN</span>
+                        <span class="u fill" style="min-width:95px">{{ $loop->first ? $L['lrn'] : '' }}</span>
+                        <span class="b">and that he/she is eligible for addmision to Grade</span>
+                        <span class="u fill" style="min-width:34px">{{ $loop->first ? $nextGrade : '' }}</span> .
+                    </td>
                 </tr>
-                <tr>
-                    <th style="width:8%">1</th>
-                    <th style="width:8%">2</th>
-                    <th style="width:8%">3</th>
-                    <th style="width:8%">4</th>
+                <tr class="line">
+                    <td colspan="3">
+                        <span class="b">School Name:</span> <span class="u" style="min-width:150px">&nbsp;</span>
+                        &nbsp;<span class="b">School ID</span> <span class="u" style="min-width:60px">&nbsp;</span>
+                        &nbsp;<span class="b">Division</span> <span class="u" style="min-width:70px">&nbsp;</span>
+                        &nbsp;<span class="b">Last School Year Attended:</span> <span class="u" style="min-width:80px">&nbsp;</span>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse ($L['subjects'] as $row)
-                    <tr>
-                        <td class="area">{{ $row['subject'] }}</td>
-                        <td class="num">{{ $row['q'][1] }}</td>
-                        <td class="num">{{ $row['q'][2] }}</td>
-                        <td class="num">{{ $row['q'][3] }}</td>
-                        <td class="num">{{ $row['q'][4] }}</td>
-                        <td class="num b">{{ $row['final'] }}</td>
-                        <td class="center">{{ $row['remark'] }}</td>
-                    </tr>
-                @empty
-                    <tr><td class="area muted" colspan="7">No learning areas set up for this class yet.</td></tr>
-                @endforelse
-                <tr>
-                    <td class="area b">General Average</td>
-                    <td class="num" colspan="4"></td>
-                    <td class="num b">{{ $L['generalAverage'] }}</td>
-                    <td class="center b">{{ $L['generalRemark'] }}</td>
+                <tr class="sig">
+                    <td style="width:30%"><div class="sl">Date</div></td>
+                    <td style="width:45%"><div class="sl">Signature of Principal/School Head over Printed Name</div></td>
+                    <td style="width:25%; vertical-align:bottom; text-align:center">(Affix School Seal here)</td>
                 </tr>
-            </tbody>
-        </table>
+            </table>
+        @endforeach
 
-        {{-- ===== Remedial Classes (fillable) ===== --}}
-        <table class="box" style="margin-top:3px">
-            <thead>
-                <tr>
-                    <th colspan="5" style="text-align:left; padding-left:3px">
-                        Remedial Classes &nbsp;·&nbsp; Conducted from: __________ to __________
-                    </th>
-                </tr>
-                <tr>
-                    <th style="width:40%">Learning Areas</th>
-                    <th>Final Rating</th>
-                    <th>Remedial Class Mark</th>
-                    <th>Recomputed Final Grade</th>
-                    <th style="width:17%">Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>
-            </tbody>
+        <table class="foot">
+            <tr>
+                <td>May add Certification Box if needed</td>
+                <td class="r">Revised 2025 based on DepEd Order No. 10, s. 2024</td>
+            </tr>
         </table>
-
-        <div class="foot">Revised 2025 based on DepEd Order No. 10, s. 2024</div>
     </div>
 @endforeach
 </body>
