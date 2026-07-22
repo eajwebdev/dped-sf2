@@ -26,7 +26,7 @@ class Sf10Controller extends Controller
     public function index(Request $request)
     {
         $sections = $request->user()->advisorySections()
-            ->with(['gradeLevel', 'schoolYear'])
+            ->with(['gradeLevel', 'schoolYear', 'activeEnrollments.student'])
             ->withCount([
                 'subjectAssignments as learning_areas_count',
                 'activeEnrollments as learners_count',
@@ -48,10 +48,12 @@ class Sf10Controller extends Controller
         $validated = $request->validate([
             'head' => ['nullable', 'string', 'max:120'],
             'district' => ['nullable', 'string', 'max:120'],
+            'student' => ['nullable', 'integer'],
         ]);
 
         $data = $this->report->build($section);
-        $this->audit->log('report_generated', $section, "SF10 generated for {$section->name}");
+        $one = $this->only($data, $validated['student'] ?? null);
+        $this->audit->log('report_generated', $section, 'SF10 generated for '.($one ?? $section->name));
 
         // One full SF10-ES page per learner is a heavy nested-table layout for
         // DomPDF; a class-sized roster needs more than the default 512M.
@@ -61,12 +63,36 @@ class Sf10Controller extends Controller
             'schoolHead' => trim((string) ($validated['head'] ?? '')),
             'district' => trim((string) ($validated['district'] ?? '')),
         ])->setPaper('letter', 'portrait')
-            ->stream($this->filename($section));
+            ->stream($this->filename($section, $one));
     }
 
-    private function filename(Section $section): string
+    /**
+     * Narrow the built learners to a single enrolment when a `student` was
+     * chosen; returns that learner's name for the filename/audit, or null for
+     * the whole class. 404s when the id is not in this section.
+     */
+    private function only(array &$data, ?int $enrollmentId): ?string
     {
-        return Str::slug("SF10 {$section->gradeLevel->name} {$section->name}").'.pdf';
+        if (! $enrollmentId) {
+            return null;
+        }
+
+        $learners = array_values(array_filter(
+            $data['learners'],
+            fn ($l) => (int) $l['enrollment_id'] === $enrollmentId,
+        ));
+        abort_if($learners === [], 404, 'That learner is not in this class.');
+
+        $data['learners'] = $learners;
+
+        return $learners[0]['name'] ?? null;
+    }
+
+    private function filename(Section $section, ?string $learner = null): string
+    {
+        $who = $learner ? " {$learner}" : '';
+
+        return Str::slug("SF10 {$section->gradeLevel->name} {$section->name}{$who}").'.pdf';
     }
 
     private function authorizeAdviser(Request $request, Section $section): void

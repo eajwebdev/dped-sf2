@@ -32,11 +32,23 @@
                                 @endif
                             </p>
                         </div>
-                        <div class="flex shrink-0 items-center gap-2">
+                        @php
+                            $roster = $section->activeEnrollments
+                                ->sortBy(fn ($e) => $e->student->last_name.$e->student->first_name)->values();
+                        @endphp
+                        <div class="flex shrink-0 flex-wrap items-center gap-2" x-data="{ st: '' }">
                             <a href="{{ route('teacher.sf9.grades', $section) }}" class="btn-secondary btn-sm">
                                 {{ $noAreas ? 'Set up & enter grades' : 'Enter grades' }}
                             </a>
-                            <a href="{{ route('reports.sf10.show', $section) }}" target="_blank" class="btn-primary btn-sm">Open PDF</a>
+                            <select x-model="st" class="input w-auto py-1.5 text-xs" style="min-width:11rem">
+                                <option value="">Whole class ({{ $roster->count() }})</option>
+                                @foreach ($roster as $e)
+                                    <option value="{{ $e->id }}">{{ $e->student->full_name }}</option>
+                                @endforeach
+                            </select>
+                            <a :href="'{{ route('reports.sf10.show', $section) }}' + (st ? '?student=' + st : '')"
+                               target="_blank" class="btn-primary btn-sm"
+                               x-text="st ? 'Open learner' : 'Open PDF'">Open PDF</a>
                         </div>
                     </div>
                 @empty

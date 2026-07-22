@@ -116,6 +116,7 @@ class Sf10ReportService
         return [
             'enrollment_id' => $enrollment->id,
             'student' => $student,
+            'name' => $student->full_name,
             'lastName' => $student->last_name,
             'firstName' => $student->first_name,
             'middleName' => $student->middle_name,

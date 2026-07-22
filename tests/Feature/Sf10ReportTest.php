@@ -166,6 +166,30 @@ class Sf10ReportTest extends TestCase
         $this->assertStringStartsWith('%PDF', $response->getContent());
     }
 
+    public function test_adviser_can_open_sf10_for_a_single_learner(): void
+    {
+        $one = $this->enroll();
+        $this->enroll();
+        $subject = $this->assignSubject('Mathematics');
+        $this->grade($one, $subject, [1 => 90, 2 => 80, 3 => 90, 4 => 80]);
+
+        $response = $this->actingAs($this->adviserUser)
+            ->get(route('reports.sf10.show', ['section' => $this->section, 'student' => $one->id]));
+
+        $response->assertOk();
+        $this->assertSame('application/pdf', $response->headers->get('content-type'));
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
+    public function test_sf10_single_learner_404s_when_not_in_the_section(): void
+    {
+        $this->enroll();
+
+        $this->actingAs($this->adviserUser)
+            ->get(route('reports.sf10.show', ['section' => $this->section, 'student' => 999999]))
+            ->assertNotFound();
+    }
+
     public function test_non_adviser_cannot_open_sf10(): void
     {
         $stranger = User::factory()->create(['role' => User::ROLE_TEACHER, 'is_active' => true]);

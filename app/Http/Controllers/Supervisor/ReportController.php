@@ -141,11 +141,12 @@ class ReportController extends Controller
         $v = $this->headerFields($request);
 
         $data = $this->sf9->build($section);
+        $one = $this->only($data, $request->integer('student') ?: null);
         $this->log($section, 'SF9 Report Card');
 
         return Pdf::loadView('reports.sf9.print', ['schoolHead' => $v['head']] + $data)
             ->setPaper('a4', 'landscape')
-            ->stream($this->filename('SF9', $section));
+            ->stream($this->filename('SF9'.($one ? " {$one}" : ''), $section));
     }
 
     // ── SF10 — Learner Permanent Academic Record ─────────────────────────────
@@ -161,6 +162,7 @@ class ReportController extends Controller
         $v = $this->headerFields($request);
 
         $data = $this->sf10->build($section);
+        $one = $this->only($data, $request->integer('student') ?: null);
         $this->log($section, 'SF10 Permanent Academic Record');
 
         // A class-sized roster of full SF10-ES pages exceeds DomPDF's default
@@ -171,7 +173,29 @@ class ReportController extends Controller
             'schoolHead' => $v['head'],
             'district' => $v['district'],
         ])->setPaper('letter', 'portrait')
-            ->stream($this->filename('SF10', $section));
+            ->stream($this->filename('SF10'.($one ? " {$one}" : ''), $section));
+    }
+
+    /**
+     * Narrow the built learners to a single enrolment when a `student` was
+     * chosen; returns that learner's name, or null for the whole class. 404s
+     * when the id is not part of this section.
+     */
+    private function only(array &$data, ?int $enrollmentId): ?string
+    {
+        if (! $enrollmentId) {
+            return null;
+        }
+
+        $learners = array_values(array_filter(
+            $data['learners'],
+            fn ($l) => (int) $l['enrollment_id'] === $enrollmentId,
+        ));
+        abort_if($learners === [], 404, 'That learner is not in this class.');
+
+        $data['learners'] = $learners;
+
+        return $learners[0]['name'] ?? null;
     }
 
     // ── Shared helpers ───────────────────────────────────────────────────────
