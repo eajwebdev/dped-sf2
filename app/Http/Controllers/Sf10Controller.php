@@ -53,6 +53,10 @@ class Sf10Controller extends Controller
         $data = $this->report->build($section);
         $this->audit->log('report_generated', $section, "SF10 generated for {$section->name}");
 
+        // One full SF10-ES page per learner is a heavy nested-table layout for
+        // DomPDF; a class-sized roster needs more than the default 512M.
+        ini_set('memory_limit', '1024M');
+
         return Pdf::loadView('reports.sf10.print', $data + [
             'schoolHead' => trim((string) ($validated['head'] ?? '')),
             'district' => trim((string) ($validated['district'] ?? '')),

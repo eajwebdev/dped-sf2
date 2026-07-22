@@ -163,6 +163,10 @@ class ReportController extends Controller
         $data = $this->sf10->build($section);
         $this->log($section, 'SF10 Permanent Academic Record');
 
+        // A class-sized roster of full SF10-ES pages exceeds DomPDF's default
+        // 512M memory budget.
+        ini_set('memory_limit', '1024M');
+
         return Pdf::loadView('reports.sf10.print', $data + [
             'schoolHead' => $v['head'],
             'district' => $v['district'],
