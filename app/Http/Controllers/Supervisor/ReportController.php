@@ -10,6 +10,7 @@ use App\Services\Sf3ReportService;
 use App\Services\Sf5ReportService;
 use App\Services\Sf8ReportService;
 use App\Services\Sf9ReportService;
+use App\Services\Sf10ReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class ReportController extends Controller
         private readonly Sf5ReportService $sf5,
         private readonly Sf8ReportService $sf8,
         private readonly Sf9ReportService $sf9,
+        private readonly Sf10ReportService $sf10,
         private readonly AuditLogger $audit,
     ) {}
 
@@ -144,6 +146,28 @@ class ReportController extends Controller
         return Pdf::loadView('reports.sf9.print', ['schoolHead' => $v['head']] + $data)
             ->setPaper('a4', 'landscape')
             ->stream($this->filename('SF9', $section));
+    }
+
+    // ── SF10 — Learner Permanent Academic Record ─────────────────────────────
+    public function sf10Index(Request $request)
+    {
+        return $this->picker($request, 'sf10', 'SF10 — Permanent Record',
+            'The learner permanent academic record for any class in your school.');
+    }
+
+    public function sf10Show(Request $request, Section $section)
+    {
+        $this->authorizeSection($request, $section);
+        $v = $this->headerFields($request);
+
+        $data = $this->sf10->build($section);
+        $this->log($section, 'SF10 Permanent Academic Record');
+
+        return Pdf::loadView('reports.sf10.print', $data + [
+            'schoolHead' => $v['head'],
+            'district' => $v['district'],
+        ])->setPaper('a4', 'portrait')
+            ->stream($this->filename('SF10', $section));
     }
 
     // ── Shared helpers ───────────────────────────────────────────────────────

@@ -24,6 +24,7 @@
             ['route' => 'supervisor.sf5.index', 'match' => 'supervisor.sf5.*', 'label' => 'SF5 — Promotion', 'desc' => 'Promotion & proficiency report'],
             ['route' => 'supervisor.sf8.index', 'match' => 'supervisor.sf8.*', 'label' => 'SF8 — Health & Nutrition', 'desc' => 'Learner health & nutrition report'],
             ['route' => 'supervisor.sf9.index', 'match' => 'supervisor.sf9.*', 'label' => 'SF9 — Report Card', 'desc' => 'Learner progress report card'],
+            ['route' => 'supervisor.sf10.index', 'match' => 'supervisor.sf10.*', 'label' => 'SF10 — Permanent Record', 'desc' => 'Learner permanent academic record'],
             ['route' => 'supervisor.insights.index', 'match' => 'supervisor.insights.*', 'label' => 'Advanced Reports', 'desc' => 'Class insights & watchlists'],
         ];
     } else {
@@ -44,6 +45,7 @@
             ['route' => 'reports.sf5.index', 'match' => 'reports.sf5.*', 'label' => 'SF5 — Promotion', 'desc' => 'Promotion & proficiency report'],
             ['route' => 'reports.sf8.index', 'match' => 'reports.sf8.*', 'label' => 'SF8 — Health & Nutrition', 'desc' => 'Learner health & nutrition report'],
             ['route' => 'reports.sf9.index', 'match' => ['reports.sf9.*', 'teacher.sf9.*'], 'label' => 'SF9 — Report Card', 'desc' => 'Learner progress report card'],
+            ['route' => 'reports.sf10.index', 'match' => 'reports.sf10.*', 'label' => 'SF10 — Permanent Record', 'desc' => 'Learner permanent academic record'],
             ['route' => 'insights.index', 'match' => 'insights.*', 'label' => 'Advanced Reports', 'desc' => 'Class insights & watchlists'],
         ];
     }

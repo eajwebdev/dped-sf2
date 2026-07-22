@@ -31,6 +31,7 @@ use App\Http\Controllers\Sf3Controller;
 use App\Http\Controllers\Sf5Controller;
 use App\Http\Controllers\Sf8Controller;
 use App\Http\Controllers\Sf9Controller;
+use App\Http\Controllers\Sf10Controller;
 use App\Http\Controllers\TeacherTextbookController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Teacher\CuttingClassController as TeacherCuttingClassController;
@@ -177,6 +178,11 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     Route::delete('/reports/sf9/subject-assignments/{subjectAssignment}', [Sf9GradeController::class, 'removeSubject'])->name('teacher.sf9.subjects.destroy');
     Route::get('/reports/sf9/{section}', [Sf9Controller::class, 'show'])->name('reports.sf9.show');
 
+    // SF10 Learner Permanent Academic Record (formerly Form 137) — locked PDF
+    // built from the same quarterly ratings entered for SF9.
+    Route::get('/reports/sf10', [Sf10Controller::class, 'index'])->name('reports.sf10.index');
+    Route::get('/reports/sf10/{section}', [Sf10Controller::class, 'show'])->name('reports.sf10.show');
+
     // SF3 Books Issued and Returned, plus the adviser's issuance screen behind it.
     // Professional-plan module: Starter subscribers get an upgrade prompt.
     Route::middleware('module:sf3')->group(function () {
@@ -234,7 +240,7 @@ Route::middleware(['auth', 'verified', 'supervisor'])
 
         // The adviser School Forms — read-only, one controller, same PDFs.
         $reports = \App\Http\Controllers\Supervisor\ReportController::class;
-        foreach (['sf1', 'sf3', 'sf5', 'sf8', 'sf9'] as $sf) {
+        foreach (['sf1', 'sf3', 'sf5', 'sf8', 'sf9', 'sf10'] as $sf) {
             Route::get("/{$sf}", [$reports, "{$sf}Index"])->name("{$sf}.index");
             Route::get("/{$sf}/{section}", [$reports, "{$sf}Show"])->name("{$sf}.show");
         }
