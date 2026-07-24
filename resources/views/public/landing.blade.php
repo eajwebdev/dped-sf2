@@ -399,6 +399,47 @@
                                 </div>
                             </div>
 
+                            {{-- ── Live module: SF10 permanent academic record (transcript) ── --}}
+                            <div x-show="current.code === 'SF10'" x-cloak
+                                 x-transition:enter="transition duration-500 ease-out"
+                                 x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="h-2.5 w-28 rounded-full bg-white/25"></div>
+                                        <div class="mt-2 h-2 w-20 rounded-full bg-white/10"></div>
+                                    </div>
+                                    <div class="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-xs font-bold text-white">Generate SF10</div>
+                                </div>
+                                {{-- Scholastic record: learning areas × final rating per grade level --}}
+                                <div class="overflow-hidden rounded-xl border border-white/10">
+                                    <div class="flex items-center gap-2 border-b border-white/10 bg-white/[0.06] px-3 py-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                                        <span class="flex-1">Learning Area</span><span class="w-7 text-center">G7</span><span class="w-7 text-center">G8</span><span class="w-7 text-center">G9</span><span class="w-8 text-center">G10</span>
+                                    </div>
+                                    @foreach ([['w-20', '87', '88', '90', '91'], ['w-24', '89', '90', '88', '92'], ['w-16', '85', '86', '87', '88'], ['w-24', '91', '90', '92', '93']] as [$w, $g7, $g8, $g9, $g10])
+                                        <div class="flex items-center gap-2 border-b border-white/5 px-3 py-1.5 last:border-0">
+                                            <span class="flex-1"><span class="block h-1.5 {{ $w }} rounded-full bg-white/20"></span></span>
+                                            <span class="w-7 text-center text-[8px] text-slate-400">{{ $g7 }}</span>
+                                            <span class="w-7 text-center text-[8px] text-slate-400">{{ $g8 }}</span>
+                                            <span class="w-7 text-center text-[8px] text-slate-400">{{ $g9 }}</span>
+                                            <span class="w-8 text-center text-[8px] font-bold text-emerald-300">{{ $g10 }}</span>
+                                        </div>
+                                    @endforeach
+                                    <div class="flex items-center gap-2 border-t border-white/10 bg-white/[0.04] px-3 py-1.5 text-[8px] font-bold">
+                                        <span class="flex-1 text-slate-400">General Average</span>
+                                        <span class="w-7 text-center text-slate-300">88</span>
+                                        <span class="w-7 text-center text-slate-300">89</span>
+                                        <span class="w-7 text-center text-slate-300">89</span>
+                                        <span class="w-8 text-center text-emerald-300">91</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 text-[9px] font-bold">
+                                    <span class="rounded-md bg-emerald-400/15 px-2 py-1 text-emerald-300">Formerly Form 137</span>
+                                    <span class="rounded-md bg-white/[0.06] px-2 py-1 text-slate-400">Follows the learner</span>
+                                    <span class="rounded-md bg-white/[0.06] px-2 py-1 text-slate-400">Always current</span>
+                                </div>
+                            </div>
+
                             {{-- ── Unreleased module: an explicit preview, never a fake working screen ── --}}
                             <div x-show="! current.available" x-cloak
                                  x-transition:enter="transition duration-500 ease-out"
