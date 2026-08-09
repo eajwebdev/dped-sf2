@@ -8,7 +8,9 @@ use App\Models\School;
 use App\Models\User;
 use App\Services\AuditLogger;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
@@ -16,12 +18,51 @@ use Illuminate\View\View;
 class RegisteredUserController extends Controller
 {
     /**
-     * Display the registration view with the list of schools a teacher may join.
+     * Display the registration view. The school list is loaded by search so the
+     * page stays quick even when the app contains every DepEd school.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        $selectedSchool = $request->old('school_id')
+            ? School::active()->find($request->old('school_id'))
+            : null;
+
         return view('auth.register', [
-            'schools' => School::active()->orderBy('name')->get(),
+            'selectedSchool' => $selectedSchool,
+        ]);
+    }
+
+    /**
+     * Lightweight public lookup used by the registration form. It returns only
+     * the handful of matches a user can act on instead of shipping 47K schools
+     * to the browser.
+     */
+    public function schools(Request $request): JsonResponse
+    {
+        $term = trim((string) $request->query('q', ''));
+
+        if (strlen($term) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $prefix = addcslashes($term, '\%_').'%';
+
+        $schools = School::active()
+            ->where(function ($query) use ($prefix) {
+                $query->where('school_id', 'like', $prefix)
+                    ->orWhere('name', 'like', $prefix);
+            })
+            ->orderByRaw('case when school_id like ? then 0 else 1 end', [$prefix])
+            ->orderBy('name')
+            ->limit(20)
+            ->get(['id', 'school_id', 'name', 'municipality', 'province', 'division', 'region']);
+
+        return response()->json([
+            'data' => $schools->map(fn (School $school) => [
+                'id' => $school->id,
+                'label' => $school->name.($school->school_id ? ' (ID '.$school->school_id.')' : ''),
+                'meta' => collect([$school->municipality, $school->province, $school->division, $school->region])->filter()->join(' • '),
+            ])->values(),
         ]);
     }
 

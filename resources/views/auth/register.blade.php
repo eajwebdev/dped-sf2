@@ -23,6 +23,9 @@
 
                 @php
                     $darkInput = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 transition-all duration-200 focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/15';
+                    $selectedSchoolLabel = $selectedSchool
+                        ? $selectedSchool->name.($selectedSchool->school_id ? ' (ID '.$selectedSchool->school_id.')' : '')
+                        : null;
                 @endphp
 
                 <div class="stagger-1 animate-slide-up rounded-card border border-white/15 bg-white/[0.06] p-5 shadow-2xl shadow-navy-950/50 backdrop-blur-2xl sm:p-7">
@@ -78,11 +81,17 @@
 
                             <div class="sm:col-span-2">
                                 <label for="school_id" class="mb-1 block text-xs font-medium text-slate-300">School <span class="text-brand-400">*</span></label>
-                                <x-school-select name="school_id" :schools="$schools" :selected="old('school_id')" :required="true" :dark="true" />
+                                <x-school-select
+                                    name="school_id"
+                                    :selected="old('school_id')"
+                                    :selected-label="$selectedSchoolLabel"
+                                    :remote-url="route('register.schools')"
+                                    :required="true"
+                                    :dark="true"
+                                    placeholder="Type school name or School ID..."
+                                />
                                 @error('school_id')<p class="mt-1 text-xs font-medium text-red-400">{{ $message }}</p>@enderror
-                                @if ($schools->isEmpty())
-                                    <p class="mt-1 text-xs font-medium text-amber-400">No schools available yet — please contact your administrator.</p>
-                                @endif
+                                <p class="mt-1 text-[11px] text-slate-500">Search loads only the closest matches so registration stays fast.</p>
                             </div>
                         </div>
 

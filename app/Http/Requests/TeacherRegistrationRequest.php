@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\Rules\File;
 
@@ -33,7 +34,13 @@ class TeacherRegistrationRequest extends FormRequest
             // no MX record, and turns a DNS outage into a broken signup page.
             'email' => ['required', 'string', 'lowercase', 'email:rfc', 'max:255', 'unique:'.User::class],
             'contact_number' => ['required', 'string', 'max:30', 'regex:/^[0-9+()\-\s]+$/'],
-            'school_id' => ['required', 'integer', 'exists:schools,id'],
+            'school_id' => [
+                'required',
+                'integer',
+                Rule::exists('schools', 'id')
+                    ->where('is_active', true)
+                    ->whereNull('deleted_at'),
+            ],
 
             // The employee/teacher number printed on the ID, so the admin can
             // check it against the school's own records.

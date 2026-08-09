@@ -112,7 +112,7 @@
                 </div>
                 <div class="p-6 space-y-4">
                     <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-3">
-                        <p class="text-xs text-blue-700 dark:text-blue-300"><span class="font-semibold">Required columns:</span> lrn, first_name, middle_name, last_name, suffix, gender, birthdate, address, guardian_name, guardian_contact. Existing LRNs are skipped.</p>
+                        <p class="text-xs text-blue-700 dark:text-blue-300"><span class="font-semibold">Required columns:</span> first_name, last_name, gender. LRN, birthdate, address, guardian, and SF1 profile columns may be blank. Existing LRNs are skipped.</p>
                     </div>
                     <form method="POST" action="{{ route('admin.students.import') }}" enctype="multipart/form-data" class="space-y-4">
                         @csrf

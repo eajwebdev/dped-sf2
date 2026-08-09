@@ -45,7 +45,7 @@ class Sf1Controller extends Controller
             'schoolHead' => trim((string) ($validated['head'] ?? '')),
             'district' => trim((string) ($validated['district'] ?? '')),
         ])
-            ->setPaper('legal', 'landscape')
+            ->setPaper('a4', 'landscape')
             ->stream($this->filename($section));
     }
 

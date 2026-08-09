@@ -91,7 +91,8 @@ class Phase6Test extends TestCase
     {
         $csv = "lrn,first_name,middle_name,last_name,suffix,gender,birthdate,address,guardian_name,guardian_contact\n"
             ."111122223333,Ana,Cruz,Santos,,Female,2013-01-15,Sample,Maria,09170000000\n"
-            ."444455556666,Ben,Lopez,Reyes,,Male,2012-11-02,Sample,Jose,09171111111\n";
+            ."444455556666,Ben,Lopez,Reyes,,Male,2012-11-02,Sample,Jose,09171111111\n"
+            .",Cara,,Dela Cruz,,F,,,,\n";
 
         $file = UploadedFile::fake()->createWithContent('students.csv', $csv);
 
@@ -99,6 +100,7 @@ class Phase6Test extends TestCase
 
         $this->assertDatabaseHas('students', ['lrn' => '111122223333', 'last_name' => 'Santos']);
         $this->assertDatabaseHas('students', ['lrn' => '444455556666', 'last_name' => 'Reyes']);
+        $this->assertDatabaseHas('students', ['lrn' => null, 'last_name' => 'Dela Cruz', 'gender' => 'Female']);
     }
 
     public function test_student_export_downloads(): void

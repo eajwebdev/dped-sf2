@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SchoolRequest;
 use App\Models\School;
 use App\Services\AuditLogger;
+use App\Services\SchoolMasterlistImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -83,5 +84,37 @@ class SchoolController extends Controller
         $this->audit->deleted($school);
 
         return redirect()->route('admin.schools.index')->with('success', "{$name} deleted.");
+    }
+
+    public function importMasterlist(Request $request, SchoolMasterlistImportService $importer): RedirectResponse
+    {
+        $validated = $request->validate([
+            'masterlist' => ['nullable', 'file', 'mimes:xls,xlsx', 'max:10240'],
+            'sheet' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $path = $request->hasFile('masterlist')
+            ? $request->file('masterlist')->getRealPath()
+            : public_path('masterlist_of_schools_based_on_school_year_-_original.xls');
+
+        $sheet = $validated['sheet'] ?? 'FOR IMPORT';
+
+        if ($sheet === 'FOR IMPORT') {
+            $importer->populateImportSheet($path);
+        }
+
+        $result = $importer->import($path, $sheet);
+
+        $this->audit->log(
+            'school_masterlist_imported',
+            null,
+            "Imported {$result['total']} schools from {$result['sheet']}",
+            null,
+            $result,
+        );
+
+        return redirect()
+            ->route('admin.schools.index')
+            ->with('success', "Imported {$result['total']} schools: {$result['created']} created, {$result['updated']} updated, {$result['skipped']} skipped.");
     }
 }

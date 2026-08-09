@@ -41,18 +41,18 @@ class StudentIoController extends Controller
         } catch (ExcelValidationException $e) {
             $count = count($e->failures());
 
-            return back()->with('error', "Import stopped: {$count} row(s) failed validation (check LRN, first & last name).");
+            return back()->with('error', "Import stopped: {$count} row(s) failed validation. First name, last name, and gender are required; LRN and other fields may be blank.");
         }
 
-        $this->audit->log('import', null, "Imported {$import->imported} students from Excel");
+        $this->audit->log('import', null, "Imported {$import->imported} students from Excel; skipped {$import->skipped} duplicate LRN row(s)");
 
-        return back()->with('success', "Imported {$import->imported} new student(s).");
+        return back()->with('success', "Imported {$import->imported} new student(s). Skipped {$import->skipped} duplicate LRN row(s).");
     }
 
     /** Downloadable blank template with the expected headings. */
     public function template()
     {
-        $headings = ['lrn', 'first_name', 'middle_name', 'last_name', 'suffix', 'gender', 'birthdate', 'address', 'guardian_name', 'guardian_contact'];
+        $headings = StudentsImport::templateHeadings();
 
         return Excel::download(new class($headings) implements FromArray, WithHeadings
         {
@@ -60,7 +60,7 @@ class StudentIoController extends Controller
 
             public function array(): array
             {
-                return [['123456789012', 'Juan', 'Reyes', 'Dela Cruz', '', 'Male', '2013-05-01', 'Sample Address', 'Maria Dela Cruz', '09171234567']];
+                return [StudentsImport::templateSampleRow()];
             }
 
             public function headings(): array

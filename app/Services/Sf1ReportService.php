@@ -28,7 +28,7 @@ class Sf1ReportService
         'LE' => 'Late Enrollment',
         'CCT' => 'CCT Recipient',
         'B/A' => 'Balik-Aral',
-        'LWD' => 'Learner With Disability',
+        'SNED' => 'Special Needs Education',
         'ACL' => 'Accelerated',
     ];
 
@@ -93,7 +93,7 @@ class Sf1ReportService
                 'lrn' => $s->lrn,
                 'name' => $this->registerName($s),
                 'sex' => $s->gender === 'Male' ? 'M' : 'F',
-                'birthdate' => $s->birthdate?->format('m/d/y'),
+                'birthdate' => $s->birthdate?->format('m/d/Y'),
                 'age' => $s->ageAsOf($cutOff),
                 'birth_place' => $s->birth_place,
                 'mother_tongue' => $s->mother_tongue,
@@ -108,6 +108,7 @@ class Sf1ReportService
                 'guardian' => $s->guardian_name,
                 'relationship' => $s->guardian_relationship,
                 'contact' => $s->guardian_contact,
+                'learning_modality' => 'Face to Face',
                 'remarks' => $this->remarks($enrollment),
             ];
         }
@@ -156,7 +157,7 @@ class Sf1ReportService
             $parts[] = 'B/A '.$e->balik_aral_detail;
         }
         if (filled($e->disability_detail)) {
-            $parts[] = 'LWD '.$e->disability_detail;
+            $parts[] = 'SNED '.$e->disability_detail;
         }
         if (filled($e->accelerated_detail)) {
             $parts[] = 'ACL '.$e->accelerated_detail;

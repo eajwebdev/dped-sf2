@@ -5,7 +5,7 @@
         <td class="num">{{ $row['no'] }}</td>
         <td class="name">{{ $row['name'] }}</td>
         @foreach ($days as $d)
-            @php $code = $row['marks'][$d['date']] ?? ''; @endphp
+            @php $code = isset($d['date']) ? ($row['marks'][$d['date']] ?? '') : ''; @endphp
             <td class="day {{ $code === '/' ? 'tardy' : ($code === 'x' ? 'absent' : '') }}">{{ $code }}</td>
         @endforeach
         <td class="tot">{{ $row['absent'] ?: '' }}</td>
@@ -25,7 +25,7 @@
 <tr class="totrow">
     <td class="num">{{ count($rows) }}</td>
     <td class="name">&lt;=== {{ $label }} | TOTAL Per Day ===&gt;</td>
-    @foreach ($days as $d)<td class="day">{{ $totals[$d['date']][$genderKey] ?? 0 }}</td>@endforeach
+    @foreach ($days as $d)<td class="day">{{ isset($d['date']) ? ($totals[$d['date']][$genderKey] ?? 0) : '' }}</td>@endforeach
     <td class="tot">&nbsp;</td>
     <td class="tot">{{ collect($rows)->sum('present') }}</td>
     <td class="remarks">&nbsp;</td>

@@ -124,7 +124,7 @@ class Sf1ReportTest extends TestCase
 
         $this->assertSame('T/O Sto. Nino ES (P) 09/15/2025', $rows['Aquino']['remarks']);
         $this->assertSame('LE Family relocated', $rows['Bautista']['remarks']);
-        $this->assertSame('CCT 12345 08/01/2025; LWD Visual impairment', $rows['Castro']['remarks']);
+        $this->assertSame('CCT 12345 08/01/2025; SNED Visual impairment', $rows['Castro']['remarks']);
     }
 
     public function test_bosy_and_eosy_registration_counts(): void

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
-            $table->string('lrn', 12)->unique();             // Learner Reference Number (12 digits)
+            $table->string('lrn', 12)->nullable()->unique(); // Learner Reference Number (12 digits)
             $table->string('first_name');
             $table->string('middle_name')->nullable();
             $table->string('last_name');

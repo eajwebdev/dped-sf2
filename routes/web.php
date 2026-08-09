@@ -3,7 +3,6 @@
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BillingController as AdminBillingController;
-use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\GradeLevelController;
@@ -14,6 +13,7 @@ use App\Http\Controllers\Admin\SchoolIdDocumentController;
 use App\Http\Controllers\Admin\SchoolYearController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\StudentIoController;
 use App\Http\Controllers\Admin\SubjectController;
@@ -21,19 +21,19 @@ use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClassScanController;
 use App\Http\Controllers\ClassSessionController;
+use App\Http\Controllers\InsightsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrCardController;
 use App\Http\Controllers\QrCheckinController;
-use App\Http\Controllers\InsightsController;
+use App\Http\Controllers\Sf10Controller;
 use App\Http\Controllers\Sf1Controller;
 use App\Http\Controllers\Sf2Controller;
 use App\Http\Controllers\Sf3Controller;
 use App\Http\Controllers\Sf5Controller;
 use App\Http\Controllers\Sf8Controller;
 use App\Http\Controllers\Sf9Controller;
-use App\Http\Controllers\Sf10Controller;
-use App\Http\Controllers\TeacherTextbookController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\Supervisor\ReportController;
 use App\Http\Controllers\Teacher\CuttingClassController as TeacherCuttingClassController;
 use App\Http\Controllers\Teacher\PromotionController as TeacherPromotionController;
 use App\Http\Controllers\Teacher\SectionController as TeacherSectionController;
@@ -42,6 +42,7 @@ use App\Http\Controllers\Teacher\StudentController as TeacherStudentController;
 use App\Http\Controllers\Teacher\SubjectController as TeacherSubjectController;
 use App\Http\Controllers\TeacherDashboardController;
 use App\Http\Controllers\TeacherScheduleController;
+use App\Http\Controllers\TeacherTextbookController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -126,6 +127,8 @@ Route::middleware(['auth', 'verified', 'subscription'])->group(function () {
     Route::get('/my-class/promotion', [TeacherPromotionController::class, 'index'])->name('teacher.promotion.index');
     Route::post('/my-class/promotion', [TeacherPromotionController::class, 'promote'])->name('teacher.promotion.promote');
 
+    Route::get('/students/import/template', [TeacherStudentController::class, 'importTemplate'])->name('teacher.students.import.template');
+    Route::post('/students/import', [TeacherStudentController::class, 'import'])->name('teacher.students.import');
     Route::resource('students', TeacherStudentController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
         ->names('teacher.students');
@@ -232,22 +235,22 @@ Route::middleware(['auth', 'verified', 'supervisor'])
     ->prefix('oversight')
     ->name('supervisor.')
     ->group(function () {
-        Route::get('/', [\App\Http\Controllers\Supervisor\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/', [App\Http\Controllers\Supervisor\DashboardController::class, 'index'])->name('dashboard');
 
         // SF2 oversight: pick any class in the school, view/print its report.
-        Route::get('/sf2', [\App\Http\Controllers\Supervisor\Sf2Controller::class, 'index'])->name('sf2.index');
-        Route::get('/sf2/{section}', [\App\Http\Controllers\Supervisor\Sf2Controller::class, 'show'])->name('sf2.show');
+        Route::get('/sf2', [App\Http\Controllers\Supervisor\Sf2Controller::class, 'index'])->name('sf2.index');
+        Route::get('/sf2/{section}', [App\Http\Controllers\Supervisor\Sf2Controller::class, 'show'])->name('sf2.show');
 
         // The adviser School Forms — read-only, one controller, same PDFs.
-        $reports = \App\Http\Controllers\Supervisor\ReportController::class;
+        $reports = ReportController::class;
         foreach (['sf1', 'sf3', 'sf5', 'sf8', 'sf9', 'sf10'] as $sf) {
             Route::get("/{$sf}", [$reports, "{$sf}Index"])->name("{$sf}.index");
             Route::get("/{$sf}/{section}", [$reports, "{$sf}Show"])->name("{$sf}.show");
         }
 
         // Advanced Reports oversight: the per-class insight dashboard, read-only.
-        Route::get('/insights', [\App\Http\Controllers\Supervisor\InsightsController::class, 'index'])->name('insights.index');
-        Route::get('/insights/{section}', [\App\Http\Controllers\Supervisor\InsightsController::class, 'show'])->name('insights.show');
+        Route::get('/insights', [App\Http\Controllers\Supervisor\InsightsController::class, 'index'])->name('insights.index');
+        Route::get('/insights/{section}', [App\Http\Controllers\Supervisor\InsightsController::class, 'show'])->name('insights.show');
     });
 
 /*
@@ -262,6 +265,7 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::get('/', DashboardController::class)->name('dashboard');
 
         // Schools (SaaS tenants) that teachers register into.
+        Route::post('schools/import-masterlist', [SchoolController::class, 'importMasterlist'])->name('schools.import-masterlist');
         Route::resource('schools', SchoolController::class)->except('show');
 
         // Teacher self-registration approvals.

@@ -34,6 +34,7 @@ class SectionController extends Controller
             'grade_level_id' => ['required', 'exists:grade_levels,id'],
             'room' => ['nullable', 'string', 'max:50'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'return_to' => ['nullable', 'in:dashboard,students'],
         ], [], ['grade_level_id' => 'grade level']);
 
         // The only gate: that grade + section name must not already exist in the
@@ -54,6 +55,9 @@ class SectionController extends Controller
             ]);
         }
 
+        $returnTo = $data['return_to'] ?? null;
+        unset($data['return_to']);
+
         // school_id is stamped by the BelongsToSchool trait.
         $section = Section::create($data + [
             'school_year_id' => $activeYear->id,
@@ -62,7 +66,11 @@ class SectionController extends Controller
 
         $this->audit->created($section, "Section {$section->name} created for SY {$activeYear->name}");
 
-        return redirect()->route('teacher.dashboard')
+        $route = $returnTo === 'students'
+            ? 'teacher.students.index'
+            : 'teacher.dashboard';
+
+        return redirect()->route($route)
             ->with('success', "Class {$section->gradeLevel?->name} — {$section->name} created. You are its adviser.");
     }
 }

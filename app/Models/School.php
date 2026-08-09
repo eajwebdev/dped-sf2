@@ -90,10 +90,28 @@ class School extends Model
     protected $fillable = [
         'school_id',
         'name',
+        'short_name',
+        'previous_name',
+        'mother_school_school_id',
+        'source_school_year',
         'education_level',
         'division',
         'region',
+        'province',
+        'municipality',
+        'district',
+        'legislative_district',
         'address',
+        'school_head',
+        'school_head_designation',
+        'telephone_number',
+        'fax_number',
+        'email',
+        'date_of_operation',
+        'sub_classification',
+        'curricular_class',
+        'school_type',
+        'class_organization',
         'logo_path',
         'is_active',
         'active_school_year_id',
@@ -103,6 +121,7 @@ class School extends Model
     {
         return [
             'is_active' => 'boolean',
+            'date_of_operation' => 'date',
         ];
     }
 

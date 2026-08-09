@@ -172,6 +172,7 @@ class Sf2ReportService
         // Transferred in/out for the section this year, by gender.
         $transferredIn = $this->genderCounts($all->where('status', StudentEnrollment::STATUS_TRANSFERRED_IN));
         $transferredOut = $this->genderCounts($all->where('status', StudentEnrollment::STATUS_TRANSFERRED_OUT));
+        $droppedOut = $this->genderCounts($all->where('status', StudentEnrollment::STATUS_DROPPED));
         $lateEnrol = ['male' => $this->countBy($males, 'lateEnrolment'), 'female' => $this->countBy($females, 'lateEnrolment')];
         $absent5 = ['male' => $this->countAtLeast($males, 'consecutiveAbsences', 5), 'female' => $this->countAtLeast($females, 'consecutiveAbsences', 5)];
 
@@ -197,7 +198,7 @@ class Sf2ReportService
                 'total' => $totalCount > 0 ? round($avgTotal / $totalCount, 2) : 0.0,
             ],
             'absent5' => $intTriple($absent5['male'], $absent5['female']),
-            'nls' => $intTriple(0, 0),
+            'nls' => $intTriple($droppedOut['male'], $droppedOut['female']),
             'transferredOut' => $intTriple($transferredOut['male'], $transferredOut['female']),
             'transferredIn' => $intTriple($transferredIn['male'], $transferredIn['female']),
         ];
