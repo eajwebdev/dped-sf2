@@ -51,6 +51,46 @@ Route::get('/', function () {
     return Auth::check() ? redirect()->route('dashboard') : view('public.landing');
 })->name('landing');
 
+Route::get('/school-forms', function () {
+    return view('public.school-forms', [
+        'forms' => config('schoolforms'),
+    ]);
+})->name('public.school-forms');
+
+Route::get('/school-forms/{form}', function (string $form) {
+    $forms = config('schoolforms');
+    $key = strtolower($form);
+
+    abort_unless(isset($forms[$key]), 404);
+
+    return view('public.school-form', [
+        'form' => $forms[$key],
+        'forms' => $forms,
+    ]);
+})->where('form', 'sf[1-9]|sf10')->name('public.school-form');
+
+Route::get('/sitemap.xml', function () {
+    $siteUrl = rtrim(config('seo.site_url'), '/');
+    $urls = [
+        ['loc' => $siteUrl.'/', 'priority' => '1.0', 'changefreq' => 'weekly'],
+        ['loc' => $siteUrl.'/school-forms', 'priority' => '0.9', 'changefreq' => 'monthly'],
+        ['loc' => $siteUrl.'/register', 'priority' => '0.8', 'changefreq' => 'monthly'],
+    ];
+
+    foreach (array_keys(config('schoolforms')) as $form) {
+        $urls[] = ['loc' => $siteUrl.'/school-forms/'.$form, 'priority' => '0.8', 'changefreq' => 'monthly'];
+    }
+
+    return response()
+        ->view('seo.sitemap', ['urls' => $urls])
+        ->header('Content-Type', 'application/xml');
+})->name('sitemap');
+
+Route::get('/robots.txt', function () {
+    return response("User-agent: *\nDisallow:\n\nSitemap: ".rtrim(config('seo.site_url'), '/')."/sitemap.xml\n", 200)
+        ->header('Content-Type', 'text/plain');
+})->name('robots');
+
 // Role-aware landing: admins to the admin dashboard, supervisors to oversight,
 // teachers to theirs.
 Route::get('/dashboard', function () {
