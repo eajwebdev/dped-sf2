@@ -44,8 +44,11 @@ class StudentController extends Controller
             $selectedSectionId = null;
         }
 
+        $advisorySectionIds = $advisorySections->pluck('id');
+
         $students = Student::query()
             ->with(['currentEnrollment.section.gradeLevel'])
+            ->whereHas('enrollments', fn ($enrollment) => $enrollment->whereIn('section_id', $advisorySectionIds))
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('lrn', 'like', "%{$search}%")
@@ -196,11 +199,15 @@ class StudentController extends Controller
 
     public function edit(Student $student)
     {
+        $this->authorizeStudentRecord(request(), $student);
+
         return $this->index(request())->with(['openModal' => 'edit', 'editModel' => $student]);
     }
 
     public function update(StudentRequest $request, Student $student): RedirectResponse
     {
+        $this->authorizeStudentRecord($request, $student);
+
         $original = $student->getOriginal();
         $student->update($request->safe()->except('photo'));
         $this->audit->updated($student, $original);
@@ -208,12 +215,26 @@ class StudentController extends Controller
         return redirect()->route('teacher.students.index')->with('success', 'Student updated.');
     }
 
-    public function destroy(Student $student): RedirectResponse
+    public function destroy(Request $request, Student $student): RedirectResponse
     {
+        $this->authorizeStudentRecord($request, $student);
+
         $name = $student->full_name;
         $student->delete();
         $this->audit->deleted($student, "Student {$name} deleted");
 
         return redirect()->route('teacher.students.index')->with('success', 'Student deleted.');
+    }
+
+    private function authorizeStudentRecord(Request $request, Student $student): void
+    {
+        $sectionIds = $this->advisorySections($request->user())->pluck('id');
+
+        abort_unless(
+            $sectionIds->isNotEmpty()
+                && $student->enrollments()->whereIn('section_id', $sectionIds)->exists(),
+            403,
+            'Student records are limited to your advisory learners.'
+        );
     }
 }

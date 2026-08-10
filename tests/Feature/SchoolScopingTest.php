@@ -10,6 +10,7 @@ use App\Models\Student;
 use App\Models\StudentEnrollment;
 use App\Models\Subject;
 use App\Models\Teacher;
+use App\Models\TeacherSchedule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -56,8 +57,25 @@ class SchoolScopingTest extends TestCase
         $schoolB = School::factory()->create();
         $teacherA = $this->teacherFor($schoolA);
         $teacherB = $this->teacherFor($schoolB);
+        $teacherAProfile = Teacher::factory()->create(['school_id' => $schoolA->id, 'user_id' => $teacherA->id]);
+        $teacherBProfile = Teacher::factory()->create(['school_id' => $schoolB->id, 'user_id' => $teacherB->id]);
+        $year = SchoolYear::factory()->active()->create();
+        SchoolYear::forgetCurrent();
+        $grade = GradeLevel::factory()->create();
+        Section::factory()->create([
+            'school_id' => $schoolA->id,
+            'school_year_id' => $year->id,
+            'grade_level_id' => $grade->id,
+            'adviser_id' => $teacherAProfile->id,
+        ]);
+        Section::factory()->create([
+            'school_id' => $schoolB->id,
+            'school_year_id' => $year->id,
+            'grade_level_id' => $grade->id,
+            'adviser_id' => $teacherBProfile->id,
+        ]);
 
-        // Create one student in each school (auto-stamped by the acting user).
+        // Create one advisory student in each school (auto-stamped by the acting user).
         $this->actingAs($teacherA)->post(route('teacher.students.store'), [
             'lrn' => '111111111111', 'first_name' => 'Aaa', 'last_name' => 'Alpha', 'gender' => 'Male', 'status' => 'active',
         ]);
@@ -199,6 +217,94 @@ class SchoolScopingTest extends TestCase
             ->assertSee('Alpha')
             ->assertDontSee('Beta')
             ->assertDontSee('Gamma');
+    }
+
+    public function test_teacher_schedule_does_not_grant_student_record_access_to_non_advisory_learners(): void
+    {
+        $school = School::factory()->create();
+        $teacherAUser = $this->teacherFor($school);
+        $teacherBUser = $this->teacherFor($school);
+        $teacherA = Teacher::factory()->create(['school_id' => $school->id, 'user_id' => $teacherAUser->id]);
+        $teacherB = Teacher::factory()->create(['school_id' => $school->id, 'user_id' => $teacherBUser->id]);
+        $year = SchoolYear::factory()->active()->create();
+        SchoolYear::forgetCurrent();
+        $grade = GradeLevel::factory()->create(['name' => 'Grade 8']);
+
+        $advisory = Section::factory()->create([
+            'school_id' => $school->id,
+            'school_year_id' => $year->id,
+            'grade_level_id' => $grade->id,
+            'adviser_id' => $teacherA->id,
+            'name' => 'Advisory',
+        ]);
+        $nonAdvisory = Section::factory()->create([
+            'school_id' => $school->id,
+            'school_year_id' => $year->id,
+            'grade_level_id' => $grade->id,
+            'adviser_id' => $teacherB->id,
+            'name' => 'Other Advisory',
+        ]);
+
+        $ownLearner = Student::factory()->create([
+            'school_id' => $school->id,
+            'lrn' => '123456789101',
+            'last_name' => 'Alpha',
+        ]);
+        $otherLearner = Student::factory()->create([
+            'school_id' => $school->id,
+            'lrn' => '123456789102',
+            'first_name' => 'Berta',
+            'last_name' => 'Beta',
+            'gender' => 'Female',
+        ]);
+
+        foreach ([[$ownLearner, $advisory], [$otherLearner, $nonAdvisory]] as [$student, $section]) {
+            StudentEnrollment::create([
+                'school_id' => $school->id,
+                'student_id' => $student->id,
+                'school_year_id' => $year->id,
+                'grade_level_id' => $grade->id,
+                'section_id' => $section->id,
+                'status' => 'enrolled',
+                'promotion_status' => 'pending',
+                'enrollment_date' => now(),
+            ]);
+        }
+
+        TeacherSchedule::create([
+            'teacher_id' => $teacherA->id,
+            'school_year_id' => $year->id,
+            'section_id' => $nonAdvisory->id,
+            'day_of_week' => 1,
+            'start_time' => '07:00',
+            'end_time' => '08:00',
+        ]);
+
+        $this->actingAs($teacherAUser)
+            ->get(route('teacher.students.index'))
+            ->assertOk()
+            ->assertSee('Alpha')
+            ->assertDontSee('Beta');
+
+        $this->actingAs($teacherAUser)
+            ->get(route('teacher.students.edit', $otherLearner))
+            ->assertForbidden();
+
+        $this->actingAs($teacherAUser)
+            ->patch(route('teacher.students.update', $otherLearner), [
+                'lrn' => '123456789102',
+                'first_name' => 'Berta',
+                'last_name' => 'Beta',
+                'gender' => 'Female',
+                'status' => 'active',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($teacherAUser)
+            ->delete(route('teacher.students.destroy', $otherLearner))
+            ->assertForbidden();
+
+        $this->assertNotSoftDeleted($otherLearner);
     }
 
     public function test_teacher_add_student_uses_selected_section(): void
